@@ -1,7 +1,7 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/gyu5la0fbzjq/public_html/shop/
+    - export DEPLOYPATH=/home/gyu5la0fbzjq/public_html/shop.casaglick.com/
 
     - /bin/mkdir -p $DEPLOYPATH
 
@@ -14,4 +14,6 @@ deployment:
 
     - /bin/cp *.js $DEPLOYPATH
     - /bin/cp *.css $DEPLOYPATH
+
+    - /bin/rm -rf ${DEPLOYPATH}/assets
     - /bin/cp -R assets $DEPLOYPATH
