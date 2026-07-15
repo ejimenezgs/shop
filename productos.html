@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Cormorant+Garamond:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=25" />
+  <link rel="stylesheet" href="css/styles.css?v=25" />
 </head>
 <body class="product-page">
   <header class="hero__header product-header" aria-label="Navegación principal">
@@ -175,6 +175,7 @@
         <button class="products-filter__item" type="button" data-filter="sillas">Sillas</button>
         <button class="products-filter__item" type="button" data-filter="mesas">Mesas</button>
         <button class="products-filter__item" type="button" data-filter="sofas">Sofás</button>
+        <button class="products-filter__item" type="button" data-filter="habitacion">Habitación</button>
         <button class="products-filter__item" type="button" data-filter="decoracion">Decoración</button>
         <button class="products-filter__item" type="button" data-filter="iluminacion">Iluminación</button>
       </nav>
@@ -187,6 +188,7 @@
             <option value="sillas">Sillas</option>
             <option value="mesas">Mesas</option>
             <option value="sofas">Sofás</option>
+            <option value="habitacion">Habitación</option>
             <option value="decoracion">Decoración</option>
             <option value="iluminacion">Iluminación</option>
           </select>
@@ -200,6 +202,7 @@
             <button class="products-picker__option" type="button" role="option" aria-selected="false" data-value="sillas">Sillas</button>
             <button class="products-picker__option" type="button" role="option" aria-selected="false" data-value="mesas">Mesas</button>
             <button class="products-picker__option" type="button" role="option" aria-selected="false" data-value="sofas">Sofás</button>
+            <button class="products-picker__option" type="button" role="option" aria-selected="false" data-value="habitacion">Habitación</button>
             <button class="products-picker__option" type="button" role="option" aria-selected="false" data-value="decoracion">Decoración</button>
             <button class="products-picker__option" type="button" role="option" aria-selected="false" data-value="iluminacion">Iluminación</button>
           </div>
@@ -218,15 +221,16 @@
         <article class="product-skeleton" aria-hidden="true"></article>
         <article class="product-skeleton" aria-hidden="true"></article>
       </div>
+      <p class="products-filter-empty" data-products-filter-empty hidden>Sin resultados</p>
     </section>
   </main>
 
   <script src="https://unpkg.com/lucide@latest"></script>
   <script>window.lucide?.createIcons({attrs:{'aria-hidden':'true'}});</script>
-  <script src="cart.js"></script>
-  <script src="script.js?v=shop1"></script>
-  <script src="catalog-api.js?v=shop1"></script>
-  <script src="firebase-public-config.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/script.js?v=shop2"></script>
+  <script src="js/catalog-api.js?v=shop2"></script>
+  <script src="js/firebase-public-config.js"></script>
   <a class="whatsapp-float" href="https://wa.me/525513004665?text=Hola%2C%20quiero%20hablar%20con%20un%20agente%20de%20Casa%20Glick" target="_blank" rel="noopener" aria-label="Hablar con un agente por WhatsApp">
     <svg class="whatsapp-float__icon" viewBox="0 0 24 24" aria-hidden="true">
       <path fill="currentColor" d="M12.04 2C6.57 2 2.12 6.37 2.12 11.75c0 1.72.46 3.4 1.33 4.88L2 22l5.51-1.41a10.07 10.07 0 0 0 4.53 1.1c5.47 0 9.92-4.37 9.92-9.75S17.51 2 12.04 2Zm0 17.97c-1.46 0-2.88-.39-4.12-1.12l-.3-.18-3.27.84.87-3.11-.2-.32a8.02 8.02 0 0 1-1.2-4.33c0-4.42 3.69-8.02 8.22-8.02s8.22 3.6 8.22 8.02-3.69 8.22-8.22 8.22Zm4.5-6.02c-.25-.12-1.47-.71-1.7-.79-.23-.08-.39-.12-.56.12-.16.24-.64.79-.78.95-.14.16-.29.18-.54.06-.25-.12-1.05-.38-2-1.2-.74-.65-1.24-1.45-1.39-1.69-.14-.24-.02-.37.11-.49.11-.11.25-.29.37-.43.12-.14.16-.24.25-.41.08-.16.04-.31-.02-.43-.06-.12-.56-1.32-.77-1.81-.2-.47-.41-.41-.56-.42h-.48c-.16 0-.43.06-.66.31-.23.24-.87.83-.87 2.02s.89 2.34 1.02 2.5c.12.16 1.75 2.62 4.24 3.67.59.25 1.05.4 1.41.51.59.18 1.13.16 1.56.1.48-.07 1.47-.59 1.68-1.16.21-.57.21-1.06.14-1.16-.06-.1-.22-.16-.47-.28Z"/>
@@ -234,6 +238,6 @@
     <span class="whatsapp-float__label">Hablar con un agente</span>
   </a>
 
-  <script type="module" src="catalog-public.js?v=shop1"></script>
+  <script type="module" src="js/catalog-public.js?v=shop2"></script>
 </body>
 </html>
