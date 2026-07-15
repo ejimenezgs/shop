@@ -1,13 +1,17 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/ejimenezgs/public_html/shop/
+    - export DEPLOYPATH=/home/gyu5la0fbzjq/public_html/shop/
+
+    - /bin/mkdir -p $DEPLOYPATH
+
     - /bin/cp index.html $DEPLOYPATH
     - /bin/cp productos.html $DEPLOYPATH
     - /bin/cp producto.html $DEPLOYPATH
     - /bin/cp bolsa.html $DEPLOYPATH
     - /bin/cp checkout.html $DEPLOYPATH
     - /bin/cp confirmacion.html $DEPLOYPATH
+
     - /bin/cp *.js $DEPLOYPATH
     - /bin/cp *.css $DEPLOYPATH
     - /bin/cp -R assets $DEPLOYPATH
