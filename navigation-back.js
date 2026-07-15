@@ -1,0 +1,1 @@
+document.querySelectorAll('[data-smart-back]').forEach((link)=>{link.addEventListener('click',(event)=>{if(window.history.length>1&&document.referrer){event.preventDefault();window.history.back();}});});
