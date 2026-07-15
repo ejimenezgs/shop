@@ -5,6 +5,17 @@ deployment:
 
     - /bin/mkdir -p $DEPLOYPATH
 
+    - /bin/rm -rf ${DEPLOYPATH}/assets
+    - /bin/rm -rf ${DEPLOYPATH}/css
+    - /bin/rm -rf ${DEPLOYPATH}/js
+
+    - /bin/rm -f ${DEPLOYPATH}/*.js
+    - /bin/rm -f ${DEPLOYPATH}/*.css
+
+    - /bin/cp -R assets $DEPLOYPATH
+    - /bin/cp -R css $DEPLOYPATH
+    - /bin/cp -R js $DEPLOYPATH
+
     - /bin/cp index.html $DEPLOYPATH
     - /bin/cp productos.html $DEPLOYPATH
     - /bin/cp producto.html $DEPLOYPATH
@@ -12,8 +23,4 @@ deployment:
     - /bin/cp checkout.html $DEPLOYPATH
     - /bin/cp confirmacion.html $DEPLOYPATH
 
-    - /bin/cp *.js $DEPLOYPATH
-    - /bin/cp *.css $DEPLOYPATH
-
-    - /bin/rm -rf ${DEPLOYPATH}/assets
-    - /bin/cp -R assets $DEPLOYPATH
+    - if [ -f 404.html ]; then /bin/cp 404.html $DEPLOYPATH; fi
