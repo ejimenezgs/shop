@@ -119,9 +119,12 @@ function findOverride(product,overrides){
 }
 function applyOverride(product,overrides){
   const o=findOverride(product,overrides);
-  const panelSection=o.seccion||o.section||o.seccionShop||o.shopSection||o.categoriaPublica||o.publicCategory||o.departamento||o.department||o.categoriaShop||o.shopCategory||'';
-  const legacyCategory=o.categoria||o.category||'';
-  const resolvedCategory=normalizePublicCategory(panelSection)||normalizePublicCategory(legacyCategory)||normalizePublicCategory(product.apiCategory)||product.category||'';
+
+  // The public shop category comes only from the panel field "Categoría Web".
+  // Do not infer it from inventory categories, names, families or legacy fields.
+  const webCategoryValue = o.categoriaWeb ?? o.webCategory ?? o['Categoría Web'] ?? o['Categoria Web'] ?? '';
+  const resolvedCategory = normalizePublicCategory(webCategoryValue);
+
   return{
     ...product,
     published:o.published===true,
