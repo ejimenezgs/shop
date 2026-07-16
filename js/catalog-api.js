@@ -267,15 +267,12 @@
     const text = String(apiCategory || '')
       .normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 
-    // Mesas de noche belong to Habitación. Every other table type belongs to Mesas.
-    if (/mesa(?:s)?\s+de\s+noche|mesa(?:s)?\s+nocturna|nightstand|bur[oó](?:\s+de\s+noche)?/.test(text)) return 'habitacion';
-    if (/mesa|coffee\s+table|dining\s+table|consola|escritorio/.test(text)) return 'mesas';
-    if (/poltrona|sillon individual|butaca/.test(text)) return 'poltronas';
-    if (/silla|banco|taburete/.test(text)) return 'sillas';
-    if (/sofa|seccional|love\s*seat/.test(text)) return 'sofas';
-    if (/cama|cabecera|recamara|dormitorio/.test(text)) return 'habitacion';
-    if (/lampara|iluminacion|candil/.test(text)) return 'iluminacion';
-    if (/decor|espejo|cuadro|florero|accesorio/.test(text)) return 'decoracion';
+    // Public shop departments. Specific inventory categories are grouped here.
+    if (/exterior|outdoor|jardin|garden|terraza|patio|alberca/.test(text)) return 'exterior';
+    if (/mesa(?:s)?\s+de\s+noche|mesa(?:s)?\s+nocturna|nightstand|bur[oó](?:\s+de\s+noche)?|cama|cabecera|recamara|dormitorio|habitacion/.test(text)) return 'habitacion';
+    if (/lampara|iluminacion|candil|luminaria|lighting/.test(text)) return 'iluminacion';
+    if (/decor|espejo|cuadro|florero|accesorio|objeto|ornamento/.test(text)) return 'decoracion';
+    if (/poltrona|sillon|butaca|silla|banco|taburete|sofa|seccional|love\s*seat|mesa|coffee\s+table|dining\s+table|consola|escritorio|interior/.test(text)) return 'interior';
     return '';
   }
 

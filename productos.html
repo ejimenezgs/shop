@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Cormorant+Garamond:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=25" />
+  <link rel="stylesheet" href="css/styles.css?v=shop3" />
 </head>
 <body class="product-page">
   <header class="hero__header product-header" aria-label="Navegación principal">
@@ -171,10 +171,8 @@
 
       <nav class="products-filter" aria-label="Filtrar productos por categoría">
         <button class="products-filter__item is-active" type="button" data-filter="todo">Todo</button>
-        <button class="products-filter__item" type="button" data-filter="poltronas">Poltronas</button>
-        <button class="products-filter__item" type="button" data-filter="sillas">Sillas</button>
-        <button class="products-filter__item" type="button" data-filter="mesas">Mesas</button>
-        <button class="products-filter__item" type="button" data-filter="sofas">Sofás</button>
+        <button class="products-filter__item" type="button" data-filter="interior">Interior</button>
+        <button class="products-filter__item" type="button" data-filter="exterior">Exterior</button>
         <button class="products-filter__item" type="button" data-filter="habitacion">Habitación</button>
         <button class="products-filter__item" type="button" data-filter="decoracion">Decoración</button>
         <button class="products-filter__item" type="button" data-filter="iluminacion">Iluminación</button>
@@ -184,10 +182,8 @@
         <div class="products-picker__control" data-products-custom-picker>
           <select id="products-category-picker" class="products-picker__select" aria-hidden="true" tabindex="-1">
             <option value="todo">Todo</option>
-            <option value="poltronas">Poltronas</option>
-            <option value="sillas">Sillas</option>
-            <option value="mesas">Mesas</option>
-            <option value="sofas">Sofás</option>
+            <option value="interior">Interior</option>
+            <option value="exterior">Exterior</option>
             <option value="habitacion">Habitación</option>
             <option value="decoracion">Decoración</option>
             <option value="iluminacion">Iluminación</option>
@@ -198,10 +194,8 @@
           </button>
           <div class="products-picker__menu" id="products-category-menu" role="listbox" tabindex="-1">
             <button class="products-picker__option is-selected" type="button" role="option" aria-selected="true" data-value="todo">Todo</button>
-            <button class="products-picker__option" type="button" role="option" aria-selected="false" data-value="poltronas">Poltronas</button>
-            <button class="products-picker__option" type="button" role="option" aria-selected="false" data-value="sillas">Sillas</button>
-            <button class="products-picker__option" type="button" role="option" aria-selected="false" data-value="mesas">Mesas</button>
-            <button class="products-picker__option" type="button" role="option" aria-selected="false" data-value="sofas">Sofás</button>
+            <button class="products-picker__option" type="button" role="option" aria-selected="false" data-value="interior">Interior</button>
+            <button class="products-picker__option" type="button" role="option" aria-selected="false" data-value="exterior">Exterior</button>
             <button class="products-picker__option" type="button" role="option" aria-selected="false" data-value="habitacion">Habitación</button>
             <button class="products-picker__option" type="button" role="option" aria-selected="false" data-value="decoracion">Decoración</button>
             <button class="products-picker__option" type="button" role="option" aria-selected="false" data-value="iluminacion">Iluminación</button>
@@ -228,8 +222,8 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <script>window.lucide?.createIcons({attrs:{'aria-hidden':'true'}});</script>
   <script src="js/cart.js"></script>
-  <script src="js/script.js?v=shop2"></script>
-  <script src="js/catalog-api.js?v=shop2"></script>
+  <script src="js/script.js?v=shop3"></script>
+  <script src="js/catalog-api.js?v=shop3"></script>
   <script src="js/firebase-public-config.js"></script>
   <a class="whatsapp-float" href="https://wa.me/525513004665?text=Hola%2C%20quiero%20hablar%20con%20un%20agente%20de%20Casa%20Glick" target="_blank" rel="noopener" aria-label="Hablar con un agente por WhatsApp">
     <svg class="whatsapp-float__icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -238,6 +232,6 @@
     <span class="whatsapp-float__label">Hablar con un agente</span>
   </a>
 
-  <script type="module" src="js/catalog-public.js?v=shop2"></script>
+  <script type="module" src="js/catalog-public.js?v=shop3"></script>
 </body>
 </html>
