@@ -199,7 +199,7 @@
   }
 
   const BROAD_CATEGORY_VALUES = /^(interior|exterior|decoracion|decoración|habitacion|habitación|mobiliario|general|catalogo|catálogo)$/i;
-  const SPECIFIC_CATEGORY_VALUE = /(mesa(?:s)?(?:\s+de\s+(?:centro|comedor|noche|jardin|jardín|auxiliar|lateral))?|coffee\s+table|dining\s+table|nightstand|bur[oó](?:\s+de\s+noche)?|poltrona|sill[oó]n|butaca|silla|banco|taburete|sof[aá]|seccional|love\s*seat|cama|cabecera|l[aá]mpara|iluminaci[oó]n|candil|espejo|cuadro|florero|consola|escritorio)/i;
+  const SPECIFIC_CATEGORY_VALUE = /(mesa(?:s)?(?:\s+de\s+(?:centro|comedor|noche|jardin|jardín|auxiliar|lateral))?|coffee\s+table|dining\s+table|nightstand|bur[oó](?:\s+de\s+noche)?|poltrona|sof[aá](?:s)?\s+individual(?:es)?|sill[oó]n(?:es)?\s+individual(?:es)?|sill[oó]n|butaca|silla|banco|taburete|ottoman|otomano|sof[aá]|seccional|love\s*seat|camastro|cama|cabecera|l[aá]mpara|iluminaci[oó]n|candil|espejo|cuadro|florero|consola|escritorio)/i;
 
   function categoryValueScore(text) {
     const clean = String(text || '').replace(/\s+/g, ' ').trim();
@@ -267,12 +267,13 @@
     const text = String(apiCategory || '')
       .normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 
-    // Public shop departments. Specific inventory categories are grouped here.
-    if (/exterior|outdoor|jardin|garden|terraza|patio|alberca/.test(text)) return 'exterior';
-    if (/mesa(?:s)?\s+de\s+noche|mesa(?:s)?\s+nocturna|nightstand|bur[oó](?:\s+de\s+noche)?|cama|cabecera|recamara|dormitorio|habitacion/.test(text)) return 'habitacion';
-    if (/lampara|iluminacion|candil|luminaria|lighting/.test(text)) return 'iluminacion';
-    if (/decor|espejo|cuadro|florero|accesorio|objeto|ornamento/.test(text)) return 'decoracion';
-    if (/poltrona|sillon|butaca|silla|banco|taburete|sofa|seccional|love\s*seat|mesa|coffee\s+table|dining\s+table|consola|escritorio|interior/.test(text)) return 'interior';
+    // Public shop departments. The panel now exposes the source category,
+    // and the shop groups it into the five customer-facing departments.
+    if (/decoracion|decoración/.test(text)) return 'decoracion';
+    if (/iluminacion|iluminación|lampara|lámpara|candil|luminaria|lighting/.test(text)) return 'iluminacion';
+    if (/habitacion|habitación|recamara|recámara|dormitorio|cama|cabecera|mesa(?:s)?\s+de\s+noche|nightstand|bur[oó]/.test(text)) return 'habitacion';
+    if (/exterior|outdoor|jardin|jardín|garden|terraza|patio|alberca|camastro/.test(text)) return 'exterior';
+    if (/interior|silla|mesa|sof[aá]|ottoman|otomano|poltrona|sill[oó]n(?:es)?\s+individual(?:es)?|sof[aá](?:s)?\s+individual(?:es)?/.test(text)) return 'interior';
     return '';
   }
 
@@ -289,6 +290,21 @@
 
     const apiCategory = getApiCategory(raw);
     const category = normalizeCategory(apiCategory);
+
+    const regularPrice = parsePrice(findDeep(raw, [
+      'precioOriginal','originalPrice','precioLista','listPrice','regularPrice','precioRegular','precioAntes'
+    ]));
+    const promotionalPrice = parsePrice(findDeep(raw, [
+      'precioPromocion','precioPromoción','promotionPrice','promoPrice','discountPrice','discountedPrice',
+      'precioOferta','salePrice','precioConDescuento','precioFinal'
+    ]));
+    const fallbackPrice = parsePrice(findDeep(raw, [
+      'precio','price','precioVenta','precioPublico'
+    ]));
+    const hasValidPromotion = promotionalPrice !== null && regularPrice !== null && promotionalPrice < regularPrice;
+    const price = hasValidPromotion ? promotionalPrice : (fallbackPrice ?? promotionalPrice ?? regularPrice);
+    const originalPrice = hasValidPromotion ? regularPrice : null;
+
     return {
       id: code,
       raw,
@@ -301,7 +317,9 @@
       brand: String(findDeep(raw, ['marca','brand','fabricante','manufacturer','proveedorMarca']) || 'Sin marca'),
       apiCategory,
       category,
-      price: parsePrice(findDeep(raw, ['precio','price','precioVenta','salePrice','precioPublico','precioLista'])),
+      price,
+      originalPrice,
+      hasDiscount: Boolean(originalPrice !== null && price !== null && price < originalPrice),
       stock: parseStock(raw),
       images: images.length ? images : [FALLBACK_IMAGE],
       slug: slugify(`${name}-${code}`)
