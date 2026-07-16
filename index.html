@@ -1,337 +1,210 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Casa Glick | Diseño que trasciende</title>
-  <meta name="description" content="Casa Glick — mobiliario, decoración y soluciones para espacios residenciales, comerciales y hospitality." />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panel | Casa Glick</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Cormorant+Garamond:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/admin.css?v=8" />
 </head>
-<body>
-  <header class="hero__header">
-    <a class="brand" href="#inicio" aria-label="Casa Glick inicio">
-      <svg class="brand__svg" aria-hidden="true" width="1174" height="114" viewBox="0 0 1174 114" fill="none" xmlns="http://www.w3.org/2000/svg">
-<mask id="mask0_73_140" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="0" y="0" width="1174" height="114">
-<path d="M1173.44 0H0V114H1173.44V0Z" fill="white"/>
-</mask>
-<g mask="url(#mask0_73_140)">
-<mask id="mask1_73_140" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="0" y="-1" width="120" height="115">
-<path d="M119.34 -0.0701904H0.134277V113.628H119.34V-0.0701904Z" fill="white"/>
-</mask>
-<g mask="url(#mask1_73_140)">
-<mask id="mask2_73_140" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="0" y="0" width="120" height="114">
-<path d="M62.056 113.63C48.6684 113.63 37.3445 111.558 28.1114 107.403C18.8693 103.249 11.8973 96.9621 7.19553 88.5503C2.48475 80.1385 0.142822 69.5935 0.142822 56.9153C0.142822 38.278 5.50862 24.1576 16.2492 14.5712C26.9808 4.98483 42.1989 0.19165 61.8944 0.19165C73.0747 0.19165 82.9718 1.78937 91.6127 4.98482C100.245 8.18028 107.019 12.9217 111.945 19.2003C116.872 25.4876 119.33 33.3726 119.33 42.8467H99.2397C99.2397 36.8789 97.6874 31.9562 94.5918 28.0698C91.4961 24.1835 87.1263 21.2558 81.4823 19.2867C75.8384 17.3176 69.2522 16.333 61.7329 16.333C53.2087 16.333 45.8778 17.7667 39.7403 20.6512C33.6028 23.5271 28.8651 27.8367 25.5452 33.5885C22.2252 39.3403 20.5652 46.4826 20.5652 54.998V58.8326C20.5652 67.4603 22.2252 74.6285 25.5452 80.3198C28.8651 86.0198 33.6208 90.2776 39.8211 93.1017C46.0213 95.9258 53.433 97.3335 62.0649 97.3335C69.7009 97.3335 76.3678 96.3748 82.0656 94.4576C87.7634 92.5403 92.1601 89.6385 95.2647 85.7521C98.3604 81.8657 99.9127 76.9948 99.9127 71.1308H119.339C119.339 80.5012 116.872 88.3603 111.954 94.6994C107.028 101.038 100.281 105.78 91.7025 108.923C83.1244 112.067 73.2452 113.639 62.0739 113.639L62.056 113.63Z" fill="white"/>
-</mask>
-<g mask="url(#mask2_73_140)">
-<mask id="mask3_73_140" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="0" y="0" width="120" height="114">
-<path d="M119.519 0H0V113.793H119.519V0Z" fill="white"/>
-</mask>
-<g mask="url(#mask3_73_140)">
-<path d="M119.341 0.19165H0.135498V113.63H119.341V0.19165Z" fill="currentColor"/>
-</g>
-</g>
-</g>
-<mask id="mask4_73_140" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="135" y="2" width="128" height="111">
-<path d="M262.772 2.14203H135.904V112.212H262.772V2.14203Z" fill="white"/>
-</mask>
-<g mask="url(#mask4_73_140)">
-<path d="M135.904 112.022L187.184 2.14203H211.321L262.763 112.022H240.788L229.635 87.5125H167.704L156.55 112.022H135.904ZM175.026 71.3366H222.304L208.315 40.2629C207.759 39.2007 207.068 37.6979 206.234 35.7807C205.399 33.8634 204.538 31.7993 203.649 29.6143C202.761 27.4293 201.927 25.3479 201.155 23.3702C200.374 21.3925 199.764 19.8725 199.324 18.8102H198.158C197.27 20.9434 196.238 23.4047 195.08 26.177C193.914 28.9579 192.774 31.6179 191.67 34.1829C190.558 36.7479 189.67 38.8293 189.006 40.427L175.026 71.3366Z" fill="currentColor"/>
-</g>
-<mask id="mask5_73_140" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="278" y="-1" width="109" height="115">
-<path d="M386.58 -0.0701904H278.591V113.74H386.58V-0.0701904Z" fill="white"/>
-</mask>
-<g mask="url(#mask5_73_140)">
-<mask id="mask6_73_140" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="278" y="0" width="109" height="114">
-<path d="M332.922 113.741C325.609 113.741 318.691 113.18 312.149 112.066C305.617 110.943 299.829 109.078 294.787 106.469C289.744 103.861 285.787 100.363 282.907 95.9935C280.026 91.6235 278.591 86.1307 278.591 79.5239V78.168C278.591 77.6844 278.644 77.2871 278.752 76.9675H298.69C298.573 77.3907 298.493 77.9003 298.439 78.4876C298.385 79.0748 298.358 79.7398 298.358 80.4912C298.358 84.2221 299.767 87.3657 302.593 89.9221C305.42 92.4785 309.43 94.4044 314.635 95.6826C319.839 96.9607 325.878 97.5998 332.742 97.5998C336.179 97.5998 339.499 97.4444 342.711 97.1162C345.923 96.7967 348.938 96.2612 351.765 95.5185C354.591 94.7757 357.05 93.7912 359.158 92.5648C361.258 91.3385 362.918 89.8703 364.147 88.1689C365.368 86.4675 365.978 84.4898 365.978 82.253C365.978 78.9453 364.811 76.2507 362.487 74.178C360.163 72.0967 356.978 70.3953 352.931 69.0566C348.884 67.7266 344.371 66.5521 339.391 65.5417C334.411 64.5312 329.225 63.5207 323.859 62.5016C318.484 61.4912 313.307 60.213 308.327 58.6671C303.338 57.1212 298.824 55.178 294.787 52.8289C290.74 50.4885 287.555 47.5003 285.231 43.873C282.907 40.2457 281.74 35.7721 281.74 30.4348C281.74 25.7453 282.853 21.5048 285.069 17.7221C287.285 13.9394 290.578 10.7439 294.957 8.1271C299.327 5.51892 304.702 3.54118 311.073 2.21118C317.443 0.881184 324.837 0.216187 333.254 0.216187C341.123 0.216187 348.122 0.907099 354.277 2.29755C360.424 3.68801 365.601 5.70892 369.809 8.37756C374.018 11.0462 377.203 14.2935 379.365 18.1366C381.528 21.9712 382.605 26.3498 382.605 31.2466V33.6475H362.999V31.2466C362.999 28.2671 361.779 25.6762 359.347 23.4912C356.906 21.3062 353.505 19.5703 349.127 18.2921C344.748 17.0139 339.678 16.3748 333.927 16.3748C326.838 16.3748 320.934 16.9103 316.232 17.9725C311.521 19.0435 307.977 20.5635 305.599 22.5325C303.212 24.5016 302.028 26.8767 302.028 29.6489C302.028 32.4212 303.221 34.8998 305.599 36.7653C307.977 38.6307 311.189 40.1766 315.236 41.403C319.283 42.6294 323.796 43.7176 328.776 44.6762C333.756 45.6348 338.916 46.6539 344.227 47.7162C349.548 48.7871 354.726 50.0912 359.769 51.6371C364.802 53.183 369.343 55.1521 373.389 57.553C377.427 59.9539 380.613 62.968 382.946 66.5953C385.27 70.2226 386.436 74.6444 386.436 79.8694C386.436 87.9703 384.166 94.5339 379.626 99.543C375.085 104.552 368.795 108.179 360.765 110.416C352.734 112.653 343.456 113.776 332.931 113.776L332.922 113.741Z" fill="white"/>
-</mask>
-<g mask="url(#mask6_73_140)">
-<mask id="mask7_73_140" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="278" y="0" width="109" height="114">
-<path d="M386.552 0H278.447V113.793H386.552V0Z" fill="white"/>
-</mask>
-<g mask="url(#mask7_73_140)">
-<path d="M386.3 0.19165H278.589V113.743H386.3V0.19165Z" fill="currentColor"/>
-</g>
-</g>
-</g>
-<mask id="mask8_73_140" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="402" y="2" width="128" height="111">
-<path d="M529.168 2.14203H402.3V112.212H529.168V2.14203Z" fill="white"/>
-</mask>
-<g mask="url(#mask8_73_140)">
-<path d="M402.3 112.022L453.58 2.14203H477.717L529.159 112.022H507.184L496.031 87.5125H434.1L422.947 112.022H402.3ZM441.422 71.3366H488.7L474.72 40.2629C474.164 39.2007 473.473 37.6979 472.639 35.7807C471.804 33.8634 470.943 31.7993 470.064 29.6143C469.175 27.4293 468.341 25.3479 467.569 23.3702C466.788 21.3925 466.178 19.8725 465.739 18.8102H464.572C463.684 20.9434 462.661 23.4047 461.494 26.177C460.328 28.9579 459.188 31.6179 458.085 34.1829C456.972 36.7479 456.084 38.8293 455.42 40.427L441.44 71.3366H441.422Z" fill="currentColor"/>
-</g>
-<mask id="mask9_73_140" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="578" y="0" width="130" height="114">
-<path d="M707.551 0.112732H578.709V113.983H707.551V0.112732Z" fill="white"/>
-</mask>
-<g mask="url(#mask9_73_140)">
-<mask id="mask10_73_140" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="578" y="0" width="130" height="114">
-<path d="M641.439 113.785C620.954 113.785 605.421 109.147 594.842 99.88C584.263 90.6045 578.978 76.32 578.978 57.035C578.978 44.3482 581.607 33.7945 586.865 25.3741C592.124 16.9536 599.795 10.6405 609.872 6.42591C619.949 2.22 631.963 0.112732 645.925 0.112732C654.674 0.112732 662.785 0.941819 670.26 2.59136C677.734 4.24955 684.266 6.74547 689.857 10.105C695.447 13.4646 699.79 17.6705 702.894 22.74C705.999 27.8009 707.542 33.7427 707.542 40.5655H680.964C680.964 37.1541 680.049 34.2005 678.228 31.6959C676.397 29.1914 673.903 27.1359 670.753 25.5382C667.595 23.9405 663.97 22.74 659.869 21.9368C655.769 21.1423 651.453 20.7364 646.912 20.7364C640.604 20.7364 634.951 21.4273 629.971 22.8177C624.982 24.2082 620.72 26.3327 617.185 29.2173C613.641 32.0932 610.958 35.6427 609.127 39.8486C607.297 44.0632 606.382 49.0464 606.382 54.7982V59.1164C606.382 67.01 607.88 73.4527 610.868 78.4618C613.856 83.4709 618.208 87.1759 623.906 89.5768C629.603 91.9777 636.557 93.1695 644.75 93.1695C652.395 93.1695 658.927 92.3146 664.356 90.6132C669.784 88.9118 673.966 86.4591 676.9 83.2636C679.834 80.0682 681.296 76.225 681.296 71.7514V70.6286H642.426V51.4473H707.542V111.885H690.763L688.268 98.9386C684.5 102.35 680.265 105.148 675.563 107.333C670.852 109.518 665.675 111.142 660.031 112.204C654.387 113.266 648.177 113.802 641.43 113.802L641.439 113.785Z" fill="white"/>
-</mask>
-<g mask="url(#mask10_73_140)">
-<mask id="mask11_73_140" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="578" y="0" width="130" height="114">
-<path d="M707.641 0.000305176H578.862V113.793H707.641V0.000305176Z" fill="white"/>
-</mask>
-<g mask="url(#mask11_73_140)">
-<path d="M707.551 0.112732H578.978V113.724H707.551V0.112732Z" fill="currentColor"/>
-</g>
-</g>
-</g>
-<mask id="mask12_73_140" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="738" y="1" width="93" height="111">
-<path d="M830.166 1.80505H738.086V111.996H830.166V1.80505Z" fill="white"/>
-</mask>
-<g mask="url(#mask12_73_140)">
-<mask id="mask13_73_140" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="738" y="2" width="93" height="110">
-<path d="M738.355 111.842V2.065H765.086V90.1041H830.166V111.842H738.355Z" fill="white"/>
-</mask>
-<g mask="url(#mask13_73_140)">
-<mask id="mask14_73_140" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="738" y="1" width="93" height="111">
-<path d="M830.175 1.86438H738.221V111.926H830.175V1.86438Z" fill="white"/>
-</mask>
-<g mask="url(#mask14_73_140)">
-<path d="M830.166 2.065H738.355V111.738H830.166V2.065Z" fill="currentColor"/>
-</g>
-</g>
-</g>
-<mask id="mask15_73_140" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="852" y="2" width="27" height="110">
-<path d="M878.977 2.06409H852.247V111.841H878.977V2.06409Z" fill="white"/>
-</mask>
-<g mask="url(#mask15_73_140)">
-<mask id="mask16_73_140" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="852" y="1" width="28" height="111">
-<path d="M879.059 1.86499H852.14V111.927H879.059V1.86499Z" fill="white"/>
-</mask>
-<g mask="url(#mask16_73_140)">
-<path d="M878.978 2.06372H852.248V111.797H878.978V2.06372Z" fill="currentColor"/>
-</g>
-</g>
-<mask id="mask17_73_140" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="905" y="0" width="124" height="114">
-<path d="M1028.13 0.112732H905.743V113.759H1028.13V0.112732Z" fill="white"/>
-</mask>
-<g mask="url(#mask17_73_140)">
-<mask id="mask18_73_140" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="906" y="0" width="122" height="114">
-<path d="M969.452 113.748C955.615 113.748 943.986 111.667 934.574 107.513C925.161 103.359 918.055 97.0713 913.236 88.6508C908.418 80.2304 906.013 69.6336 906.013 56.8431C906.013 38.1972 911.468 24.0767 922.371 14.4904C933.273 4.89536 948.912 0.102173 969.281 0.102173C980.686 0.102173 990.789 1.81218 999.592 5.21491C1008.39 8.62628 1015.29 13.6094 1020.27 20.1558C1025.25 26.7108 1027.74 34.7772 1027.74 44.3722H1001.33C1001.33 39.2595 999.977 34.9672 997.259 31.504C994.549 28.0408 990.78 25.3808 985.971 23.5154C981.152 21.6499 975.535 20.7172 969.12 20.7172C961.367 20.7172 954.835 22.0472 949.523 24.7158C944.211 27.3758 940.191 31.2449 937.481 36.3058C934.771 41.3667 933.416 47.4726 933.416 54.6063V59.0799C933.416 66.3258 934.771 72.4836 937.481 77.5445C940.191 82.6054 944.211 86.4744 949.523 89.1344C954.835 91.8031 961.367 93.1331 969.12 93.1331C975.867 93.1331 981.708 92.2522 986.635 90.499C991.561 88.7372 995.383 86.1031 998.093 82.5881C1000.8 79.0731 1002.17 74.8154 1002.17 69.7976H1027.9C1027.9 79.2804 1025.43 87.2777 1020.51 93.7722C1015.58 100.275 1008.74 105.233 1000 108.635C991.256 112.047 981.071 113.748 969.452 113.748Z" fill="white"/>
-</mask>
-<g mask="url(#mask18_73_140)">
-<mask id="mask19_73_140" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="905" y="0" width="124" height="114">
-<path d="M1028.08 0H905.977V113.793H1028.08V0Z" fill="white"/>
-</mask>
-<g mask="url(#mask19_73_140)">
-<path d="M1027.87 0.112427H906.013V113.758H1027.87V0.112427Z" fill="currentColor"/>
-</g>
-</g>
-</g>
-<mask id="mask20_73_140" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="1054" y="1" width="120" height="111">
-<path d="M1173.37 1.80505H1054.33V111.953H1173.37V1.80505Z" fill="white"/>
-</mask>
-<g mask="url(#mask20_73_140)">
-<mask id="mask21_73_140" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="1054" y="2" width="120" height="110">
-<path d="M1054.33 111.842V2.065H1081.07V55.4291L1138.67 2.065H1172.37L1124.06 47.1209L1173.37 111.842H1140.66L1104.97 63.7373L1081.07 83.0741V111.842H1054.33Z" fill="white"/>
-</mask>
-<g mask="url(#mask21_73_140)">
-<mask id="mask22_73_140" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="1054" y="1" width="120" height="111">
-<path d="M1173.44 1.86438H1054.14V111.926H1173.44V1.86438Z" fill="white"/>
-</mask>
-<g mask="url(#mask22_73_140)">
-<path d="M1173.37 2.065H1054.33V111.954H1173.37V2.065Z" fill="currentColor"/>
-</g>
-</g>
-</g>
-</g>
-</svg>
-
-    </a>
-
-  </header>
-
-  <a class="cart-shortcut" href="bolsa.html" aria-label="Abrir bolsa">
-    <svg class="bag-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-    <span class="cart-shortcut__count" data-cart-count hidden>0</span>
-  </a>
-
-  <button class="menu-toggle menu-toggle--global" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="site-menu">
-    <span></span>
-    <span></span>
-    <span></span>
-  </button>
-
-  <nav class="site-menu" id="site-menu" aria-hidden="true">
-    <div class="site-menu__panel">
-      <button class="site-menu__close" type="button" aria-label="Cerrar menú">
-        <span></span>
-        <span></span>
-      </button>
-      <a href="index.html#about">Nosotros</a>
-      <a href="index.html#lifestyle">Inspiración</a>
-      <a href="index.html#showroom">Showroom</a>
-      <a href="productos.html?filter=todo">Catálogo</a>
-      <a href="https://wa.me/525513004665?text=Hola%2C%20quiero%20contactar%20a%20Casa%20Glick" target="_blank" rel="noopener">Contacto</a>
+<body class="auth-signed-out">
+  <section class="login-screen" id="login-screen" aria-labelledby="login-title">
+    <div class="login-card">
+      <a class="login-brand" href="https://shop.casaglick.com/" aria-label="Ir a Casa Glick">
+        <img src="assets/logo.svg" alt="Casa Glick" />
+      </a>
+      <div class="login-copy">
+        <p class="eyebrow">ACCESO ADMINISTRATIVO</p>
+        <h1 id="login-title">Iniciar sesión</h1>
+        <p>Ingresa con una cuenta autorizada para gestionar el catálogo.</p>
+      </div>
+      <form class="login-form" id="login-form" novalidate>
+        <label>
+          <span>Correo electrónico</span>
+          <div class="login-input">
+            <i data-lucide="mail"></i>
+            <input id="login-email" type="email" autocomplete="username" required placeholder="correo@empresa.com" />
+          </div>
+        </label>
+        <label>
+          <span>Contraseña</span>
+          <div class="login-input">
+            <i data-lucide="lock-keyhole"></i>
+            <input id="login-password" type="password" autocomplete="current-password" required placeholder="••••••••" />
+            <button class="password-toggle" id="password-toggle" type="button" aria-label="Mostrar contraseña"><i data-lucide="eye"></i></button>
+          </div>
+        </label>
+        <p class="login-error" id="login-error" role="alert" aria-live="polite"></p>
+        <button class="button button--dark login-submit" id="login-submit" type="submit">
+          <span>Ingresar</span><i data-lucide="arrow-right"></i>
+        </button>
+      </form>
+      <p class="login-help">El acceso se administra directamente desde Firebase Authentication.</p>
     </div>
-  </nav>
-  <main>
-    <section class="hero scroll-section" id="inicio" aria-label="Casa Glick hero">
-      <picture class="hero__background" aria-hidden="true">
-        <source media="(max-width: 760px)" srcset="assets/hero-mobile.webp" />
-        <img src="assets/hero-desk.webp" alt="" />
-      </picture>
-
-      <div class="hero__content">
-        <h1 class="hero__title reveal reveal--title">
-          <span>Diseño que</span>
-          <strong>Trasciende</strong>
-        </h1>
-
-        <a class="hero__button reveal reveal--button" href="#productos">Conocer más</a>
+  </section>
+  <div class="admin-shell">
+    <aside class="sidebar">
+      <a href="https://shop.casaglick.com/" class="sidebar__brand" aria-label="Ir a Casa Glick">
+        <img src="assets/logo.svg" alt="Casa Glick" />
+      </a>
+      <nav class="sidebar__nav" aria-label="Navegación del administrador">
+        <button class="nav-item is-active" type="button" data-view="products">
+          <i class="nav-item__icon" data-lucide="package"></i><span>Productos</span>
+        </button>
+        <button class="nav-item" type="button" data-view="orders">
+          <i class="nav-item__icon" data-lucide="clipboard-list"></i><span>Órdenes</span>
+        </button>
+        <button class="nav-item" type="button" data-view="settings">
+          <i class="nav-item__icon" data-lucide="settings-2"></i><span>Configuración</span>
+        </button>
+      </nav>
+      <div class="sidebar__footer">
+        <a href="https://shop.casaglick.com/productos.html" target="_blank" rel="noopener"><span>Ver tienda</span><i data-lucide="external-link"></i></a>
+        <span>Panel v1.0</span>
       </div>
-    </section>
+    </aside>
 
-    <section class="products scroll-section" id="productos" aria-labelledby="products-title">
-      <div class="products__motion section-motion-content">
-        <div class="products__intro">
-        <h2 id="products-title">Piezas que elevan cada espacio.</h2>
-        <p>Explora nuestra curaduría de mobiliario y decoración para proyectos residenciales, comerciales y de hospitality.</p>
-      </div>
+    <main class="workspace">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">CASA GLICK</p>
+          <h1>Administración de productos</h1>
+        </div>
+        <div class="topbar__actions">
+          <div class="sync-state" id="sync-state"><span></span> Conectando inventario</div>
+          <button class="button button--ghost" id="refresh-products" type="button"><i data-lucide="refresh-cw"></i><span>Actualizar</span></button>
+        </div>
+      </header>
 
-        <div class="products__grid" aria-label="Categorías de producto">
-        <a class="product-category" href="productos.html?filter=poltronas" aria-label="Ver categoría Poltronas">
-          <span class="product-category__media">
-            <img src="assets/category-poltrona.webp" alt="Poltrona de piel café Casa Glick" loading="lazy" />
-          </span>
-          <span class="product-category__title">Poltronas</span>
-        </a>
-
-        <a class="product-category" href="productos.html?filter=sillas" aria-label="Ver categoría Sillas">
-          <span class="product-category__media">
-            <img src="assets/category-sillas.webp" alt="Silla contemporánea Casa Glick" loading="lazy" />
-          </span>
-          <span class="product-category__title">Sillas</span>
-        </a>
-
-        <a class="product-category" href="productos.html?filter=mesas" aria-label="Ver categoría Mesas">
-          <span class="product-category__media">
-            <img src="assets/category-mesas.webp" alt="Mesa auxiliar con cubierta de mármol" loading="lazy" />
-          </span>
-          <span class="product-category__title">Mesas</span>
-        </a>
-
-        <a class="product-category" href="productos.html?filter=sofas" aria-label="Ver categoría Sofás">
-          <span class="product-category__media">
-            <img src="assets/category-sofas.webp" alt="Sofá contemporáneo de piel café" loading="lazy" />
-          </span>
-          <span class="product-category__title">Sofás</span>
-        </a>
-
-        <a class="product-category" href="productos.html?filter=decoracion" aria-label="Ver categoría Decoración">
-          <span class="product-category__media">
-            <img src="assets/category-decoracion.webp" alt="Cuadro decorativo en tonos cálidos" loading="lazy" />
-          </span>
-          <span class="product-category__title">Decoración</span>
-        </a>
+      <section class="view is-active" id="view-products">
+        <div class="summary-grid" aria-label="Resumen del catálogo">
+          <article class="summary-card"><span>Productos recibidos</span><strong id="stat-total">—</strong></article>
+          <article class="summary-card"><span>Publicados en web</span><strong id="stat-published">—</strong></article>
+                    <article class="summary-card"><span>Sin precio</span><strong id="stat-no-price">—</strong></article>
         </div>
 
-        <div class="products__actions">
-          <a class="primary-button products__view-all" href="productos.html?filter=todo">Ver todo</a>
-        </div>
-      </div>
-    </section>
-
-    <section class="about scroll-section" id="about" aria-labelledby="about-title">
-      <div class="about__motion section-motion-content">
-        <figure class="about__media" aria-label="Mesa de trabajo Casa Glick con planos, materiales y acabados">
-          <img src="assets/about-materials.webp" alt="Mesa de trabajo Casa Glick con planos, muestras de mármol, acabados y selección de materiales" loading="lazy" />
-        </figure>
-
-        <div class="about__content">
-          <div class="about__text">
-            <h2 id="about-title">Casa Glick</h2>
-            <p>Integramos diseño, fabricación, suministro e instalación para desarrollar espacios donde cada detalle responde a una misma visión.</p>
-            <p>Un equipo que coordina cada etapa para lograr resultados consistentes y una ejecución impecable.</p>
-            <a class="about__link" href="#productos">
-              <span>Descubre nuestro enfoque</span>
-              <span aria-hidden="true">→</span>
-            </a>
+        <section class="panel products-panel">
+          <div class="panel__header">
+            <div>
+              <h2>Catálogo</h2>
+              <p>Los datos de inventario son de solo lectura. La presentación web se configura aquí.</p>
+            </div>
+            <div class="panel__tools">
+              <label class="search-field">
+                <i data-lucide="search"></i>
+                <input id="product-search" type="search" placeholder="Buscar por nombre o código" autocomplete="off" />
+              </label>
+              <select id="brand-filter" aria-label="Filtrar por marca">
+                <option value="all">Todas las marcas</option>
+              </select>
+              <select id="category-filter" aria-label="Filtrar por categoría">
+                <option value="all">Todas las categorías</option>
+              </select>
+              <select id="status-filter" aria-label="Filtrar por publicación">
+                <option value="all">Todos</option>
+                <option value="published">Publicados</option>
+                <option value="hidden">Ocultos</option>
+                <option value="in">Disponibles</option>
+                <option value="out">Sin stock</option>
+              </select>
+            </div>
           </div>
-        </div>
-      </div>
-    </section>
 
-    <section class="lifestyle scroll-section" id="lifestyle" aria-label="Lifestyle Casa Glick">
-      <div class="lifestyle__motion section-motion-content">
-        <div class="lifestyle__carousel" aria-label="Carrusel de ambientes y lifestyle de productos">
-          <div class="lifestyle__track">
-            <figure class="lifestyle-item" aria-label="Mujer leyendo en poltrona de cuero">
-              <img src="assets/lifestyle-reading-chair.webp" alt="Ambiente Casa Glick con mujer leyendo en poltrona de cuero marrón" loading="lazy">
-            </figure>
-            <figure class="lifestyle-item" aria-label="Mujer sentada en silla de comedor">
-              <img src="assets/lifestyle-dining-chair.webp" alt="Ambiente Casa Glick con silla tapizada junto a mesa de comedor" loading="lazy">
-            </figure>
-            <figure class="lifestyle-item" aria-label="Mesa lateral con cubierta de mármol">
-              <img src="assets/lifestyle-side-table.webp" alt="Ambiente Casa Glick con mesa lateral de base dorada y cubierta de mármol oscuro" loading="lazy">
-            </figure>
-            <figure class="lifestyle-item" aria-label="Sofá de piel en sala">
-              <img src="assets/lifestyle-sofa.webp" alt="Ambiente Casa Glick con sofá de piel color café en sala contemporánea" loading="lazy">
-            </figure>
+          <div class="table-wrap">
+            <table class="products-table">
+              <thead>
+                <tr>
+                  <th>Producto</th>
+                  <th>Código</th>
+                  <th>Categoría web</th>
+                  <th>Precio</th>
+                  <th>Stock</th>
+                  <th><span class="stock-heading">Visible <label class="visibility-toggle visibility-toggle--global" title="Activar o desactivar todos los productos"><input id="toggle-all-products" type="checkbox" aria-label="Mostrar todos los productos en la web"><i></i></label></span></th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="products-body"></tbody>
+            </table>
           </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="showroom scroll-section" id="showroom" aria-labelledby="showroom-title">
-      <div class="showroom__motion section-motion-content">
-        <div class="showroom__intro">
-          <h2 id="showroom-title"><span>Vive CASA GLICK</span> <span>en persona</span></h2>
-          <p class="showroom__copy">Descubre una selección curada de mobiliario, materiales y soluciones integrales en un espacio diseñado para inspirar cada proyecto.</p>
-          <a class="showroom__location" href="https://www.google.com/maps/search/?api=1&query=T%C3%A9mistocles%2051%2C%20Polanco%2C%20CDMX" target="_blank" rel="noopener" aria-label="Ver ubicación de Casa Glick en Google Maps">
-            <span class="showroom__location-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false">
-                <path d="M12 21s6-5.38 6-11a6 6 0 0 0-12 0c0 5.62 6 11 6 11Z"/>
-                <circle cx="12" cy="10" r="2.15"/>
-              </svg>
-            </span>
-            <span>Témistocles 51, Polanco, CDMX</span>
-          </a>
-        </div>
-
-        <div class="showroom__gallery" aria-label="Galería del showroom Casa Glick">
-          <div class="showroom__gallery-track">
-          <figure class="showroom__item showroom__item--narrow">
-            <img src="assets/about-materials.webp" alt="Mesa con materiales y acabados Casa Glick" loading="lazy" />
-          </figure>
-          <figure class="showroom__item">
-            <img src="assets/lifestyle-sofa.webp" alt="Ambiente de sala Casa Glick" loading="lazy" />
-          </figure>
-          <figure class="showroom__item">
-            <img src="assets/lifestyle-side-table.webp" alt="Mesa lateral en ambiente Casa Glick" loading="lazy" />
-          </figure>
-          <figure class="showroom__item">
-            <img src="assets/lifestyle-reading-chair.webp" alt="Poltrona en ambiente Casa Glick" loading="lazy" />
-          </figure>
-          <figure class="showroom__item showroom__item--narrow">
-            <img src="assets/category-decoracion.webp" alt="Pieza decorativa Casa Glick" loading="lazy" />
-          </figure>
-          <figure class="showroom__item showroom__item--narrow">
-            <img src="assets/lifestyle-dining-chair.webp" alt="Silla en ambiente Casa Glick" loading="lazy" />
-          </figure>
+          <div class="empty-state" id="empty-state" hidden>
+            <strong>No encontramos productos</strong>
+            <span>Prueba cambiando los filtros o actualizando el inventario.</span>
           </div>
-        </div>
+        </section>
+      </section>
 
-        <div class="showroom__actions">
-          <a class="showroom__button" href="https://wa.me/525513004665?text=Quiero%20conocer%20el%20showroom" target="_blank" rel="noopener">Visitar showroom</a>
-        </div>
+
+      <section class="view" id="view-orders">
+        <section class="panel orders-panel">
+          <div class="panel__header"><div><h2>Órdenes</h2><p>Solicitudes generadas desde la bolsa de Casa Glick.</p></div><button class="button button--ghost" id="refresh-orders" type="button"><i data-lucide="refresh-cw"></i><span>Actualizar</span></button></div>
+          <div class="table-wrap"><table class="products-table orders-table"><thead><tr><th>Folio</th><th>Cliente</th><th>Fecha</th><th>Total</th><th>Estado</th><th></th></tr></thead><tbody id="orders-body"></tbody></table></div>
+          <div class="empty-state" id="orders-empty" hidden><strong>No hay órdenes todavía</strong><span>Las solicitudes aparecerán aquí cuando un cliente finalice su bolsa.</span></div>
+        </section>
+      </section>
+      <section class="view" id="view-settings">
+        <section class="panel settings-panel">
+          <div class="panel__header"><div><h2>Fuente de inventario</h2><p>Configuración de la conexión con el catálogo de Grupo Segel.</p></div></div>
+          <div class="settings-form">
+            <label><span>Endpoint del catálogo</span><input id="api-url" type="url" value="https://segel-inventario.vercel.app/api/catalogo" /></label>
+            <div class="settings-note"><strong>Sincronización en vivo</strong><p>Precio, stock y datos técnicos se consultan directamente desde el inventario. Los cambios editoriales del admin se guardan en Firebase y se sincronizan para todos los administradores y dispositivos.</p></div>
+            <button class="button button--dark" id="save-settings" type="button"><i data-lucide="save"></i><span>Guardar configuración</span></button>
+            <div class="settings-session">
+              <div>
+                <strong>Sesión del administrador</strong>
+                <p>Cierra la sesión de este dispositivo para volver a la pantalla de acceso.</p>
+              </div>
+              <button class="button button--ghost settings-logout" id="logout-button" type="button"><i data-lucide="log-out"></i><span>Cerrar sesión</span></button>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <div class="drawer-backdrop" id="drawer-backdrop" hidden></div>
+  <aside class="product-drawer" id="product-drawer" aria-hidden="true" aria-label="Editar producto">
+    <div class="drawer__header">
+      <div><p class="eyebrow">EDITAR PRODUCTO</p><h2 id="drawer-title">Producto</h2></div>
+      <button class="drawer__close icon-button" id="close-drawer" type="button" aria-label="Cerrar"><i data-lucide="x"></i></button>
+    </div>
+    <div class="drawer__body">
+      <section class="inventory-preview">
+        <div class="inventory-preview__image"><img id="drawer-image" src="" alt="" /></div>
+        <div><span id="drawer-code">—</span><strong id="drawer-price">—</strong><small id="drawer-stock">—</small></div>
+      </section>
+
+      <div class="drawer-tabs" role="tablist">
+        <button class="is-active" type="button" data-drawer-tab="web">Presentación web</button>
+        <button type="button" data-drawer-tab="inventory">Datos de inventario</button>
       </div>
-    </section>
 
-  </main>
+      <section class="drawer-tab is-active" id="drawer-tab-web">
+        <form id="product-form" class="edit-form">
+          <label class="toggle-row"><span><strong>Mostrar en la web</strong><small>Permite que este producto aparezca en el catálogo público.</small></span><input id="field-published" type="checkbox" /><i></i></label>
+          <label><span>Categoría del inventario</span><input id="field-category-api" type="text" readonly aria-readonly="true"></label>
+          <label><span>Nombre mostrado</span><input id="field-display-name" type="text" placeholder="Usar nombre de inventario" /></label>
+          <label><span>Descripción editorial</span><textarea id="field-description" rows="5" placeholder="Usar descripción de inventario"></textarea></label>
+          <div class="form-grid"><label><span>Orden</span><input id="field-order" type="number" min="0" step="1" value="0" /></label><label class="check-field"><input id="field-featured" type="checkbox" /><span>Producto destacado</span></label></div>
+          <label><span>Slug / URL</span><input id="field-slug" type="text" placeholder="nombre-del-producto" /></label>
+        </form>
+      </section>
 
+      <section class="drawer-tab" id="drawer-tab-inventory">
+        <dl class="inventory-list" id="inventory-list"></dl>
+      </section>
+    </div>
+    <div class="drawer__footer">
+      <button class="button button--ghost" id="preview-product" type="button"><i data-lucide="eye"></i><span>Vista previa</span></button>
+      <button class="button button--dark" id="save-product" type="button"><i data-lucide="save"></i><span>Guardar cambios</span></button>
+    </div>
+  </aside>
 
-  <a class="whatsapp-float" href="https://wa.me/525513004665?text=Hola%2C%20quiero%20hablar%20con%20un%20agente%20de%20Casa%20Glick" target="_blank" rel="noopener" aria-label="Hablar con un agente por WhatsApp">
-    <svg class="whatsapp-float__icon" viewBox="0 0 24 24" aria-hidden="true">
-      <path fill="currentColor" d="M12.04 2C6.57 2 2.12 6.37 2.12 11.75c0 1.72.46 3.4 1.33 4.88L2 22l5.51-1.41a10.07 10.07 0 0 0 4.53 1.1c5.47 0 9.92-4.37 9.92-9.75S17.51 2 12.04 2Zm0 17.97c-1.46 0-2.88-.39-4.12-1.12l-.3-.18-3.27.84.87-3.11-.2-.32a8.02 8.02 0 0 1-1.2-4.33c0-4.42 3.69-8.02 8.22-8.02s8.22 3.6 8.22 8.02-3.69 8.22-8.22 8.22Zm4.5-6.02c-.25-.12-1.47-.71-1.7-.79-.23-.08-.39-.12-.56.12-.16.24-.64.79-.78.95-.14.16-.29.18-.54.06-.25-.12-1.05-.38-2-1.2-.74-.65-1.24-1.45-1.39-1.69-.14-.24-.02-.37.11-.49.11-.11.25-.29.37-.43.12-.14.16-.24.25-.41.08-.16.04-.31-.02-.43-.06-.12-.56-1.32-.77-1.81-.2-.47-.41-.41-.56-.42h-.48c-.16 0-.43.06-.66.31-.23.24-.87.83-.87 2.02s.89 2.34 1.02 2.5c.12.16 1.75 2.62 4.24 3.67.59.25 1.05.4 1.41.51.59.18 1.13.16 1.56.1.48-.07 1.47-.59 1.68-1.16.21-.57.21-1.06.14-1.16-.06-.1-.22-.16-.47-.28Z"/>
-    </svg>
-    <span class="whatsapp-float__label">Hablar con un agente</span>
-  </a>
-
-  <script src="js/cart.js"></script>
-  <script src="js/script.js"></script>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="js/catalog-api.js?v=8"></script>
+  <script src="js/firebase-config.js?v=8"></script>
+  <script type="module" src="js/auth.js?v=8"></script>
 </body>
 </html>

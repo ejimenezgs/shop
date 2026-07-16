@@ -1,42 +1,22 @@
-# Casa Glick Shop
+# Casa Glick Panel
 
-Repositorio publico para `https://shop.casaglick.com`.
-
-## Conexion con Panel
-
-La tienda y `https://panel.casaglick.com` usan el mismo proyecto Firebase:
-
-- Proyecto: `casaglick-439b2`
-- Endpoint de inventario: `https://segel-inventario.vercel.app/api/catalogo`
-- Coleccion editorial: `catalogProductOverrides`
-- Configuracion general: `catalogSettings`
-- Ordenes: `orders`
-
-El Panel escribe visibilidad, orden, nombre editorial, descripcion, slug y destacados. La tienda lee esos cambios desde Firestore y los combina con precio, stock, imagenes, materiales, medidas, marca y categoria recibidos desde la API de inventario.
+Panel administrativo independiente para `panel.casaglick.com`.
 
 ## Estructura
 
-- `index.html`: inicio
-- `productos.html`: catalogo
-- `producto.html`: detalle
-- `bolsa.html`: bolsa
-- `checkout.html`: datos del cliente y generacion de orden
-- `confirmacion.html`: confirmacion y WhatsApp
-- `firebase-public-config.js`: configuracion publica de Firebase para Shop
-- `catalog-api.js`: normalizacion de la API de inventario
-- `catalog-public.js`: lectura publica de Firestore y render del catalogo
+- `index.html`
+- `css/admin.css`
+- `js/admin.js`
+- `js/auth.js`
+- `js/catalog-api.js`
+- `js/firebase-config.js`
+- `assets/`
+- `firestore.rules`
 
-## Despliegue
+## Datos
 
-El contenido de esta carpeta debe quedar directamente en la raiz documental de `shop.casaglick.com`, con `index.html` en el primer nivel.
+La API de inventario aporta producto, precio, stock, imágenes y categoría. El panel guarda en Firestore visibilidad, nombre editorial, descripción, orden, destacado y slug.
 
-No se necesita la carpeta del Panel dentro de este repositorio.
+## Categorías
 
-## Firestore
-
-Las reglas de `firestore.rules` deben publicarse en el mismo proyecto Firebase. Permiten:
-
-- lectura publica de ajustes del catalogo;
-- escritura solo para administradores autenticados;
-- creacion publica de ordenes validas;
-- lectura y seguimiento de ordenes solo desde el Panel autenticado.
+El normalizador compara todos los campos de categoría del producto y prioriza valores específicos sobre secciones generales como Interior o Exterior. Todas las mesas se agrupan en `Mesas`, excepto mesas de noche y burós, que se agrupan en `Habitación`.
