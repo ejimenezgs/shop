@@ -26,6 +26,23 @@
     return undefined;
   }
 
+  function collectDeepEntries(source) {
+    const entries = [];
+    const queue = [{ value: source, path: [] }];
+    const seen = new Set();
+    while (queue.length) {
+      const { value, path } = queue.shift();
+      if (!value || typeof value !== 'object' || seen.has(value)) continue;
+      seen.add(value);
+      for (const [key, child] of Object.entries(value)) {
+        const nextPath = [...path, key];
+        entries.push({ key, normalizedKey: normalizeKey(key), path: nextPath, value: child });
+        if (child && typeof child === 'object') queue.push({ value: child, path: nextPath });
+      }
+    }
+    return entries;
+  }
+
   function asArray(value) {
     if (Array.isArray(value)) return value;
     if (!value) return [];
@@ -271,8 +288,8 @@
     // and the shop groups it into the five customer-facing departments.
     if (/decoracion|decoración/.test(text)) return 'decoracion';
     if (/iluminacion|iluminación|lampara|lámpara|candil|luminaria|lighting/.test(text)) return 'iluminacion';
-    if (/habitacion|habitación|recamara|recámara|dormitorio|cama|cabecera|mesa(?:s)?\s+de\s+noche|nightstand|bur[oó]/.test(text)) return 'habitacion';
     if (/exterior|outdoor|jardin|jardín|garden|terraza|patio|alberca|camastro/.test(text)) return 'exterior';
+    if (/habitacion|habitación|recamara|recámara|dormitorio|\bcamas?\b|cabecera|mesa(?:s)?\s+de\s+noche|nightstand|bur[oó]/.test(text)) return 'habitacion';
     if (/interior|silla|mesa|sof[aá]|ottoman|otomano|poltrona|sill[oó]n(?:es)?\s+individual(?:es)?|sof[aá](?:s)?\s+individual(?:es)?/.test(text)) return 'interior';
     return '';
   }
@@ -288,22 +305,58 @@
     }).filter(Boolean);
     if (directImage && typeof directImage === 'string' && !images.includes(directImage)) images.unshift(directImage);
 
-    const apiCategory = getApiCategory(raw);
+    // Prefer the inventory system's explicit category before running the legacy
+    // heuristic. This prevents product names/descriptions from being mistaken
+    // for the category.
+    const explicitCategory = findDeep(raw, [
+      'categoria','category','categoriaNombre','nombreCategoria','categoryName',
+      'categoriaProducto','productCategory','subcategoria','subcategory','familia','family','linea','line'
+    ]);
+    const apiCategory = categoryText(explicitCategory) || getApiCategory(raw);
     const category = normalizeCategory(apiCategory);
 
-    const regularPrice = parsePrice(findDeep(raw, [
-      'precioOriginal','originalPrice','precioLista','listPrice','regularPrice','precioRegular','precioAntes'
-    ]));
-    const promotionalPrice = parsePrice(findDeep(raw, [
-      'precioPromocion','precioPromoción','promotionPrice','promoPrice','discountPrice','discountedPrice',
-      'precioOferta','salePrice','precioConDescuento','precioFinal'
-    ]));
+    // Promotion payloads differ between inventory versions. Read both direct
+    // aliases and nested objects, then validate by comparing the two prices.
+    const entries = collectDeepEntries(raw);
+    const firstPriceFor = patterns => {
+      for (const entry of entries) {
+        const normalizedPath = entry.path.map(normalizeKey).join('.');
+        const contextualPriceKey = /(precio|price|promoc|oferta|discount|sale)/.test(normalizedPath);
+        const matched = patterns.some(pattern => pattern.test(entry.normalizedKey))
+          || (contextualPriceKey && patterns.some(pattern => pattern.test(normalizedPath)));
+        if (!matched) continue;
+        const parsed = parsePrice(entry.value);
+        if (parsed !== null) return parsed;
+      }
+      return null;
+    };
+
+    const regularPrice = firstPriceFor([
+      /preciooriginal/, /originalprice/, /precioantes/, /precioanterior/, /previousprice/,
+      /preciolista/, /listprice/, /precioregular/, /regularprice/, /pricebefore/,
+      /preciosindescuento/, /precioantesdescuento/, /baseprice/, /msrp/, /previous$/, /before$/
+    ]);
+    const promotionalPrice = firstPriceFor([
+      /preciopromocion/, /promotionprice/, /promoprice/, /preciodescuento/, /discountprice/,
+      /discountedprice/, /preciooferta/, /saleprice/, /preciocondescuento/, /preciofinal/,
+      /precioespecial/, /specialprice/, /currentprice/, /preciopromo/, /current$/, /final$/
+    ]);
     const fallbackPrice = parsePrice(findDeep(raw, [
-      'precio','price','precioVenta','precioPublico'
+      'precio','price','precioVenta','precioPublico','precioActual','currentPrice','venta'
     ]));
-    const hasValidPromotion = promotionalPrice !== null && regularPrice !== null && promotionalPrice < regularPrice;
-    const price = hasValidPromotion ? promotionalPrice : (fallbackPrice ?? promotionalPrice ?? regularPrice);
-    const originalPrice = hasValidPromotion ? regularPrice : null;
+
+    // Some APIs replace `precio` with the promotional value and expose only
+    // the previous/list value separately. Support that shape explicitly.
+    let price = promotionalPrice ?? fallbackPrice ?? regularPrice;
+    let originalPrice = null;
+    if (regularPrice !== null && price !== null && price < regularPrice) {
+      originalPrice = regularPrice;
+    } else if (promotionalPrice !== null && fallbackPrice !== null) {
+      const lower = Math.min(promotionalPrice, fallbackPrice);
+      const higher = Math.max(promotionalPrice, fallbackPrice);
+      price = lower;
+      if (lower < higher) originalPrice = higher;
+    }
 
     return {
       id: code,

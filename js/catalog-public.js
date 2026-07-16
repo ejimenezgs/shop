@@ -81,7 +81,20 @@ async function renderSwatches(product){
   const label=extracted?'Color extraído de la imagen principal':(fallback||'Color del producto');
   container.innerHTML=`<button class="product-swatch is-active" type="button" aria-label="${esc(label)}" title="${esc(label)}" style="--swatch:${esc(color)}"></button>`;
 }
-function applyOverride(product,overrides){const o=overrides[product.id]||{};return{...product,published:o.published===true,category:product.category||'',displayName:o.displayName||product.name,editorialDescription:o.editorialDescription||product.description,order:Number(o.order)||0,slug:o.slug||product.slug}}
+function normalizePublicCategory(value){
+  const text=String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+  if(/decoracion/.test(text))return'decoracion';
+  if(/iluminacion|lampara|candil|luminaria|lighting/.test(text))return'iluminacion';
+  if(/exterior|outdoor|jardin|garden|terraza|patio|alberca|camastro/.test(text))return'exterior';
+  if(/habitacion|recamara|dormitorio|\bcamas?\b|cabecera|mesa(?:s)?\s+de\s+noche|nightstand|buro/.test(text))return'habitacion';
+  if(/interior|silla|mesa|sofa|ottoman|otomano|poltrona|sillon/.test(text))return'interior';
+  return'';
+}
+function applyOverride(product,overrides){
+  const o=overrides[product.id]||{};
+  const overrideCategory=o.category||o.categoria||o.department||o.departamento||o.publicCategory||o.categoriaPublica||'';
+  return{...product,published:o.published===true,category:normalizePublicCategory(overrideCategory)||product.category||'',displayName:o.displayName||product.name,editorialDescription:o.editorialDescription||product.description,order:Number(o.order)||0,slug:o.slug||product.slug};
+}
 
 async function loadPublicProducts() {
   if (!catalog) throw new Error('CasaGlickCatalog no está disponible');

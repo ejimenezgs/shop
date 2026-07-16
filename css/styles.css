@@ -8059,9 +8059,9 @@ body.product-detail-page .product-detail-skeleton::after {
 }
 
 
-/* shop4: promotional pricing */
-.product-price__main{align-items:flex-end;}
+/* shop5: promotional pricing */
+.product-price__main{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;column-gap:18px;row-gap:4px;}
 .product-price__amount.is-discounted{color:#b52820;}
-.product-price__original{display:block;width:100%;margin-top:4px;text-align:right;color:#77736d;font-size:30%;line-height:1.15;text-decoration:line-through;text-decoration-thickness:1px;}
+.product-price__original{display:block;grid-column:1 / -1;justify-self:end;text-align:right;color:#77736d;font-size:30%;line-height:1.15;text-decoration:line-through;text-decoration-thickness:1px;}
 .product-price__original[hidden]{display:none!important;}
 @media (max-width: 767px){.product-price__original{margin-top:3px;font-size:30%;}}
