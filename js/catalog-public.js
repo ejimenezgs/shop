@@ -167,13 +167,13 @@ function readPanelWebCategory(record){
 function applyOverride(product,overrides){
   const o=findOverride(product,overrides);
 
-  // Always classify from the panel override. Never use the inventory category.
-  const resolvedCategory = readPanelWebCategory(o);
-
+  // The panel category is calculated from the inventory payload. Keep that
+  // inventory-derived category and use Firestore overrides only for publishing
+  // and editorial fields.
   return{
     ...product,
     published:o.published===true,
-    category:resolvedCategory,
+    category:product.category,
     displayName:o.displayName||product.name,
     editorialDescription:o.editorialDescription||product.description,
     order:Number(o.order)||0,

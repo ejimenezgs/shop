@@ -280,19 +280,36 @@
     return candidates[0]?.text || '';
   }
 
-  function normalizeCategory(apiCategory) {
+  function normalizeInventoryCategory(apiCategory) {
     const text = String(apiCategory || '')
       .normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 
-    // Public shop departments. The panel now exposes the source category,
-    // and the shop groups it into the five customer-facing departments.
-    if (/decoracion|decoración/.test(text)) return 'decoracion';
-    if (/iluminacion|iluminación|lampara|lámpara|candil|luminaria|lighting/.test(text)) return 'iluminacion';
-    if (/exterior|outdoor|jardin|jardín|garden|terraza|patio|alberca|camastro/.test(text)) return 'exterior';
-    if (/habitacion|habitación|recamara|recámara|dormitorio|\bcamas?\b|cabecera|mesa(?:s)?\s+de\s+noche|nightstand|bur[oó]/.test(text)) return 'habitacion';
-    if (/interior|silla|mesa|sof[aá]|ottoman|otomano|poltrona|sill[oó]n(?:es)?\s+individual(?:es)?|sof[aá](?:s)?\s+individual(?:es)?/.test(text)) return 'interior';
+    // This is intentionally the same classification used by panel.casaglick.com.
+    if (/mesa(?:s)?\s+de\s+noche|mesa(?:s)?\s+nocturna|nightstand|bur[oó](?:\s+de\s+noche)?/.test(text)) return 'habitacion';
+    if (/mesa|coffee\s+table|dining\s+table|consola|escritorio/.test(text)) return 'mesas';
+    if (/camastro|tumbona|chaise\s*longue|sun\s*lounger/.test(text)) return 'exterior';
+    if (/poltrona|sillon(?:es)?\s+individual(?:es)?|butaca/.test(text)) return 'poltronas';
+    if (/ottoman|pouf|puf|reposapies/.test(text)) return 'ottoman';
+    if (/silla(?:s)?\s+alta(?:s)?|bar\s*stool|counter\s*stool|banco|taburete/.test(text)) return 'sillas';
+    if (/silla/.test(text)) return 'sillas';
+    if (/sofa|seccional|love\s*seat/.test(text)) return 'sofas';
+    if (/cama|cabecera|recamara|dormitorio/.test(text)) return 'habitacion';
+    if (/luminaria|lampara|iluminacion|candil/.test(text)) return 'iluminacion';
+    if (/decor|espejo|cuadro|florero|accesorio/.test(text)) return 'decoracion';
+    if (/exterior|jardin|terraza/.test(text)) return 'exterior';
     return '';
   }
+
+  function normalizeCategory(apiCategory) {
+    const inventoryCategory = normalizeInventoryCategory(apiCategory);
+    if (['sillas','mesas','sofas','poltronas','ottoman'].includes(inventoryCategory)) return 'interior';
+    if (inventoryCategory === 'exterior') return 'exterior';
+    if (inventoryCategory === 'habitacion') return 'habitacion';
+    if (inventoryCategory === 'decoracion') return 'decoracion';
+    if (inventoryCategory === 'iluminacion') return 'iluminacion';
+    return '';
+  }
+
 
   function normalizeProduct(raw, index = 0) {
     const code = String(findDeep(raw, ['codigo','code','sku','clave','idProducto','productId','id']) || `product-${index + 1}`);
