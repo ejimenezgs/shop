@@ -94,8 +94,18 @@ async function renderSwatches(product){
   const label=extracted?'Color extraído de la imagen principal':(fallback||'Color del producto');
   container.innerHTML=`<button class="product-swatch is-active" type="button" aria-label="${esc(label)}" title="${esc(label)}" style="--swatch:${esc(color)}"></button>`;
 }
+function publicCategoryText(value){
+  if(value===null||value===undefined)return'';
+  if(Array.isArray(value))return value.map(publicCategoryText).filter(Boolean).join(' ');
+  if(value&&typeof value==='object'){
+    const preferred=['nombre','name','label','value','titulo','title','seccion','section','categoria','category'];
+    for(const key of preferred){if(value[key]!==undefined){const text=publicCategoryText(value[key]);if(text)return text}}
+    return Object.values(value).map(publicCategoryText).filter(Boolean).join(' ');
+  }
+  return String(value).trim();
+}
 function normalizePublicCategory(value){
-  const text=String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+  const text=publicCategoryText(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
   if(/decoracion/.test(text))return'decoracion';
   if(/iluminacion|lampara|candil|luminaria|lighting/.test(text))return'iluminacion';
   if(/exterior|outdoor|jardin|garden|terraza|patio|alberca|camastro/.test(text))return'exterior';
@@ -108,8 +118,11 @@ function applyOverride(product,overrides){
   const o=lookupKeys.map(key=>overrides[key]).find(Boolean)||{};
   // Prefer the public/shop department saved by the panel. Legacy category
   // fields are used only when the dedicated field is absent.
-  const overrideCategory=o.categoriaPublica||o.publicCategory||o.departamento||o.department||o.categoriaShop||o.shopCategory||o.categoria||o.category||'';
-  const resolvedCategory=normalizePublicCategory(overrideCategory)||normalizePublicCategory(product.apiCategory)||product.category||'';
+  // The panel saves the customer-facing placement as Section/Seccion.
+  // Use it as the source of truth and only fall back to legacy category fields.
+  const panelSection=o.seccion||o.section||o.seccionShop||o.shopSection||o.categoriaPublica||o.publicCategory||o.departamento||o.department||o.categoriaShop||o.shopCategory||'';
+  const legacyCategory=o.categoria||o.category||'';
+  const resolvedCategory=normalizePublicCategory(panelSection)||normalizePublicCategory(legacyCategory)||normalizePublicCategory(product.apiCategory)||product.category||'';
   return{...product,published:o.published===true,category:resolvedCategory,displayName:o.displayName||product.name,editorialDescription:o.editorialDescription||product.description,order:Number(o.order)||0,slug:o.slug||product.slug};
 }
 
