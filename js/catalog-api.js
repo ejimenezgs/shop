@@ -305,14 +305,13 @@
     }).filter(Boolean);
     if (directImage && typeof directImage === 'string' && !images.includes(directImage)) images.unshift(directImage);
 
-    // Prefer the inventory system's explicit category before running the legacy
-    // heuristic. This prevents product names/descriptions from being mistaken
-    // for the category.
-    const explicitCategory = findDeep(raw, [
+    // Inspect every category/classification field instead of stopping at the
+    // first one. Inventory payloads often expose a broad value such as
+    // "Mobiliario" before the useful category (for example "Sillas").
+    const apiCategory = getApiCategory(raw) || categoryText(findDeep(raw, [
       'categoria','category','categoriaNombre','nombreCategoria','categoryName',
       'categoriaProducto','productCategory','subcategoria','subcategory','familia','family','linea','line'
-    ]);
-    const apiCategory = categoryText(explicitCategory) || getApiCategory(raw);
+    ]));
     const category = normalizeCategory(apiCategory);
 
     // Promotion payloads differ between inventory versions. Read both direct
