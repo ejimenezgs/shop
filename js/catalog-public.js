@@ -54,45 +54,12 @@ const COLOR_MAP={blanco:'#f5f5f2',white:'#f5f5f2',marfil:'#eee9df',ivory:'#eee9d
 const colorItems=value=>{if(Array.isArray(value))return value.flatMap(colorItems);if(value&&typeof value==='object')return Object.values(value).flatMap(colorItems);const text=String(value??'').trim();if(!text||text==='—'||/^sin color$/i.test(text))return[];return text.split(/[,;|/\n]+/).map(v=>v.trim()).filter(Boolean)};
 const colorHex=label=>{const value=String(label||'').trim();const hex=value.match(/#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})\b/i);if(hex)return hex[0];const normalized=value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();for(const[name,color]of Object.entries(COLOR_MAP)){const key=name.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();if(normalized.includes(key))return color}return'#8a8178'};
 
-function rgbToHex(r,g,b){return `#${[r,g,b].map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('')}`}
-function extractImageColor(src){
-  return new Promise((resolve,reject)=>{
-    if(!src)return reject(new Error('Imagen principal no disponible'));
-    const image=new Image();
-    image.crossOrigin='anonymous';
-    image.decoding='async';
-    image.onload=()=>{
-      try{
-        const size=48;
-        const canvas=document.createElement('canvas');canvas.width=size;canvas.height=size;
-        const context=canvas.getContext('2d',{willReadFrequently:true});
-        context.drawImage(image,0,0,size,size);
-        const data=context.getImageData(0,0,size,size).data;
-        let r=0,g=0,b=0,count=0;
-        for(let i=0;i<data.length;i+=16){
-          const alpha=data[i+3];if(alpha<180)continue;
-          const max=Math.max(data[i],data[i+1],data[i+2]);const min=Math.min(data[i],data[i+1],data[i+2]);
-          if(max>244&&min>238)continue;
-          if(max-min<8&&max>225)continue;
-          r+=data[i];g+=data[i+1];b+=data[i+2];count++;
-        }
-        if(!count)throw new Error('No se encontró un color dominante');
-        resolve(rgbToHex(r/count,g/count,b/count));
-      }catch(error){reject(error)}
-    };
-    image.onerror=()=>reject(new Error('No se pudo analizar la imagen'));
-    image.src=src;
-  });
-}
-
-async function renderSwatches(product){
-  const container=document.querySelector('[data-product-swatches]');if(!container)return;
-  let extracted='';
-  try{extracted=await extractImageColor(product.images?.[0])}catch(error){console.warn('Se usará el color de respaldo del catálogo',error)}
-  const fallback=colorItems(product.color)[0];
-  const color=extracted||colorHex(fallback||'natural');
-  const label=extracted?'Color extraído de la imagen principal':(fallback||'Color del producto');
-  container.innerHTML=`<button class="product-swatch is-active" type="button" aria-label="${esc(label)}" title="${esc(label)}" style="--swatch:${esc(color)}"></button>`;
+function renderSwatches(product){
+  const container=document.querySelector('[data-product-swatches]');
+  if(!container)return;
+  const colors=colorItems(product.color);
+  const values=colors.length?colors:['Natural'];
+  container.innerHTML=values.map((label,index)=>`<button class="product-swatch${index===0?' is-active':''}" type="button" aria-label="${esc(label)}" style="--swatch:${esc(colorHex(label))}"></button>`).join('');
 }
 function publicCategoryText(value){
   if(value===null||value===undefined)return'';

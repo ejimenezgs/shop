@@ -8166,3 +8166,88 @@ body.product-detail-page .product-detail-skeleton::after {
   .product-price__main { column-gap: 35px; }
   .product-price__original { font-size: 24px; }
 }
+
+
+/* shop10: inventory colors, balanced promo pricing and element-level detail skeleton */
+.product-price__original {
+  font-size: 24px;
+}
+@media (max-width: 767px) {
+  .product-price__original { font-size: 12px; }
+}
+
+body.product-detail-page .product-info.product-detail-skeleton {
+  background: transparent;
+  overflow: visible;
+}
+body.product-detail-page .product-info.product-detail-skeleton > * {
+  visibility: visible;
+}
+body.product-detail-page .product-info.product-detail-skeleton::after {
+  display: none;
+}
+body.product-detail-page .product-info.product-detail-skeleton .product-sheet-toggle,
+body.product-detail-page .product-info.product-detail-skeleton .product-mobile-tabs,
+body.product-detail-page .product-info.product-detail-skeleton .product-mobile-section-title {
+  visibility: hidden;
+}
+body.product-detail-page .product-info.product-detail-skeleton .product-code-eyebrow,
+body.product-detail-page .product-info.product-detail-skeleton [data-product-title],
+body.product-detail-page .product-info.product-detail-skeleton [data-product-description],
+body.product-detail-page .product-info.product-detail-skeleton .product-option h2,
+body.product-detail-page .product-info.product-detail-skeleton .product-spec h2,
+body.product-detail-page .product-info.product-detail-skeleton [data-product-materials],
+body.product-detail-page .product-info.product-detail-skeleton [data-product-measures],
+body.product-detail-page .product-info.product-detail-skeleton .product-info__divider,
+body.product-detail-page .product-info.product-detail-skeleton .product-price,
+body.product-detail-page .product-info.product-detail-skeleton .product-quote {
+  position: relative;
+  color: transparent !important;
+  border-color: transparent !important;
+  background: #ece9e3 !important;
+  overflow: hidden;
+  border-radius: 4px;
+  box-shadow: none !important;
+  pointer-events: none;
+}
+body.product-detail-page .product-info.product-detail-skeleton .product-code-eyebrow { width: 88px; height: 10px; }
+body.product-detail-page .product-info.product-detail-skeleton [data-product-title] { width: min(92%, 470px); height: 72px; }
+body.product-detail-page .product-info.product-detail-skeleton [data-product-description] { width: 100%; min-height: 86px; }
+body.product-detail-page .product-info.product-detail-skeleton .product-info__divider { width: 100%; height: 1px; }
+body.product-detail-page .product-info.product-detail-skeleton .product-option h2,
+body.product-detail-page .product-info.product-detail-skeleton .product-spec h2 { width: 86px; height: 16px; }
+body.product-detail-page .product-info.product-detail-skeleton [data-product-materials] { width: 76%; height: 18px; }
+body.product-detail-page .product-info.product-detail-skeleton [data-product-measures] { width: 64%; height: 18px; }
+body.product-detail-page .product-info.product-detail-skeleton .product-swatches { gap: 10px; }
+body.product-detail-page .product-info.product-detail-skeleton .product-swatch {
+  width: 38px;
+  height: 38px;
+  border: 0;
+  background: #ece9e3;
+  pointer-events: none;
+}
+body.product-detail-page .product-info.product-detail-skeleton .product-swatch::before { display: none; }
+body.product-detail-page .product-info.product-detail-skeleton .product-price { width: 245px; height: 48px; display: block !important; }
+body.product-detail-page .product-info.product-detail-skeleton .product-quote { width: 100%; min-height: 54px; }
+body.product-detail-page .product-info.product-detail-skeleton .product-code-eyebrow::after,
+body.product-detail-page .product-info.product-detail-skeleton [data-product-title]::after,
+body.product-detail-page .product-info.product-detail-skeleton [data-product-description]::after,
+body.product-detail-page .product-info.product-detail-skeleton .product-option h2::after,
+body.product-detail-page .product-info.product-detail-skeleton .product-spec h2::after,
+body.product-detail-page .product-info.product-detail-skeleton [data-product-materials]::after,
+body.product-detail-page .product-info.product-detail-skeleton [data-product-measures]::after,
+body.product-detail-page .product-info.product-detail-skeleton .product-price::after,
+body.product-detail-page .product-info.product-detail-skeleton .product-quote::after,
+body.product-detail-page .product-gallery.product-detail-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.72), transparent);
+  animation: casa-glick-product-skeleton 1.45s ease-in-out infinite;
+}
+@media (max-width: 767px) {
+  body.product-detail-page .product-info.product-detail-skeleton [data-product-title] { height: 38px; width: 88%; }
+  body.product-detail-page .product-info.product-detail-skeleton [data-product-description] { min-height: 68px; }
+  body.product-detail-page .product-info.product-detail-skeleton .product-price { width: 200px; height: 42px; }
+}
