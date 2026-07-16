@@ -117,13 +117,58 @@ function findOverride(product,overrides){
   const productKeys=new Set(values.map(normalizeLookupKey).filter(Boolean));
   return overrides.records.find(record=>collectIdentityValues(record).some(value=>productKeys.has(normalizeLookupKey(value))))||{};
 }
+function normalizeFieldKey(value){
+  return String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g,'');
+}
+
+function readPanelWebCategory(record){
+  if(!record || typeof record !== 'object') return '';
+
+  // "Categoría Web" is the label shown by the panel. Depending on the
+  // panel build, Firestore may store it with one of these internal keys.
+  const preferredKeys = new Set([
+    'categoriaweb','webcategory','categoryweb','categoriatienda','shopcategory',
+    'seccionweb','websection','sectionweb','departamentoweb','webdepartment'
+  ]);
+  const panelFallbackKeys = new Set([
+    'categoria','category','seccion','section','departamento','department'
+  ]);
+
+  let panelFallback = '';
+  const visit = (value, depth = 0) => {
+    if(!value || typeof value !== 'object' || depth > 4) return '';
+    for(const [key, child] of Object.entries(value)){
+      const normalizedKey = normalizeFieldKey(key);
+      if(preferredKeys.has(normalizedKey)){
+        const normalizedValue = normalizePublicCategory(child);
+        if(normalizedValue) return normalizedValue;
+      }
+      if(!panelFallback && panelFallbackKeys.has(normalizedKey)){
+        const normalizedValue = normalizePublicCategory(child);
+        if(normalizedValue) panelFallback = normalizedValue;
+      }
+    }
+    for(const child of Object.values(value)){
+      if(child && typeof child === 'object'){
+        const result = visit(child, depth + 1);
+        if(result) return result;
+      }
+    }
+    return '';
+  };
+
+  return visit(record) || panelFallback;
+}
+
 function applyOverride(product,overrides){
   const o=findOverride(product,overrides);
 
-  // The public shop category comes only from the panel field "Categoría Web".
-  // Do not infer it from inventory categories, names, families or legacy fields.
-  const webCategoryValue = o.categoriaWeb ?? o.webCategory ?? o['Categoría Web'] ?? o['Categoria Web'] ?? '';
-  const resolvedCategory = normalizePublicCategory(webCategoryValue);
+  // Always classify from the panel override. Never use the inventory category.
+  const resolvedCategory = readPanelWebCategory(o);
 
   return{
     ...product,
