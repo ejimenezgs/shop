@@ -8065,3 +8065,36 @@ body.product-detail-page .product-detail-skeleton::after {
 .product-price__original{display:block;grid-column:1 / -1;justify-self:end;text-align:right;color:#77736d;font-size:30%;line-height:1.15;text-decoration:line-through;text-decoration-thickness:1px;}
 .product-price__original[hidden]{display:none!important;}
 @media (max-width: 767px){.product-price__original{margin-top:3px;font-size:30%;}}
+
+/* shop6: promotional price hierarchy and stock alignment */
+.product-price__main {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "price stock"
+    "original stock";
+  align-items: end;
+  column-gap: 18px;
+  row-gap: 5px;
+}
+.product-price__amount {
+  grid-area: price;
+}
+.product-price__original {
+  grid-area: original;
+  justify-self: start;
+  text-align: left;
+  font-size: 37.5%;
+  margin-top: 0;
+}
+.product-price__stock {
+  grid-area: stock;
+  justify-self: end;
+  align-self: center;
+  text-align: right;
+}
+@media (max-width: 767px) {
+  .product-price__original {
+    font-size: 37.5%;
+    margin-top: 0;
+  }
+}
