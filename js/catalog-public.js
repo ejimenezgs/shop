@@ -164,16 +164,35 @@ function readPanelWebCategory(record){
   return visit(record) || panelFallback;
 }
 
+function mapPanelCategoryToShop(value){
+  const category=String(value??'')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase()
+    .trim();
+
+  if(['sillas','mesas','sofas','poltronas','ottoman','ottomanos','interior'].includes(category))return'interior';
+  if(category==='exterior')return'exterior';
+  if(category==='habitacion')return'habitacion';
+  if(category==='decoracion')return'decoracion';
+  if(category==='iluminacion')return'iluminacion';
+  return'';
+}
+
 function applyOverride(product,overrides){
   const o=findOverride(product,overrides);
+  const panelCategory=String(o.category??'').trim();
+  const shopCategory=mapPanelCategoryToShop(panelCategory);
 
-  // The panel category is calculated from the inventory payload. Keep that
-  // inventory-derived category and use Firestore overrides only for publishing
-  // and editorial fields.
+  // The panel now persists the normalized inventory category in Firestore.
+  // Use that saved value as the single source of truth for public sections.
   return{
     ...product,
     published:o.published===true,
-    category:product.category,
+    category:shopCategory,
+    panelCategory,
+    categoryLabel:o.categoryLabel||'',
+    apiCategory:o.apiCategory||'',
     displayName:o.displayName||product.name,
     editorialDescription:o.editorialDescription||product.description,
     order:Number(o.order)||0,
