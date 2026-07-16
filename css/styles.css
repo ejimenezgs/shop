@@ -8098,3 +8098,37 @@ body.product-detail-page .product-detail-skeleton::after {
     margin-top: 0;
   }
 }
+
+
+/* shop8: inventory category lookup and compact price/stock layout */
+.product-price__main {
+  display: grid;
+  grid-template-columns: max-content max-content;
+  grid-template-areas:
+    "price stock"
+    "original original";
+  justify-content: start;
+  align-items: baseline;
+  column-gap: 10px;
+  row-gap: 5px;
+}
+.product-price__amount { grid-area: price; }
+.product-price__stock {
+  grid-area: stock;
+  justify-self: start;
+  align-self: baseline;
+  text-align: left;
+  white-space: nowrap;
+}
+.product-price__original {
+  grid-area: original;
+  justify-self: end;
+  text-align: right;
+  font-size: 50%;
+  line-height: 1.1;
+  margin-top: 0;
+}
+@media (max-width: 767px) {
+  .product-price__main { column-gap: 8px; }
+  .product-price__original { font-size: 50%; }
+}

@@ -29,7 +29,20 @@ async function readOverrides(){
       'Firestore tardó demasiado en responder'
     );
     const result = {};
-    snapshot.forEach(item => { result[item.id] = item.data(); });
+    const addKey = (key, value) => {
+      const clean = String(key ?? '').trim().toLowerCase();
+      if (clean) result[clean] = value;
+    };
+    snapshot.forEach(item => {
+      const data = item.data();
+      addKey(item.id, data);
+      addKey(data.code, data);
+      addKey(data.codigo, data);
+      addKey(data.sku, data);
+      addKey(data.productId, data);
+      addKey(data.idProducto, data);
+      addKey(data.slug, data);
+    });
     return result;
   } catch(error) {
     console.error('No se pudo leer la configuración pública desde Firebase', error);
@@ -91,9 +104,13 @@ function normalizePublicCategory(value){
   return'';
 }
 function applyOverride(product,overrides){
-  const o=overrides[product.id]||{};
-  const overrideCategory=o.category||o.categoria||o.department||o.departamento||o.publicCategory||o.categoriaPublica||'';
-  return{...product,published:o.published===true,category:normalizePublicCategory(overrideCategory)||product.category||'',displayName:o.displayName||product.name,editorialDescription:o.editorialDescription||product.description,order:Number(o.order)||0,slug:o.slug||product.slug};
+  const lookupKeys=[product.id,product.code,product.slug].map(value=>String(value??'').trim().toLowerCase()).filter(Boolean);
+  const o=lookupKeys.map(key=>overrides[key]).find(Boolean)||{};
+  // Prefer the public/shop department saved by the panel. Legacy category
+  // fields are used only when the dedicated field is absent.
+  const overrideCategory=o.categoriaPublica||o.publicCategory||o.departamento||o.department||o.categoriaShop||o.shopCategory||o.categoria||o.category||'';
+  const resolvedCategory=normalizePublicCategory(overrideCategory)||normalizePublicCategory(product.apiCategory)||product.category||'';
+  return{...product,published:o.published===true,category:resolvedCategory,displayName:o.displayName||product.name,editorialDescription:o.editorialDescription||product.description,order:Number(o.order)||0,slug:o.slug||product.slug};
 }
 
 async function loadPublicProducts() {
@@ -142,7 +159,6 @@ async function renderDetail(){
     const hasStock=Number(product.stock)>0;const priceNode=document.querySelector('[data-product-price]');const originalPriceNode=document.querySelector('[data-product-original-price]');const hasDiscount=Boolean(product.hasDiscount&&product.originalPrice!==null&&Number(product.price)<Number(product.originalPrice));if(priceNode){priceNode.textContent=hasStock?money(product.price):'Sin stock';priceNode.classList.toggle('is-discounted',hasStock&&hasDiscount)}if(originalPriceNode){originalPriceNode.textContent=hasDiscount?money(product.originalPrice):'';originalPriceNode.hidden=!hasStock||!hasDiscount}
     const priceBlock=document.querySelector('[data-product-price-block]');if(priceBlock){priceBlock.hidden=false;priceBlock.classList.add('is-visible')}
     const stockNode=document.querySelector('[data-product-stock]');if(stockNode){stockNode.textContent=hasStock?`${product.stock} disponibles`:'';stockNode.hidden=!hasStock}
-    const stockBadge=document.querySelector('[data-product-stock-badge]');if(stockBadge){stockBadge.hidden=!hasStock;stockBadge.textContent='Stock disponible'}
     await renderSwatches(product);
     const gallery=document.querySelector('.product-gallery');if(gallery){const availableImages=Array.isArray(product.images)&&product.images.length?product.images.filter(Boolean):[catalog.FALLBACK_IMAGE];gallery.innerHTML=availableImages.map((src,index)=>`<figure class="product-gallery__item${index===0?' product-gallery__item--hero':''}"><img data-product-image="${index}" src="${esc(src)}" alt="${esc(product.displayName)} Casa Glick${index?`, vista ${index+1}`:''}" loading="${index===0?'eager':'lazy'}" onerror="this.onerror=null;this.src='${catalog.FALLBACK_IMAGE}'" /></figure>`).join('');gallery.removeAttribute('aria-busy');gallery.classList.remove('product-detail-skeleton');document.querySelector('.product-info')?.classList.remove('product-detail-skeleton');document.body.classList.add('product-detail-loaded');document.dispatchEvent(new CustomEvent('casa-glick:gallery-updated'))}
     const quote=document.querySelector('[data-product-quote]');if(quote){const hasPrice=product.price!==null&&Number.isFinite(Number(product.price));const canAdd=hasStock&&hasPrice;if(canAdd){quote.textContent='Agregar a bolsa';quote.href='bolsa.html';quote.removeAttribute('target');quote.removeAttribute('rel');quote.onclick=event=>{event.preventDefault();window.CasaGlickCart?.add({id:product.id,code:product.code,name:product.displayName,price:Number(product.price),image:(product.images&&product.images[0])||catalog.FALLBACK_IMAGE,stock:Number(product.stock)});quote.classList.add('is-added');quote.textContent='Agregado a bolsa';setTimeout(()=>{quote.classList.remove('is-added');quote.textContent='Agregar a bolsa'},1300)}}else{quote.textContent='Cotizar';quote.target='_blank';quote.rel='noopener';quote.onclick=null;const reason=!hasStock?'sin stock':'sin precio';quote.href=`https://wa.me/525513004665?text=${encodeURIComponent(`Hola, quiero cotizar ${product.displayName} (${product.code}) de Casa Glick. Actualmente aparece ${reason}.`)}`}}
