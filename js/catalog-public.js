@@ -11,8 +11,31 @@ function withTimeout(promise, milliseconds, message) {
   ]);
 }
 
+function normalizeLookupKey(value){
+  return String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g,'');
+}
+
+function collectIdentityValues(source){
+  if(!source || typeof source!=='object')return[];
+  const keys=[
+    'code','codigo','sku','productId','productID','idProducto','inventoryId','inventoryID',
+    'codigoProducto','productCode','clave','claveProducto','itemCode','itemId','itemID','slug'
+  ];
+  const values=[];
+  for(const key of keys){
+    const value=source[key];
+    if(Array.isArray(value)) values.push(...value);
+    else if(value!==undefined&&value!==null) values.push(value);
+  }
+  return values;
+}
+
 async function readOverrides(){
-  if (!config.projectId) return {};
+  if (!config.projectId) return {exact:{},canonical:{},records:[]};
   try{
     const [{ initializeApp, getApps }, { collection, getDocs, getFirestore }] = await withTimeout(
       Promise.all([
@@ -28,25 +51,25 @@ async function readOverrides(){
       7000,
       'Firestore tardó demasiado en responder'
     );
-    const result = {};
-    const addKey = (key, value) => {
-      const clean = String(key ?? '').trim().toLowerCase();
-      if (clean) result[clean] = value;
+    const exact={};
+    const canonical={};
+    const records=[];
+    const addKey=(key,value)=>{
+      const clean=String(key??'').trim().toLowerCase();
+      if(clean)exact[clean]=value;
+      const normalized=normalizeLookupKey(key);
+      if(normalized)canonical[normalized]=value;
     };
-    snapshot.forEach(item => {
-      const data = item.data();
-      addKey(item.id, data);
-      addKey(data.code, data);
-      addKey(data.codigo, data);
-      addKey(data.sku, data);
-      addKey(data.productId, data);
-      addKey(data.idProducto, data);
-      addKey(data.slug, data);
+    snapshot.forEach(item=>{
+      const data={...item.data(),__documentId:item.id};
+      records.push(data);
+      addKey(item.id,data);
+      collectIdentityValues(data).forEach(value=>addKey(value,data));
     });
-    return result;
-  } catch(error) {
-    console.error('No se pudo leer la configuración pública desde Firebase', error);
-    return {};
+    return{exact,canonical,records};
+  }catch(error){
+    console.error('No se pudo leer la configuración pública desde Firebase',error);
+    return{exact:{},canonical:{},records:[]};
   }
 }
 
@@ -80,17 +103,34 @@ function normalizePublicCategory(value){
   if(/interior|silla|mesa|sofa|ottoman|otomano|poltrona|sillon/.test(text))return'interior';
   return'';
 }
+function findOverride(product,overrides){
+  const values=[product.id,product.code,product.slug,...collectIdentityValues(product)].filter(v=>v!==undefined&&v!==null&&String(v).trim());
+  for(const value of values){
+    const exact=overrides.exact[String(value).trim().toLowerCase()];
+    if(exact)return exact;
+  }
+  for(const value of values){
+    const canonical=overrides.canonical[normalizeLookupKey(value)];
+    if(canonical)return canonical;
+  }
+  // Last safe fallback: compare normalized identifiers from every panel record.
+  const productKeys=new Set(values.map(normalizeLookupKey).filter(Boolean));
+  return overrides.records.find(record=>collectIdentityValues(record).some(value=>productKeys.has(normalizeLookupKey(value))))||{};
+}
 function applyOverride(product,overrides){
-  const lookupKeys=[product.id,product.code,product.slug].map(value=>String(value??'').trim().toLowerCase()).filter(Boolean);
-  const o=lookupKeys.map(key=>overrides[key]).find(Boolean)||{};
-  // Prefer the public/shop department saved by the panel. Legacy category
-  // fields are used only when the dedicated field is absent.
-  // The panel saves the customer-facing placement as Section/Seccion.
-  // Use it as the source of truth and only fall back to legacy category fields.
+  const o=findOverride(product,overrides);
   const panelSection=o.seccion||o.section||o.seccionShop||o.shopSection||o.categoriaPublica||o.publicCategory||o.departamento||o.department||o.categoriaShop||o.shopCategory||'';
   const legacyCategory=o.categoria||o.category||'';
   const resolvedCategory=normalizePublicCategory(panelSection)||normalizePublicCategory(legacyCategory)||normalizePublicCategory(product.apiCategory)||product.category||'';
-  return{...product,published:o.published===true,category:resolvedCategory,displayName:o.displayName||product.name,editorialDescription:o.editorialDescription||product.description,order:Number(o.order)||0,slug:o.slug||product.slug};
+  return{
+    ...product,
+    published:o.published===true,
+    category:resolvedCategory,
+    displayName:o.displayName||product.name,
+    editorialDescription:o.editorialDescription||product.description,
+    order:Number(o.order)||0,
+    slug:o.slug||product.slug
+  };
 }
 
 async function loadPublicProducts() {
