@@ -8251,3 +8251,11 @@ body.product-detail-page .product-gallery.product-detail-skeleton::after {
   body.product-detail-page .product-info.product-detail-skeleton [data-product-description] { min-height: 68px; }
   body.product-detail-page .product-info.product-detail-skeleton .product-price { width: 200px; height: 42px; }
 }
+
+/* shop11: reduce previous promotional price by 50% */
+.product-price__original {
+  font-size: 12px;
+}
+@media (max-width: 767px) {
+  .product-price__original { font-size: 6px; }
+}
