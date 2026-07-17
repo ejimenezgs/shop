@@ -1137,3 +1137,31 @@ if (mobileProductSheet) {
   window.addEventListener('popstate', () => requestAnimationFrame(updateEmptyState));
   requestAnimationFrame(updateEmptyState);
 })();
+
+// shop18: landing contact form opens the user's email client with the completed project brief.
+(() => {
+  const form = document.getElementById('landing-contact-form');
+  if (!form) return;
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    if (!form.reportValidity()) return;
+
+    const data = new FormData(form);
+    const nombre = String(data.get('nombre') || '').trim();
+    const correo = String(data.get('correo') || '').trim();
+    const telefono = String(data.get('telefono') || '').trim();
+    const mensaje = String(data.get('mensaje') || '').trim();
+    const subject = encodeURIComponent(`Nuevo proyecto Casa Glick - ${nombre}`);
+    const body = encodeURIComponent([
+      `Nombre: ${nombre}`,
+      `Correo: ${correo}`,
+      `Teléfono: ${telefono}`,
+      '',
+      'Mensaje:',
+      mensaje
+    ].join('\n'));
+
+    window.location.href = `mailto:contacto@gruposegel.com?subject=${subject}&body=${body}`;
+  });
+})();

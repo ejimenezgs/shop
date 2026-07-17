@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/styles.css?v=shop18" />
 </head>
 <body>
   <header class="hero__header">
@@ -165,7 +165,7 @@
       <a href="index.html#lifestyle">Inspiración</a>
       <a href="index.html#showroom">Showroom</a>
       <a href="productos.html?filter=todo">Catálogo</a>
-      <a href="https://wa.me/525513004665?text=Hola%2C%20quiero%20contactar%20a%20Casa%20Glick" target="_blank" rel="noopener">Contacto</a>
+      <a href="index.html#contacto">Contacto</a>
     </div>
   </nav>
   <main>
@@ -238,7 +238,7 @@
     <section class="about scroll-section" id="about" aria-labelledby="about-title">
       <div class="about__motion section-motion-content">
         <figure class="about__media" aria-label="Mesa de trabajo Casa Glick con planos, materiales y acabados">
-          <img src="assets/about-materials.webp" alt="Mesa de trabajo Casa Glick con planos, muestras de mármol, acabados y selección de materiales" loading="lazy" />
+          <img src="assets/about-materials-final.webp" alt="Mesa de trabajo Casa Glick con plano arquitectónico, laptop, muestras de materiales y acabados" loading="lazy" />
         </figure>
 
         <div class="about__content">
@@ -295,7 +295,7 @@
         <div class="showroom__gallery" aria-label="Galería del showroom Casa Glick">
           <div class="showroom__gallery-track">
           <figure class="showroom__item showroom__item--narrow">
-            <img src="assets/about-materials.webp" alt="Mesa con materiales y acabados Casa Glick" loading="lazy" />
+            <img src="assets/about-materials-correct.webp" alt="Mesa con materiales y acabados Casa Glick" loading="lazy" />
           </figure>
           <figure class="showroom__item">
             <img src="assets/lifestyle-sofa.webp" alt="Ambiente de sala Casa Glick" loading="lazy" />
@@ -321,8 +321,59 @@
       </div>
     </section>
 
+    <section class="contact-section scroll-section" id="contacto" aria-labelledby="contact-title">
+      <div class="contact-section__form-panel">
+        <div class="contact-section__content">
+          <p class="contact-section__eyebrow">Contacto</p>
+          <h2 id="contact-title">Déjanos ayudarte con tu compra.</h2>
+
+          <form class="contact-form" id="landing-contact-form">
+            <label class="contact-form__field">
+              <span>Nombre *</span>
+              <input type="text" name="nombre" autocomplete="name" required>
+            </label>
+
+            <label class="contact-form__field">
+              <span>Correo electrónico *</span>
+              <input type="email" name="correo" autocomplete="email" required>
+            </label>
+
+            <label class="contact-form__field">
+              <span>Teléfono *</span>
+              <input type="tel" name="telefono" autocomplete="tel" required>
+            </label>
+
+            <label class="contact-form__field contact-form__field--message">
+              <span>Mensaje *</span>
+              <textarea name="mensaje" rows="3" required></textarea>
+            </label>
+
+            <button class="contact-form__submit" type="submit">Enviar</button>
+          </form>
+        </div>
+      </div>
+
+      <figure class="contact-section__media">
+        <img src="assets/contact-design-worktable.png" alt="Mesa de trabajo con planos, muestras de materiales y selección de acabados Casa Glick" loading="lazy">
+      </figure>
+    </section>
+
   </main>
 
+  <footer class="site-footer" aria-label="Pie de página Casa Glick">
+    <div class="site-footer__inner">
+      <div class="site-footer__brand">CASA GLICK</div>
+
+      <div class="site-footer__contact">
+        <a href="tel:+525513004665">+52 (55) 1300 4665</a>
+        <a href="mailto:contacto@gruposegel.com">contacto@gruposegel.com</a>
+        <p>Temístocles 51, Polanco, CDMX</p>
+      </div>
+
+      <div class="site-footer__divider" aria-hidden="true"></div>
+      <p class="site-footer__copyright">© Copyright 2026, Casa Glick. Todos los derechos reservados.</p>
+    </div>
+  </footer>
 
   <a class="whatsapp-float" href="https://wa.me/525513004665?text=Hola%2C%20quiero%20hablar%20con%20un%20agente%20de%20Casa%20Glick" target="_blank" rel="noopener" aria-label="Hablar con un agente por WhatsApp">
     <svg class="whatsapp-float__icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -332,6 +383,6 @@
   </a>
 
   <script src="js/cart.js"></script>
-  <script src="js/script.js"></script>
+  <script src="js/script.js?v=shop20"></script>
 </body>
 </html>
