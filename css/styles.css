@@ -8583,3 +8583,16 @@ body.product-detail-page .product-gallery.product-detail-skeleton::after {
   color: #2d6b45;
 }
 
+
+/* v27: four centered landing categories with wider desktop spacing */
+@media (min-width: 901px) {
+  .products__grid {
+    width: min(100%, 1240px) !important;
+    max-width: 1240px !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: clamp(48px, 5vw, 72px) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    justify-content: center !important;
+  }
+}
