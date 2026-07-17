@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=shop24" />
+  <link rel="stylesheet" href="css/styles.css?v=shop25" />
 </head>
 <body>
   <header class="hero__header">
@@ -330,7 +330,7 @@
           <form class="contact-form" id="landing-contact-form">
             <label class="contact-form__field">
               <span>Nombre *</span>
-              <input type="text" name="nombre" autocomplete="name" required>
+              <input type="text" name="nombre" autocomplete="name" minlength="2" required>
             </label>
 
             <label class="contact-form__field">
@@ -340,15 +340,16 @@
 
             <label class="contact-form__field">
               <span>Teléfono *</span>
-              <input type="tel" name="telefono" autocomplete="tel" required>
+              <input type="tel" name="telefono" autocomplete="tel" maxlength="30" required>
             </label>
 
             <label class="contact-form__field contact-form__field--message">
               <span>Mensaje *</span>
-              <textarea name="mensaje" rows="3" required></textarea>
+              <textarea name="mensaje" rows="3" minlength="2" maxlength="3000" required></textarea>
             </label>
 
             <button class="contact-form__submit" type="submit">Enviar</button>
+            <p class="contact-form__status" id="contact-form-status" role="status" aria-live="polite"></p>
           </form>
         </div>
       </div>
@@ -382,7 +383,9 @@
     <span class="whatsapp-float__label">Hablar con un agente</span>
   </a>
 
-  <script src="js/cart.js"></script>
-  <script src="js/script.js?v=shop24"></script>
+  <script src="js/cart.js?v=shop25"></script>
+  <script src="js/firebase-public-config.js?v=shop25"></script>
+  <script src="js/script.js?v=shop25"></script>
+  <script type="module" src="js/contact-form.js?v=shop25"></script>
 </body>
 </html>

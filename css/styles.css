@@ -8553,3 +8553,33 @@ body.product-detail-page .product-gallery.product-detail-skeleton::after {
     transition: none;
   }
 }
+
+/* shop25: Firestore contact form states. */
+.contact-form__submit:disabled {
+  cursor: wait;
+  opacity: 0.68;
+  pointer-events: none;
+}
+
+.contact-form__status {
+  min-height: 18px;
+  margin: 1px 0 0;
+  font-family: "Montserrat", sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: #171717;
+}
+
+.contact-form__status:empty {
+  min-height: 0;
+}
+
+.contact-form__status.is-error {
+  color: #a12b25;
+}
+
+.contact-form__status.is-success {
+  color: #2d6b45;
+}
+
