@@ -8526,3 +8526,30 @@ body.product-detail-page .product-gallery.product-detail-skeleton::after {
     font-size: 8px;
   }
 }
+
+
+/* Shop v24: progressive catalog loading */
+.product-card--progressive {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity .55s ease, transform .55s ease;
+}
+.product-card--progressive.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.products-load-more {
+  width: 100%;
+  height: 1px;
+  pointer-events: none;
+}
+.products-load-more[hidden] {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .product-card--progressive {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

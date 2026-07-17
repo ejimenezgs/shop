@@ -211,6 +211,21 @@ async function loadPublicProducts() {
   return productsResult.value.map(product => applyOverride(product, overrides));
 }
 
+const LISTING_BATCH_SIZE = 12;
+
+function listingCardMarkup(product){
+  return `<article class="product-card product-card--progressive" data-category="${esc(product.category||'todo')}" data-brand="${esc(product.brand)}"><a class="product-card__link" href="producto.html?product=${encodeURIComponent(product.code)}" aria-label="Ver detalle de ${esc(product.displayName)}"><img src="${esc(product.images[0])}" alt="${esc(product.displayName)} Casa Glick" loading="lazy" onerror="this.onerror=null;this.src='${catalog.FALLBACK_IMAGE}'" /><span class="product-card__meta"><strong>${esc(product.displayName)}</strong><small>${esc(categoryLabel(product.category))}</small></span></a></article>`;
+}
+
+function normalizeListingFilter(value){
+  const clean=String(value||'todo').toLowerCase().trim();
+  if(clean==='all')return 'todo';
+  if(clean==='decoración')return 'decoracion';
+  if(clean==='iluminación')return 'iluminacion';
+  if(clean==='habitación')return 'habitacion';
+  return clean;
+}
+
 async function renderListing(){
   const list=document.querySelector('.products-list');
   if(!list)return;
@@ -219,10 +234,77 @@ async function renderListing(){
     const products=(await loadPublicProducts())
       .filter(product=>product.published)
       .sort((a,b)=>a.order-b.order||a.displayName.localeCompare(b.displayName,'es'));
-    list.innerHTML=products.map(p=>`<article class="product-card" data-category="${esc(p.category||'todo')}" data-brand="${esc(p.brand)}"><a class="product-card__link" href="producto.html?product=${encodeURIComponent(p.code)}" aria-label="Ver detalle de ${esc(p.displayName)}"><img src="${esc(p.images[0])}" alt="${esc(p.displayName)} Casa Glick" loading="lazy" onerror="this.onerror=null;this.src='${catalog.FALLBACK_IMAGE}'" /><span class="product-card__meta"><strong>${esc(p.displayName)}</strong><small>${esc(categoryLabel(p.category))}</small></span></a></article>`).join('');
-    if(!products.length)list.innerHTML='<p class="products-empty">No hay productos publicados por el momento.</p>';
+
+    let activeFilter=normalizeListingFilter(new URLSearchParams(location.search).get('filter')||document.getElementById('products-category-picker')?.value||'todo');
+    let filteredProducts=[];
+    let renderedCount=0;
+    let observer=null;
+    let sentinel=document.querySelector('[data-products-load-more]');
+
+    if(!sentinel){
+      sentinel=document.createElement('div');
+      sentinel.className='products-load-more';
+      sentinel.setAttribute('data-products-load-more','');
+      sentinel.setAttribute('aria-hidden','true');
+      list.insertAdjacentElement('afterend',sentinel);
+    }
+
+    const updateEmptyState=()=>{
+      const empty=document.querySelector('[data-products-filter-empty]');
+      if(empty)empty.hidden=filteredProducts.length>0;
+    };
+
+    const appendBatch=()=>{
+      if(renderedCount>=filteredProducts.length){
+        sentinel.hidden=true;
+        return;
+      }
+      const next=filteredProducts.slice(renderedCount,renderedCount+LISTING_BATCH_SIZE);
+      list.insertAdjacentHTML('beforeend',next.map(listingCardMarkup).join(''));
+      renderedCount+=next.length;
+      sentinel.hidden=renderedCount>=filteredProducts.length;
+      requestAnimationFrame(()=>{
+        list.querySelectorAll('.product-card--progressive:not(.is-visible)').forEach(card=>card.classList.add('is-visible'));
+      });
+    };
+
+    const resetListing=(filter,updateUrl=false)=>{
+      activeFilter=normalizeListingFilter(filter);
+      filteredProducts=activeFilter==='todo'?products:products.filter(product=>normalizeListingFilter(product.category)===activeFilter);
+      renderedCount=0;
+      list.innerHTML='';
+      updateEmptyState();
+      appendBatch();
+      if(updateUrl){
+        const url=new URL(location.href);
+        url.searchParams.set('filter',activeFilter);
+        history.replaceState({},'',url);
+      }
+    };
+
+    observer=new IntersectionObserver(entries=>{
+      if(entries.some(entry=>entry.isIntersecting))appendBatch();
+    },{rootMargin:'600px 0px'});
+    observer.observe(sentinel);
+
     const picker=document.getElementById('products-category-picker');
-    if(picker)picker.dispatchEvent(new Event('change',{bubbles:true}));
+    picker?.addEventListener('change',()=>requestAnimationFrame(()=>resetListing(picker.value)));
+
+    document.querySelectorAll('.products-filter__item').forEach(button=>{
+      button.addEventListener('click',()=>requestAnimationFrame(()=>resetListing(button.dataset.filter)));
+    });
+
+    document.querySelectorAll('.products-picker__option').forEach(option=>{
+      option.addEventListener('click',()=>requestAnimationFrame(()=>resetListing(option.dataset.value)));
+    });
+
+    window.addEventListener('popstate',()=>resetListing(new URLSearchParams(location.search).get('filter')||'todo'));
+
+    resetListing(activeFilter);
+    if(picker){
+      picker.value=activeFilter;
+      picker.dispatchEvent(new Event('change',{bubbles:true}));
+    }
   }catch(error){
     console.error('No se pudo cargar el catálogo público',error);
     list.innerHTML='<p class="products-empty">No fue posible cargar los productos. Recarga la página para intentarlo nuevamente.</p>';
