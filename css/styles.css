@@ -8606,3 +8606,12 @@ body.product-detail-page .product-gallery.product-detail-skeleton::after {
 .stripe-result-details span{font-size:11px;color:#77736d}
 .stripe-retry,.stripe-result-primary{width:100%;margin-top:26px}
 .stripe-result-link{display:inline-block;margin-top:20px;color:#252422;font:500 10px Montserrat,sans-serif;text-decoration:none;text-transform:uppercase;letter-spacing:.1em}
+
+/* v30: four landing categories in a clean 2 x 2 mobile grid */
+@media (max-width: 760px) {
+  .products__grid .product-category:last-child {
+    grid-column: auto !important;
+    width: 100% !important;
+    justify-self: stretch !important;
+  }
+}
