@@ -57,3 +57,7 @@ usando `private-config.example.php` como referencia, y guarda también ahí el J
 `https://shop.casaglick.com/api/stripe-webhook.php`
 
 Eventos mínimos: `checkout.session.completed`, `checkout.session.expired` y `payment_intent.payment_failed`.
+
+## Web Design dinámico
+
+El landing escucha en tiempo real `shopContent/home` mediante `js/shop-content.js`. Los bloques admitidos son `hero`, `products`, `showroom`, `about`, `brands` y `contact`. Si el documento, un campo o una imagen fallan, se conserva el contenido incluido en el HTML.

@@ -20,6 +20,11 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    match /shopContent/{documentId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     match /contactMessages/{messageId} {
       allow create: if request.resource.data.keys().hasOnly([
           "name", "email", "phone", "message", "source", "status", "createdAt"

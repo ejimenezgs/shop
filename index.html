@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=shop30" />
+  <link rel="stylesheet" href="css/styles.css?v=shop31" />
 </head>
 <body>
   <header class="hero__header">
@@ -169,8 +169,8 @@
     </div>
   </nav>
   <main>
-    <section class="hero scroll-section" id="inicio" aria-label="Casa Glick hero">
-      <picture class="hero__background" aria-hidden="true">
+    <section class="hero scroll-section" id="inicio" data-section="hero" aria-label="Casa Glick hero">
+      <picture class="hero__background" data-content="hero-image" aria-hidden="true">
         <source media="(max-width: 760px)" srcset="assets/hero-mobile.webp" />
         <img src="assets/hero-desk.webp" alt="" />
       </picture>
@@ -178,11 +178,11 @@
 
     </section>
 
-    <section class="products scroll-section" id="productos" aria-labelledby="products-title">
+    <section class="products scroll-section" id="productos" data-section="products" aria-labelledby="products-title">
       <div class="products__motion section-motion-content">
         <div class="products__intro">
-        <h2 id="products-title">Piezas que elevan cada espacio.</h2>
-        <p>Explora nuestra curaduría de mobiliario y decoración para proyectos residenciales, comerciales y de hospitality.</p>
+        <h2 id="products-title" data-content="products-title">Piezas que elevan cada espacio.</h2>
+        <p data-content="products-description">Explora nuestra curaduría de mobiliario y decoración para proyectos residenciales, comerciales y de hospitality.</p>
       </div>
 
         <div class="products__grid" aria-label="Categorías de producto">
@@ -217,23 +217,23 @@
         </div>
 
         <div class="products__actions">
-          <a class="primary-button products__view-all" href="productos.html?filter=todo">Ver todo</a>
+          <a class="primary-button products__view-all" data-content="products-button" href="productos.html?filter=todo">Ver todo</a>
         </div>
       </div>
     </section>
 
-    <section class="about scroll-section" id="about" aria-labelledby="about-title">
+    <section class="about scroll-section" id="about" data-section="about" aria-labelledby="about-title">
       <div class="about__motion section-motion-content">
         <figure class="about__media" aria-label="Mesa de trabajo Casa Glick con planos, materiales y acabados">
-          <img src="assets/about-materials-final.webp" alt="Mesa de trabajo Casa Glick con plano arquitectónico, laptop, muestras de materiales y acabados" loading="lazy" />
+          <img data-content="about-image" src="assets/about-materials-final.webp" alt="Mesa de trabajo Casa Glick con plano arquitectónico, laptop, muestras de materiales y acabados" loading="lazy" />
         </figure>
 
         <div class="about__content">
           <div class="about__text">
-            <h2 id="about-title">Casa Glick</h2>
-            <p>Integramos diseño, fabricación, suministro e instalación para desarrollar espacios donde cada detalle responde a una misma visión.</p>
-            <p>Un equipo que coordina cada etapa para lograr resultados consistentes y una ejecución impecable.</p>
-            <a class="about__link" href="#productos">
+            <h2 id="about-title" data-content="about-title">Casa Glick</h2>
+            <p data-content="about-description">Integramos diseño, fabricación, suministro e instalación para desarrollar espacios donde cada detalle responde a una misma visión.</p>
+            <p data-content="about-description-extra">Un equipo que coordina cada etapa para lograr resultados consistentes y una ejecución impecable.</p>
+            <a class="about__link" data-content="about-button" href="#productos">
               <span>Descubre nuestro enfoque</span>
               <span aria-hidden="true">→</span>
             </a>
@@ -242,12 +242,12 @@
       </div>
     </section>
 
-    <section class="lifestyle scroll-section" id="lifestyle" aria-label="Lifestyle Casa Glick">
+    <section class="lifestyle scroll-section" id="lifestyle" data-section="brands" aria-label="Lifestyle Casa Glick">
       <div class="lifestyle__motion section-motion-content">
         <div class="lifestyle__carousel" aria-label="Carrusel de ambientes y lifestyle de productos">
           <div class="lifestyle__track">
             <figure class="lifestyle-item" aria-label="Mujer leyendo en poltrona de cuero">
-              <img src="assets/lifestyle-reading-chair.webp" alt="Ambiente Casa Glick con mujer leyendo en poltrona de cuero marrón" loading="lazy">
+              <img data-content="brands-image" src="assets/lifestyle-reading-chair.webp" alt="Ambiente Casa Glick con mujer leyendo en poltrona de cuero marrón" loading="lazy">
             </figure>
             <figure class="lifestyle-item" aria-label="Mujer sentada en silla de comedor">
               <img src="assets/lifestyle-dining-chair.webp" alt="Ambiente Casa Glick con silla tapizada junto a mesa de comedor" loading="lazy">
@@ -263,11 +263,11 @@
       </div>
     </section>
 
-    <section class="showroom scroll-section" id="showroom" aria-labelledby="showroom-title">
+    <section class="showroom scroll-section" id="showroom" data-section="showroom" aria-labelledby="showroom-title">
       <div class="showroom__motion section-motion-content">
         <div class="showroom__intro">
-          <h2 id="showroom-title"><span>Vive CASA GLICK</span> <span>en persona</span></h2>
-          <p class="showroom__copy">Descubre una selección curada de mobiliario, materiales y soluciones integrales en un espacio diseñado para inspirar cada proyecto.</p>
+          <h2 id="showroom-title" data-content="showroom-title"><span>Vive CASA GLICK</span> <span>en persona</span></h2>
+          <p class="showroom__copy" data-content="showroom-description">Descubre una selección curada de mobiliario, materiales y soluciones integrales en un espacio diseñado para inspirar cada proyecto.</p>
           <a class="showroom__location" href="https://www.google.com/maps/search/?api=1&query=T%C3%A9mistocles%2051%2C%20Polanco%2C%20CDMX" target="_blank" rel="noopener" aria-label="Ver ubicación de Casa Glick en Google Maps">
             <span class="showroom__location-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" focusable="false">
@@ -282,7 +282,7 @@
         <div class="showroom__gallery" aria-label="Galería del showroom Casa Glick">
           <div class="showroom__gallery-track">
           <figure class="showroom__item showroom__item--narrow">
-            <img src="assets/about-materials-correct.webp" alt="Mesa con materiales y acabados Casa Glick" loading="lazy" />
+            <img data-content="showroom-image" src="assets/about-materials-correct.webp" alt="Mesa con materiales y acabados Casa Glick" loading="lazy" />
           </figure>
           <figure class="showroom__item">
             <img src="assets/lifestyle-sofa.webp" alt="Ambiente de sala Casa Glick" loading="lazy" />
@@ -303,16 +303,16 @@
         </div>
 
         <div class="showroom__actions">
-          <a class="showroom__button" href="https://wa.me/525513004665?text=Quiero%20conocer%20el%20showroom" target="_blank" rel="noopener">Visitar showroom</a>
+          <a class="showroom__button" data-content="showroom-button" href="https://wa.me/525513004665?text=Quiero%20conocer%20el%20showroom" target="_blank" rel="noopener">Visitar showroom</a>
         </div>
       </div>
     </section>
 
-    <section class="contact-section scroll-section" id="contacto" aria-labelledby="contact-title">
+    <section class="contact-section scroll-section" id="contacto" data-section="contact" aria-labelledby="contact-title">
       <div class="contact-section__form-panel">
         <div class="contact-section__content">
-          <p class="contact-section__eyebrow">Contacto</p>
-          <h2 id="contact-title">Déjanos ayudarte con tu compra.</h2>
+          <p class="contact-section__eyebrow" data-content="contact-eyebrow">Contacto</p>
+          <h2 id="contact-title" data-content="contact-title">Déjanos ayudarte con tu compra.</h2>
 
           <form class="contact-form" id="landing-contact-form">
             <label class="contact-form__field">
@@ -335,14 +335,14 @@
               <textarea name="mensaje" rows="3" minlength="2" maxlength="3000" required></textarea>
             </label>
 
-            <button class="contact-form__submit" type="submit">Enviar</button>
+            <button class="contact-form__submit" data-content="contact-button" type="submit">Enviar</button>
             <p class="contact-form__status" id="contact-form-status" role="status" aria-live="polite"></p>
           </form>
         </div>
       </div>
 
       <figure class="contact-section__media">
-        <img src="assets/contact-design-worktable.png" alt="Mesa de trabajo con planos, muestras de materiales y selección de acabados Casa Glick" loading="lazy">
+        <img data-content="contact-image" src="assets/contact-design-worktable.png" alt="Mesa de trabajo con planos, muestras de materiales y selección de acabados Casa Glick" loading="lazy">
       </figure>
     </section>
 
@@ -370,9 +370,10 @@
     <span class="whatsapp-float__label">Hablar con un agente</span>
   </a>
 
-  <script src="js/cart.js?v=shop30"></script>
-  <script src="js/firebase-public-config.js?v=shop30"></script>
-  <script src="js/script.js?v=shop30"></script>
-  <script type="module" src="js/contact-form.js?v=shop30"></script>
+  <script src="js/cart.js?v=shop31"></script>
+  <script src="js/firebase-public-config.js?v=shop31"></script>
+  <script src="js/script.js?v=shop31"></script>
+  <script type="module" src="js/shop-content.js?v=shop31"></script>
+  <script type="module" src="js/contact-form.js?v=shop31"></script>
 </body>
 </html>
