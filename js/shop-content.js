@@ -207,7 +207,12 @@ function applySection(name, section) {
 
 function applyShopContent(content) {
   if (!content || typeof content !== 'object') return;
-  Object.keys(sectionMap).forEach((name) => applySection(name, content[name]));
+  const nested = content.sections && typeof content.sections === 'object' ? content.sections : {};
+  Object.keys(sectionMap).forEach((name) => {
+    const directSection = content[name] && typeof content[name] === 'object' ? content[name] : null;
+    const nestedSection = nested[name] && typeof nested[name] === 'object' ? nested[name] : null;
+    applySection(name, directSection || nestedSection || {});
+  });
 }
 
 if (firebaseConfig?.projectId) {
