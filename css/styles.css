@@ -8622,3 +8622,10 @@ body.product-detail-page .product-gallery.product-detail-skeleton::after {
 .is-shop-content-disabled {
   display: none !important;
 }
+
+
+/* Web Design visibility guard */
+[data-section].is-shop-content-disabled,
+[data-section][hidden].is-shop-content-disabled {
+  display: none !important;
+}

@@ -185,10 +185,12 @@ function applySection(name, section) {
   if (isDisabled) {
     root.hidden = true;
     root.classList.add('is-shop-content-disabled');
+    root.style.setProperty('display', 'none', 'important');
     root.setAttribute('aria-hidden', 'true');
   } else if (isEnabled) {
     root.hidden = false;
     root.classList.remove('is-shop-content-disabled');
+    root.style.removeProperty('display');
     root.removeAttribute('aria-hidden');
   }
 
