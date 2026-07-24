@@ -8615,3 +8615,10 @@ body.product-detail-page .product-gallery.product-detail-skeleton::after {
     justify-self: stretch !important;
   }
 }
+
+
+/* Web Design visibility override */
+[hidden],
+.is-shop-content-disabled {
+  display: none !important;
+}

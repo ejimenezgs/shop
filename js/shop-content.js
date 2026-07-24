@@ -178,8 +178,19 @@ function applySection(name, section) {
   if (!root) return;
   remember(root);
 
-  if (section.enabled === false) root.hidden = true;
-  else if (section.enabled === true) root.hidden = false;
+  const enabledValue = section.enabled;
+  const isDisabled = enabledValue === false || enabledValue === 0 || enabledValue === "false";
+  const isEnabled = enabledValue === true || enabledValue === 1 || enabledValue === "true";
+
+  if (isDisabled) {
+    root.hidden = true;
+    root.classList.add('is-shop-content-disabled');
+    root.setAttribute('aria-hidden', 'true');
+  } else if (isEnabled) {
+    root.hidden = false;
+    root.classList.remove('is-shop-content-disabled');
+    root.removeAttribute('aria-hidden');
+  }
 
   if (map.eyebrow) setText(document.querySelector(map.eyebrow), section.eyebrow);
   if (map.title) setText(document.querySelector(map.title), section.title);
