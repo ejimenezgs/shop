@@ -8596,3 +8596,13 @@ body.product-detail-page .product-gallery.product-detail-skeleton::after {
     justify-content: center !important;
   }
 }
+
+/* Checkout mode + Stripe result pages */
+.checkout-mode-note{margin:-10px 0 0;text-align:center;color:#77736d;font:500 9px/1.5 Montserrat,sans-serif;letter-spacing:.06em;text-transform:uppercase}
+.checkout-submit:disabled{cursor:wait;opacity:.62}
+.stripe-result-card{max-width:620px;margin:auto;text-align:center}
+.stripe-result-details{display:grid;gap:8px;margin:22px 0 6px;font-family:Montserrat,sans-serif}
+.stripe-result-details strong{font-size:15px}
+.stripe-result-details span{font-size:11px;color:#77736d}
+.stripe-retry,.stripe-result-primary{width:100%;margin-top:26px}
+.stripe-result-link{display:inline-block;margin-top:20px;color:#252422;font:500 10px Montserrat,sans-serif;text-decoration:none;text-transform:uppercase;letter-spacing:.1em}

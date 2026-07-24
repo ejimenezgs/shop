@@ -40,3 +40,20 @@ Las reglas de `firestore.rules` deben publicarse en el mismo proyecto Firebase. 
 - escritura solo para administradores autenticados;
 - creacion publica de ordenes validas;
 - lectura y seguimiento de ordenes solo desde el Panel autenticado.
+
+## Stripe Checkout (modo prueba)
+
+El documento `catalogSettings/admin` controla el flujo:
+
+- `stripeEnabled: false` o `checkoutMode: "assisted"`: orden + WhatsApp.
+- `stripeEnabled: true` o `checkoutMode: "stripe"`: Stripe Checkout.
+
+El backend PHP está en `api/`. No contiene secretos. Crea fuera de `public_html`:
+
+`/home/TU_USUARIO/private/casa-glick-shop.php`
+
+usando `private-config.example.php` como referencia, y guarda también ahí el JSON de la cuenta de servicio de Firebase. El webhook de Stripe debe apuntar a:
+
+`https://shop.casaglick.com/api/stripe-webhook.php`
+
+Eventos mínimos: `checkout.session.completed`, `checkout.session.expired` y `payment_intent.payment_failed`.
