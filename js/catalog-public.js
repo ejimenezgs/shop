@@ -213,8 +213,88 @@ async function loadPublicProducts() {
 
 const LISTING_BATCH_SIZE = 12;
 
+
+const SUBCATEGORY_META = {
+  todo: { label: 'Todos los productos', parent: 'todo' },
+  sillas: { label: 'Sillas', parent: 'interior' },
+  mesas: { label: 'Mesas', parent: 'interior' },
+  mesas_auxiliares: { label: 'Mesas auxiliares', parent: 'interior' },
+  mesas_centro: { label: 'Mesas de centro', parent: 'interior' },
+  mesas_comedor: { label: 'Mesas de comedor', parent: 'interior' },
+  sofas: { label: 'Sofás', parent: 'interior' },
+  sofas_individuales: { label: 'Sofás individuales', parent: 'interior' },
+  ottomanos: { label: 'Ottomanos', parent: 'interior' },
+  camastros: { label: 'Camastros', parent: 'exterior' },
+  sillas_exterior: { label: 'Sillas de exterior', parent: 'exterior' },
+  mesas_exterior: { label: 'Mesas de exterior', parent: 'exterior' },
+  salas_exterior: { label: 'Salas de exterior', parent: 'exterior' },
+  camas: { label: 'Camas', parent: 'habitacion' },
+  cabeceras: { label: 'Cabeceras', parent: 'habitacion' },
+  mesas_noche: { label: 'Mesas de noche', parent: 'habitacion' },
+  espejos: { label: 'Espejos', parent: 'decoracion' },
+  cuadros: { label: 'Cuadros', parent: 'decoracion' },
+  floreros: { label: 'Floreros', parent: 'decoracion' },
+  accesorios: { label: 'Accesorios', parent: 'decoracion' },
+  consolas: { label: 'Consolas', parent: 'decoracion' },
+  lamparas_colgantes: { label: 'Lámparas colgantes', parent: 'iluminacion' },
+  lamparas_mesa: { label: 'Lámparas de mesa', parent: 'iluminacion' },
+  lamparas_piso: { label: 'Lámparas de piso', parent: 'iluminacion' },
+  candiles: { label: 'Candiles', parent: 'iluminacion' },
+  iluminacion: { label: 'Iluminación', parent: 'iluminacion' }
+};
+
+function normalizeSubcategoryText(value){
+  return String(value ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
+}
+
+function productSubcategory(product){
+  const text=normalizeSubcategoryText([product.apiCategory,product.panelCategory,product.name].filter(Boolean).join(' '));
+  const parent=normalizeListingFilter(product.category);
+
+  if(parent==='interior'){
+    if(/mesa(?:s)?\s+(?:auxiliar|lateral)|side\s*table/.test(text))return'mesas_auxiliares';
+    if(/mesa(?:s)?\s+de\s+centro|coffee\s*table/.test(text))return'mesas_centro';
+    if(/mesa(?:s)?\s+de\s+comedor|dining\s*table/.test(text))return'mesas_comedor';
+    if(/poltrona|sillon(?:es)?\s+individual|sofa(?:s)?\s+individual|butaca/.test(text))return'sofas_individuales';
+    if(/ottoman|otomano|pouf|puf|reposapies/.test(text))return'ottomanos';
+    if(/silla|banco|taburete|stool/.test(text))return'sillas';
+    if(/sofa|seccional|love\s*seat/.test(text))return'sofas';
+    if(/mesa|consola|escritorio/.test(text))return'mesas';
+  }
+  if(parent==='exterior'){
+    if(/camastro|tumbona|sun\s*lounger|chaise/.test(text))return'camastros';
+    if(/silla|banco|taburete/.test(text))return'sillas_exterior';
+    if(/mesa/.test(text))return'mesas_exterior';
+    if(/sofa|sala|seccional/.test(text))return'salas_exterior';
+  }
+  if(parent==='habitacion'){
+    if(/mesa(?:s)?\s+de\s+noche|nightstand|buro/.test(text))return'mesas_noche';
+    if(/cabecera/.test(text))return'cabeceras';
+    if(/cama/.test(text))return'camas';
+  }
+  if(parent==='decoracion'){
+    if(/espejo/.test(text))return'espejos';
+    if(/cuadro|arte|wall\s*art/.test(text))return'cuadros';
+    if(/florero|jarron|vaso decorativo/.test(text))return'floreros';
+    if(/consola/.test(text))return'consolas';
+    return'accesorios';
+  }
+  if(parent==='iluminacion'){
+    if(/colgante|pendant/.test(text))return'lamparas_colgantes';
+    if(/mesa|table\s*lamp/.test(text))return'lamparas_mesa';
+    if(/piso|floor\s*lamp/.test(text))return'lamparas_piso';
+    if(/candil|chandelier/.test(text))return'candiles';
+    return'iluminacion';
+  }
+  return'';
+}
+
+function subcategoryLabel(value){
+  return SUBCATEGORY_META[value]?.label || value || 'Todos los productos';
+}
+
 function listingCardMarkup(product){
-  return `<article class="product-card product-card--progressive" data-category="${esc(product.category||'todo')}" data-brand="${esc(product.brand)}"><a class="product-card__link" href="producto.html?product=${encodeURIComponent(product.code)}" aria-label="Ver detalle de ${esc(product.displayName)}"><img src="${esc(product.images[0])}" alt="${esc(product.displayName)} Casa Glick" loading="lazy" onerror="this.onerror=null;this.src='${catalog.FALLBACK_IMAGE}'" /><span class="product-card__meta"><strong>${esc(product.displayName)}</strong><small>${esc(categoryLabel(product.category))}</small></span></a></article>`;
+  return `<article class="product-card product-card--progressive" data-category="${esc(product.category||'todo')}" data-subcategory="${esc(product.subcategory||'')}" data-brand="${esc(product.brand)}"><a class="product-card__link" href="producto.html?product=${encodeURIComponent(product.code)}" aria-label="Ver detalle de ${esc(product.displayName)}"><img src="${esc(product.images[0])}" alt="${esc(product.displayName)} Casa Glick" loading="lazy" onerror="this.onerror=null;this.src='${catalog.FALLBACK_IMAGE}'" /><span class="product-card__meta"><strong>${esc(product.displayName)}</strong><small>${esc(categoryLabel(product.category))}</small></span></a></article>`;
 }
 
 function normalizeListingFilter(value){
@@ -226,6 +306,45 @@ function normalizeListingFilter(value){
   return clean;
 }
 
+
+function setupPremiumMobilePicker(root,onSelect){
+  if(!root||root.dataset.premiumPickerReady==='true')return;
+  const select=root.querySelector('select');
+  const button=root.querySelector('.catalog-premium-picker__button');
+  const value=root.querySelector('.catalog-premium-picker__value');
+  const menu=root.querySelector('.catalog-premium-picker__menu');
+  if(!select||!button||!value||!menu)return;
+
+  const close=()=>{root.classList.remove('is-open');button.setAttribute('aria-expanded','false');};
+  const sync=()=>{
+    const options=Array.from(select.options);
+    const selected=options.find(option=>option.value===select.value)||options[0];
+    value.textContent=selected?.textContent?.trim()||'';
+    menu.innerHTML=options.map(option=>`<button class="catalog-premium-picker__option${option.value===select.value?' is-selected':''}" type="button" role="option" aria-selected="${option.value===select.value?'true':'false'}" data-picker-value="${esc(option.value)}">${esc(option.textContent.trim())}</button>`).join('');
+  };
+
+  button.addEventListener('click',event=>{
+    event.stopPropagation();
+    const open=!root.classList.contains('is-open');
+    document.querySelectorAll('.catalog-premium-picker.is-open').forEach(item=>{if(item!==root){item.classList.remove('is-open');item.querySelector('.catalog-premium-picker__button')?.setAttribute('aria-expanded','false');}});
+    root.classList.toggle('is-open',open);
+    button.setAttribute('aria-expanded',open?'true':'false');
+  });
+  menu.addEventListener('click',event=>{
+    const option=event.target.closest('[data-picker-value]');
+    if(!option)return;
+    select.value=option.dataset.pickerValue;
+    sync();
+    close();
+    onSelect?.(select.value);
+  });
+  document.addEventListener('click',event=>{if(!root.contains(event.target))close();});
+  select.addEventListener('change',sync);
+  root._syncPremiumPicker=sync;
+  root.dataset.premiumPickerReady='true';
+  sync();
+}
+
 async function renderListing(){
   const list=document.querySelector('.products-list');
   if(!list)return;
@@ -233,12 +352,15 @@ async function renderListing(){
   try{
     const products=(await loadPublicProducts())
       .filter(product=>product.published)
+      .map(product=>({...product,subcategory:productSubcategory(product)}))
       .sort((a,b)=>a.order-b.order||a.displayName.localeCompare(b.displayName,'es'));
 
-    let activeFilter=normalizeListingFilter(new URLSearchParams(location.search).get('filter')||document.getElementById('products-category-picker')?.value||'todo');
+    const params=new URLSearchParams(location.search);
+    let activeFilter=normalizeListingFilter(params.get('filter')||'todo');
+    let activeSubcategory=String(params.get('subcat')||'').trim();
+    const SUBCATEGORY_PARENTS=new Set(['interior','exterior','habitacion','decoracion']);
     let filteredProducts=[];
     let renderedCount=0;
-    let observer=null;
     let sentinel=document.querySelector('[data-products-load-more]');
 
     if(!sentinel){
@@ -249,62 +371,122 @@ async function renderListing(){
       list.insertAdjacentElement('afterend',sentinel);
     }
 
+    const availableSubcategories=parent=>{
+      const keys=[...new Set(products.filter(p=>p.category===parent&&p.subcategory).map(p=>p.subcategory))];
+      return keys.sort((a,b)=>subcategoryLabel(a).localeCompare(subcategoryLabel(b),'es'));
+    };
+
     const updateEmptyState=()=>{
       const empty=document.querySelector('[data-products-filter-empty]');
       if(empty)empty.hidden=filteredProducts.length>0;
     };
 
     const appendBatch=()=>{
-      if(renderedCount>=filteredProducts.length){
-        sentinel.hidden=true;
-        return;
-      }
+      if(renderedCount>=filteredProducts.length){sentinel.hidden=true;return;}
       const next=filteredProducts.slice(renderedCount,renderedCount+LISTING_BATCH_SIZE);
       list.insertAdjacentHTML('beforeend',next.map(listingCardMarkup).join(''));
       renderedCount+=next.length;
       sentinel.hidden=renderedCount>=filteredProducts.length;
-      requestAnimationFrame(()=>{
-        list.querySelectorAll('.product-card--progressive:not(.is-visible)').forEach(card=>card.classList.add('is-visible'));
+      requestAnimationFrame(()=>list.querySelectorAll('.product-card--progressive:not(.is-visible)').forEach(card=>card.classList.add('is-visible')));
+    };
+
+    const renderDesktopFlyouts=()=>{
+      document.querySelectorAll('[data-subcategory-flyout]').forEach(flyout=>{
+        const parent=flyout.dataset.subcategoryFlyout;
+        const keys=availableSubcategories(parent);
+        flyout.innerHTML=`<button type="button" data-sub-filter="" data-parent-filter="${esc(parent)}">Todo</button>${keys.map(key=>`<button type="button" data-sub-filter="${esc(key)}" data-parent-filter="${esc(parent)}">${esc(subcategoryLabel(key))}</button>`).join('')}`;
+        flyout.closest('.products-filter__group')?.classList.toggle('has-no-subcategories',keys.length===0);
       });
     };
 
-    const resetListing=(filter,updateUrl=false)=>{
+    const renderMobileSubcategories=()=>{
+      const primary=document.querySelector('[data-mobile-primary]');
+      const secondary=document.querySelector('[data-mobile-secondary]');
+      const wrapper=document.querySelector('[data-mobile-subcategory-picker]');
+      if(primary)primary.value=activeFilter;
+      if(!secondary||!wrapper)return;
+
+      const supportsSubcategories=SUBCATEGORY_PARENTS.has(activeFilter);
+      const keys=supportsSubcategories?availableSubcategories(activeFilter):[];
+      const shouldShow=supportsSubcategories&&keys.length>0;
+      wrapper.hidden=!shouldShow;
+
+      secondary.innerHTML=`<option value="">Todos los productos</option>${keys.map(key=>`<option value="${esc(key)}">${esc(subcategoryLabel(key))}</option>`).join('')}`;
+      secondary.value=shouldShow&&keys.includes(activeSubcategory)?activeSubcategory:'';
+      secondary.disabled=!shouldShow;
+      document.querySelector('[data-catalog-premium-picker="primary"]')?._syncPremiumPicker?.();
+      document.querySelector('[data-catalog-premium-picker="secondary"]')?._syncPremiumPicker?.();
+    };
+
+    const updateControls=()=>{
+      document.querySelectorAll('[data-main-filter]').forEach(btn=>{
+        const active=btn.dataset.mainFilter===activeFilter;
+        btn.classList.toggle('is-active',active);
+        btn.setAttribute('aria-expanded',active&&btn.closest('.products-filter__group')?.matches(':hover')?'true':'false');
+      });
+      document.querySelectorAll('[data-sub-filter]').forEach(btn=>btn.classList.toggle('is-active',btn.dataset.parentFilter===activeFilter&&btn.dataset.subFilter===activeSubcategory));
+      renderMobileSubcategories();
+    };
+
+    const resetListing=(filter,subcategory='',updateUrl=true)=>{
       activeFilter=normalizeListingFilter(filter);
-      filteredProducts=activeFilter==='todo'?products:products.filter(product=>normalizeListingFilter(product.category)===activeFilter);
+      activeSubcategory=SUBCATEGORY_PARENTS.has(activeFilter)?String(subcategory||''):'';
+      const validSubs=SUBCATEGORY_PARENTS.has(activeFilter)?availableSubcategories(activeFilter):[];
+      if(activeSubcategory&&!validSubs.includes(activeSubcategory))activeSubcategory='';
+      filteredProducts=products.filter(product=>{
+        const parentMatches=activeFilter==='todo'||product.category===activeFilter;
+        const subMatches=!activeSubcategory||product.subcategory===activeSubcategory;
+        return parentMatches&&subMatches;
+      });
       renderedCount=0;
       list.innerHTML='';
       updateEmptyState();
       appendBatch();
+      updateControls();
       if(updateUrl){
         const url=new URL(location.href);
         url.searchParams.set('filter',activeFilter);
+        if(activeSubcategory)url.searchParams.set('subcat',activeSubcategory);else url.searchParams.delete('subcat');
         history.replaceState({},'',url);
       }
     };
 
-    observer=new IntersectionObserver(entries=>{
-      if(entries.some(entry=>entry.isIntersecting))appendBatch();
-    },{rootMargin:'600px 0px'});
+    renderDesktopFlyouts();
+
+    document.querySelectorAll('[data-main-filter]').forEach(button=>{
+      button.addEventListener('click',()=>resetListing(button.dataset.mainFilter,''));
+    });
+    document.addEventListener('click',event=>{
+      const sub=event.target.closest('[data-sub-filter]');
+      if(sub)resetListing(sub.dataset.parentFilter,sub.dataset.subFilter);
+    });
+
+    document.querySelectorAll('.products-filter__group').forEach(group=>{
+      const trigger=group.querySelector('[data-main-filter]');
+      group.addEventListener('mouseenter',()=>trigger?.setAttribute('aria-expanded','true'));
+      group.addEventListener('mouseleave',()=>trigger?.setAttribute('aria-expanded','false'));
+      group.addEventListener('focusin',()=>trigger?.setAttribute('aria-expanded','true'));
+      group.addEventListener('focusout',event=>{if(!group.contains(event.relatedTarget))trigger?.setAttribute('aria-expanded','false');});
+    });
+
+    const mobilePrimary=document.querySelector('[data-mobile-primary]');
+    const mobileSecondary=document.querySelector('[data-mobile-secondary]');
+    const primaryPicker=document.querySelector('[data-catalog-premium-picker="primary"]');
+    const secondaryPicker=document.querySelector('[data-catalog-premium-picker="secondary"]');
+    setupPremiumMobilePicker(primaryPicker,value=>resetListing(value,''));
+    setupPremiumMobilePicker(secondaryPicker,value=>resetListing(activeFilter,value));
+    mobilePrimary?.addEventListener('change',()=>resetListing(mobilePrimary.value,''));
+    mobileSecondary?.addEventListener('change',()=>resetListing(activeFilter,mobileSecondary.value));
+
+    const observer=new IntersectionObserver(entries=>{if(entries.some(entry=>entry.isIntersecting))appendBatch();},{rootMargin:'600px 0px'});
     observer.observe(sentinel);
 
-    const picker=document.getElementById('products-category-picker');
-    picker?.addEventListener('change',()=>requestAnimationFrame(()=>resetListing(picker.value)));
-
-    document.querySelectorAll('.products-filter__item').forEach(button=>{
-      button.addEventListener('click',()=>requestAnimationFrame(()=>resetListing(button.dataset.filter)));
+    window.addEventListener('popstate',()=>{
+      const next=new URLSearchParams(location.search);
+      resetListing(next.get('filter')||'todo',next.get('subcat')||'',false);
     });
 
-    document.querySelectorAll('.products-picker__option').forEach(option=>{
-      option.addEventListener('click',()=>requestAnimationFrame(()=>resetListing(option.dataset.value)));
-    });
-
-    window.addEventListener('popstate',()=>resetListing(new URLSearchParams(location.search).get('filter')||'todo'));
-
-    resetListing(activeFilter);
-    if(picker){
-      picker.value=activeFilter;
-      picker.dispatchEvent(new Event('change',{bubbles:true}));
-    }
+    resetListing(activeFilter,activeSubcategory,false);
   }catch(error){
     console.error('No se pudo cargar el catálogo público',error);
     list.innerHTML='<p class="products-empty">No fue posible cargar los productos. Recarga la página para intentarlo nuevamente.</p>';

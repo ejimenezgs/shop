@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Cormorant+Garamond:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=shop44" />
+  <link rel="stylesheet" href="css/styles.css?v=shop47beta" />
 </head>
 <body class="product-page">
   <header class="hero__header product-header" aria-label="Navegación principal">
@@ -41,36 +41,54 @@
     <section class="products-page__inner">
       <h1 id="products-page-title">COLECCIÓN 2026</h1>
 
-      <nav class="products-filter" aria-label="Filtrar productos por categoría">
-        <button class="products-filter__item is-active" type="button" data-filter="todo">Todo</button>
-        <button class="products-filter__item" type="button" data-filter="interior">Interior</button>
-        <button class="products-filter__item" type="button" data-filter="exterior">Exterior</button>
-        <button class="products-filter__item" type="button" data-filter="habitacion">Habitación</button>
-        <button class="products-filter__item" type="button" data-filter="decoracion">Decoración</button>
-        <button class="products-filter__item" type="button" data-filter="iluminacion">Iluminación</button>
-      </nav>
+      <div class="catalog-filter-beta" data-catalog-filter>
+        <nav class="products-filter products-filter--desktop" aria-label="Filtrar productos por categoría">
+          <button class="products-filter__item is-active" type="button" data-main-filter="todo">Todo</button>
+          <div class="products-filter__group" data-filter-group="interior">
+            <button class="products-filter__item" type="button" data-main-filter="interior" aria-haspopup="true" aria-expanded="false">Interior</button>
+            <div class="products-filter__flyout" data-subcategory-flyout="interior" aria-label="Subcategorías de Interior"></div>
+          </div>
+          <div class="products-filter__group" data-filter-group="exterior">
+            <button class="products-filter__item" type="button" data-main-filter="exterior" aria-haspopup="true" aria-expanded="false">Exterior</button>
+            <div class="products-filter__flyout" data-subcategory-flyout="exterior" aria-label="Subcategorías de Exterior"></div>
+          </div>
+          <div class="products-filter__group" data-filter-group="habitacion">
+            <button class="products-filter__item" type="button" data-main-filter="habitacion" aria-haspopup="true" aria-expanded="false">Habitación</button>
+            <div class="products-filter__flyout" data-subcategory-flyout="habitacion" aria-label="Subcategorías de Habitación"></div>
+          </div>
+          <div class="products-filter__group" data-filter-group="decoracion">
+            <button class="products-filter__item" type="button" data-main-filter="decoracion" aria-haspopup="true" aria-expanded="false">Decoración</button>
+            <div class="products-filter__flyout" data-subcategory-flyout="decoracion" aria-label="Subcategorías de Decoración"></div>
+          </div>
+          <button class="products-filter__item" type="button" data-main-filter="iluminacion">Iluminación</button>
+        </nav>
 
-      <div class="products-picker" aria-label="Filtrar productos por categoría en móvil">
-        <div class="products-picker__control" data-products-custom-picker>
-          <select id="products-category-picker" class="products-picker__select" aria-hidden="true" tabindex="-1">
-            <option value="todo">Todo</option>
-            <option value="interior">Interior</option>
-            <option value="exterior">Exterior</option>
-            <option value="habitacion">Habitación</option>
-            <option value="decoracion">Decoración</option>
-            <option value="iluminacion">Iluminación</option>
-          </select>
-          <button class="products-picker__button" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="products-category-menu">
-            <span class="products-picker__value">Todo</span>
-            <span class="products-picker__chevron" aria-hidden="true"></span>
-          </button>
-          <div class="products-picker__menu" id="products-category-menu" role="listbox" tabindex="-1">
-            <button class="products-picker__option is-selected" type="button" role="option" aria-selected="true" data-value="todo">Todo</button>
-            <button class="products-picker__option" type="button" role="option" aria-selected="false" data-value="interior">Interior</button>
-            <button class="products-picker__option" type="button" role="option" aria-selected="false" data-value="exterior">Exterior</button>
-            <button class="products-picker__option" type="button" role="option" aria-selected="false" data-value="habitacion">Habitación</button>
-            <button class="products-picker__option" type="button" role="option" aria-selected="false" data-value="decoracion">Decoración</button>
-            <button class="products-picker__option" type="button" role="option" aria-selected="false" data-value="iluminacion">Iluminación</button>
+        <div class="catalog-mobile-pickers" data-mobile-catalog-filter>
+          <div class="catalog-premium-picker" data-catalog-premium-picker="primary">
+            <select class="catalog-premium-picker__select" data-mobile-primary aria-label="Seleccionar categoría principal">
+              <option value="todo">Todo</option>
+              <option value="interior">Interior</option>
+              <option value="exterior">Exterior</option>
+              <option value="habitacion">Habitación</option>
+              <option value="decoracion">Decoración</option>
+              <option value="iluminacion">Iluminación</option>
+            </select>
+            <button class="catalog-premium-picker__button" type="button" aria-haspopup="listbox" aria-expanded="false">
+              <span class="catalog-premium-picker__value">Todo</span>
+              <span class="catalog-premium-picker__chevron" aria-hidden="true"></span>
+            </button>
+            <div class="catalog-premium-picker__menu" role="listbox" tabindex="-1"></div>
+          </div>
+
+          <div class="catalog-premium-picker catalog-premium-picker--subcategory" data-catalog-premium-picker="secondary" data-mobile-subcategory-picker hidden>
+            <select class="catalog-premium-picker__select" data-mobile-secondary aria-label="Seleccionar subcategoría">
+              <option value="">Todos los productos</option>
+            </select>
+            <button class="catalog-premium-picker__button" type="button" aria-haspopup="listbox" aria-expanded="false">
+              <span class="catalog-premium-picker__value">Todos los productos</span>
+              <span class="catalog-premium-picker__chevron" aria-hidden="true"></span>
+            </button>
+            <div class="catalog-premium-picker__menu" role="listbox" tabindex="-1"></div>
           </div>
         </div>
       </div>
@@ -93,10 +111,10 @@
 
   <script src="https://unpkg.com/lucide@latest"></script>
   <script>window.lucide?.createIcons({attrs:{'aria-hidden':'true'}});</script>
-  <script src="js/cart.js?v=shop44"></script>
-  <script src="js/script.js?v=shop44"></script>
-  <script src="js/catalog-api.js?v=shop44"></script>
-  <script src="js/firebase-public-config.js?v=shop44"></script>
+  <script src="js/cart.js?v=shop47beta"></script>
+  <script src="js/script.js?v=shop47beta"></script>
+  <script src="js/catalog-api.js?v=shop47beta"></script>
+  <script src="js/firebase-public-config.js?v=shop47beta"></script>
   <a class="whatsapp-float" href="https://wa.me/525513004665?text=Hola%2C%20quiero%20hablar%20con%20un%20agente%20de%20Casa%20Glick" target="_blank" rel="noopener" aria-label="Hablar con un agente por WhatsApp">
     <svg class="whatsapp-float__icon" viewBox="0 0 24 24" aria-hidden="true">
       <path fill="currentColor" d="M12.04 2C6.57 2 2.12 6.37 2.12 11.75c0 1.72.46 3.4 1.33 4.88L2 22l5.51-1.41a10.07 10.07 0 0 0 4.53 1.1c5.47 0 9.92-4.37 9.92-9.75S17.51 2 12.04 2Zm0 17.97c-1.46 0-2.88-.39-4.12-1.12l-.3-.18-3.27.84.87-3.11-.2-.32a8.02 8.02 0 0 1-1.2-4.33c0-4.42 3.69-8.02 8.22-8.02s8.22 3.6 8.22 8.02-3.69 8.22-8.22 8.22Zm4.5-6.02c-.25-.12-1.47-.71-1.7-.79-.23-.08-.39-.12-.56.12-.16.24-.64.79-.78.95-.14.16-.29.18-.54.06-.25-.12-1.05-.38-2-1.2-.74-.65-1.24-1.45-1.39-1.69-.14-.24-.02-.37.11-.49.11-.11.25-.29.37-.43.12-.14.16-.24.25-.41.08-.16.04-.31-.02-.43-.06-.12-.56-1.32-.77-1.81-.2-.47-.41-.41-.56-.42h-.48c-.16 0-.43.06-.66.31-.23.24-.87.83-.87 2.02s.89 2.34 1.02 2.5c.12.16 1.75 2.62 4.24 3.67.59.25 1.05.4 1.41.51.59.18 1.13.16 1.56.1.48-.07 1.47-.59 1.68-1.16.21-.57.21-1.06.14-1.16-.06-.1-.22-.16-.47-.28Z"/>
@@ -104,7 +122,7 @@
     <span class="whatsapp-float__label">Hablar con un agente</span>
   </a>
 
-  <script type="module" src="js/catalog-public.js?v=shop44"></script>
+  <script type="module" src="js/catalog-public.js?v=shop47beta"></script>
 
   <footer class="site-footer" aria-label="Pie de página Casa Glick">
     <div class="site-footer__inner">
