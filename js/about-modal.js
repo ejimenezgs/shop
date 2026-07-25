@@ -1,61 +1,48 @@
 (() => {
-  const modal = document.querySelector('#about-modal');
-  const trigger = document.querySelector('[data-about-modal-trigger]');
-  if (!modal || !trigger) return;
+  const aboutModal = document.querySelector('[data-about-modal]');
+  const aboutModalPanel = aboutModal?.querySelector('.project-modal__panel');
+  const aboutModalOpen = document.querySelector('[data-about-modal-open]');
+  let lastAboutTrigger = null;
 
-  const panel = modal.querySelector('.about-modal__panel');
-  const closeControls = modal.querySelectorAll('[data-about-modal-close]');
-  const contactLink = modal.querySelector('[data-about-modal-contact]');
-  let lastFocused = null;
-
-  const getFocusable = () => Array.from(modal.querySelectorAll(
-    'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
-  )).filter((element) => !element.hidden);
-
-  const openModal = (event) => {
-    if (event) event.preventDefault();
-    lastFocused = document.activeElement;
-    modal.hidden = false;
-    modal.setAttribute('aria-hidden', 'false');
-    document.body.classList.add('has-about-modal');
+  function openAboutModal(trigger, event) {
+    event?.preventDefault();
+    if (!aboutModal) return;
+    lastAboutTrigger = trigger || null;
+    aboutModal.classList.add('is-open');
+    aboutModal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('has-about-modal', 'has-project-modal');
     requestAnimationFrame(() => {
-      modal.classList.add('is-open');
-      panel?.focus({ preventScroll: true });
+      aboutModal.querySelector('[data-about-modal-close]')?.focus({ preventScroll: true });
     });
-  };
+  }
 
-  const closeModal = ({ restoreFocus = true } = {}) => {
-    modal.classList.remove('is-open');
-    modal.setAttribute('aria-hidden', 'true');
-    document.body.classList.remove('has-about-modal');
-    window.setTimeout(() => {
-      modal.hidden = true;
-      if (restoreFocus && lastFocused instanceof HTMLElement) lastFocused.focus();
-    }, 420);
-  };
-
-  trigger.addEventListener('click', openModal);
-  closeControls.forEach((control) => control.addEventListener('click', () => closeModal()));
-  contactLink?.addEventListener('click', () => closeModal({ restoreFocus: false }));
-
-  document.addEventListener('keydown', (event) => {
-    if (modal.hidden) return;
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      closeModal();
-      return;
+  function closeAboutModal({ restoreFocus = true } = {}) {
+    if (!aboutModal) return;
+    aboutModal.classList.remove('is-open');
+    aboutModal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('has-about-modal', 'has-project-modal');
+    if (restoreFocus && lastAboutTrigger instanceof HTMLElement) {
+      lastAboutTrigger.focus({ preventScroll: true });
     }
-    if (event.key !== 'Tab') return;
-    const focusable = getFocusable();
-    if (!focusable.length) return;
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    if (event.shiftKey && document.activeElement === first) {
-      event.preventDefault();
-      last.focus();
-    } else if (!event.shiftKey && document.activeElement === last) {
-      event.preventDefault();
-      first.focus();
+  }
+
+  aboutModalOpen?.addEventListener('click', (event) => openAboutModal(aboutModalOpen, event));
+
+  aboutModal?.querySelectorAll('[data-about-modal-close]').forEach((button) => {
+    button.addEventListener('click', () => closeAboutModal());
+  });
+
+  aboutModalPanel?.addEventListener('click', (event) => {
+    event.stopPropagation();
+  });
+
+  document.querySelector('[data-about-modal-cta]')?.addEventListener('click', () => {
+    closeAboutModal({ restoreFocus: false });
+  });
+
+  window.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && aboutModal?.classList.contains('is-open')) {
+      closeAboutModal();
     }
   });
 })();
