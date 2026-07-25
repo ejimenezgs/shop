@@ -345,6 +345,92 @@ function setupPremiumMobilePicker(root,onSelect){
   sync();
 }
 
+
+function setupHierarchicalMobilePicker(root,options){
+  if(!root||root.dataset.hierarchicalPickerReady==='true')return;
+  const button=root.querySelector('.catalog-hierarchical-picker__button');
+  const value=root.querySelector('.catalog-hierarchical-picker__value');
+  const menu=root.querySelector('.catalog-hierarchical-picker__menu');
+  if(!button||!value||!menu)return;
+
+  const categoryLabels={
+    todo:'Todo',interior:'Interior',exterior:'Exterior',habitacion:'Habitación',decoracion:'Decoración',iluminacion:'Iluminación'
+  };
+  const categories=['todo','interior','exterior','habitacion','decoracion','iluminacion'];
+  const submenuParents=new Set(['interior','exterior','habitacion','decoracion']);
+  let level='root';
+
+  const close=()=>{
+    root.classList.remove('is-open');
+    button.setAttribute('aria-expanded','false');
+    level='root';
+  };
+
+  const renderRoot=()=>{
+    level='root';
+    const state=options.getState();
+    menu.innerHTML=categories.map(category=>{
+      const hasChildren=submenuParents.has(category)&&options.getSubcategories(category).length>0;
+      const selected=state.filter===category&&!state.subcategory;
+      return `<button class="catalog-hierarchical-picker__option${selected?' is-selected':''}" type="button" role="menuitem" data-hier-category="${esc(category)}"><span>${esc(categoryLabels[category])}</span>${hasChildren?'<i aria-hidden="true"></i>':''}</button>`;
+    }).join('');
+  };
+
+  const renderSubmenu=parent=>{
+    level=parent;
+    const state=options.getState();
+    const keys=options.getSubcategories(parent);
+    menu.innerHTML=`<button class="catalog-hierarchical-picker__back" type="button" role="menuitem" data-hier-back><span aria-hidden="true">←</span>${esc(categoryLabels[parent])}</button>`+
+      `<button class="catalog-hierarchical-picker__option${state.filter===parent&&!state.subcategory?' is-selected':''}" type="button" role="menuitem" data-hier-parent="${esc(parent)}" data-hier-subcategory=""><span>Todo</span></button>`+
+      keys.map(key=>`<button class="catalog-hierarchical-picker__option${state.filter===parent&&state.subcategory===key?' is-selected':''}" type="button" role="menuitem" data-hier-parent="${esc(parent)}" data-hier-subcategory="${esc(key)}"><span>${esc(subcategoryLabel(key))}</span></button>`).join('');
+  };
+
+  const sync=()=>{
+    const state=options.getState();
+    value.textContent=state.filter==='todo'
+      ? 'Todo'
+      : state.subcategory
+        ? `${categoryLabels[state.filter]} · ${subcategoryLabel(state.subcategory)}`
+        : categoryLabels[state.filter]||'Todo';
+    if(root.classList.contains('is-open')){
+      if(level==='root')renderRoot();else renderSubmenu(level);
+    }
+  };
+
+  button.addEventListener('click',event=>{
+    event.stopPropagation();
+    const open=!root.classList.contains('is-open');
+    root.classList.toggle('is-open',open);
+    button.setAttribute('aria-expanded',open?'true':'false');
+    if(open)renderRoot();
+  });
+
+  menu.addEventListener('click',event=>{
+    const back=event.target.closest('[data-hier-back]');
+    if(back){renderRoot();return;}
+    const categoryButton=event.target.closest('[data-hier-category]');
+    if(categoryButton){
+      const category=categoryButton.dataset.hierCategory;
+      const keys=submenuParents.has(category)?options.getSubcategories(category):[];
+      if(keys.length){renderSubmenu(category);return;}
+      options.onSelect(category,'');
+      close();
+      return;
+    }
+    const subButton=event.target.closest('[data-hier-parent]');
+    if(subButton){
+      options.onSelect(subButton.dataset.hierParent,subButton.dataset.hierSubcategory||'');
+      close();
+    }
+  });
+
+  document.addEventListener('click',event=>{if(!root.contains(event.target))close();});
+  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&root.classList.contains('is-open')){close();button.focus();}});
+  root._syncHierarchicalPicker=sync;
+  root.dataset.hierarchicalPickerReady='true';
+  sync();
+}
+
 async function renderListing(){
   const list=document.querySelector('.products-list');
   if(!list)return;
@@ -399,23 +485,8 @@ async function renderListing(){
       });
     };
 
-    const renderMobileSubcategories=()=>{
-      const primary=document.querySelector('[data-mobile-primary]');
-      const secondary=document.querySelector('[data-mobile-secondary]');
-      const wrapper=document.querySelector('[data-mobile-subcategory-picker]');
-      if(primary)primary.value=activeFilter;
-      if(!secondary||!wrapper)return;
-
-      const supportsSubcategories=SUBCATEGORY_PARENTS.has(activeFilter);
-      const keys=supportsSubcategories?availableSubcategories(activeFilter):[];
-      const shouldShow=supportsSubcategories&&keys.length>0;
-      wrapper.hidden=!shouldShow;
-
-      secondary.innerHTML=`<option value="">Todos los productos</option>${keys.map(key=>`<option value="${esc(key)}">${esc(subcategoryLabel(key))}</option>`).join('')}`;
-      secondary.value=shouldShow&&keys.includes(activeSubcategory)?activeSubcategory:'';
-      secondary.disabled=!shouldShow;
-      document.querySelector('[data-catalog-premium-picker="primary"]')?._syncPremiumPicker?.();
-      document.querySelector('[data-catalog-premium-picker="secondary"]')?._syncPremiumPicker?.();
+    const syncMobileHierarchicalPicker=()=>{
+      document.querySelector('[data-mobile-hierarchical-picker]')?._syncHierarchicalPicker?.();
     };
 
     const updateControls=()=>{
@@ -425,7 +496,7 @@ async function renderListing(){
         btn.setAttribute('aria-expanded',active&&btn.closest('.products-filter__group')?.matches(':hover')?'true':'false');
       });
       document.querySelectorAll('[data-sub-filter]').forEach(btn=>btn.classList.toggle('is-active',btn.dataset.parentFilter===activeFilter&&btn.dataset.subFilter===activeSubcategory));
-      renderMobileSubcategories();
+      syncMobileHierarchicalPicker();
     };
 
     const resetListing=(filter,subcategory='',updateUrl=true)=>{
@@ -469,14 +540,12 @@ async function renderListing(){
       group.addEventListener('focusout',event=>{if(!group.contains(event.relatedTarget))trigger?.setAttribute('aria-expanded','false');});
     });
 
-    const mobilePrimary=document.querySelector('[data-mobile-primary]');
-    const mobileSecondary=document.querySelector('[data-mobile-secondary]');
-    const primaryPicker=document.querySelector('[data-catalog-premium-picker="primary"]');
-    const secondaryPicker=document.querySelector('[data-catalog-premium-picker="secondary"]');
-    setupPremiumMobilePicker(primaryPicker,value=>resetListing(value,''));
-    setupPremiumMobilePicker(secondaryPicker,value=>resetListing(activeFilter,value));
-    mobilePrimary?.addEventListener('change',()=>resetListing(mobilePrimary.value,''));
-    mobileSecondary?.addEventListener('change',()=>resetListing(activeFilter,mobileSecondary.value));
+    const hierarchicalPicker=document.querySelector('[data-mobile-hierarchical-picker]');
+    setupHierarchicalMobilePicker(hierarchicalPicker,{
+      getState:()=>({filter:activeFilter,subcategory:activeSubcategory}),
+      getSubcategories:availableSubcategories,
+      onSelect:(filter,subcategory)=>resetListing(filter,subcategory)
+    });
 
     const observer=new IntersectionObserver(entries=>{if(entries.some(entry=>entry.isIntersecting))appendBatch();},{rootMargin:'600px 0px'});
     observer.observe(sentinel);
