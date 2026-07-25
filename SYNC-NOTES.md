@@ -1,5 +1,1 @@
-# Web Design Shop v34
-
-- Section visibility now uses an explicit `display: none !important` guard.
-- The hidden state is applied both by class and inline important style, so existing section display rules cannot override it.
-- Cache version updated to shop34.
+Shop v35: Web Design robust loader with getDoc + onSnapshot, selector fallbacks, critical inline CSS and console diagnostics.

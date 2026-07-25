@@ -2,7 +2,8 @@ import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12
 import {
   doc,
   getFirestore,
-  onSnapshot
+  onSnapshot,
+  getDoc
 } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
 
 const firebaseConfig = window.CASA_GLICK_FIREBASE_CONFIG;
@@ -174,8 +175,19 @@ function applySection(name, section) {
   const map = sectionMap[name];
   if (!map) return;
 
-  const root = document.querySelector(map.root);
-  if (!root) return;
+  const fallbackRoots = {
+    hero: '#inicio',
+    products: '#productos',
+    showroom: '#showroom',
+    about: '#about',
+    brands: '#lifestyle',
+    contact: '#contacto'
+  };
+  const root = document.querySelector(map.root) || document.querySelector(fallbackRoots[name]);
+  if (!root) {
+    console.warn(`[Web Design] No se encontró la sección: ${name}`);
+    return;
+  }
   remember(root);
 
   const enabledValue = section.enabled;
@@ -183,16 +195,20 @@ function applySection(name, section) {
   const isEnabled = enabledValue === true || enabledValue === 1 || enabledValue === "true";
 
   if (isDisabled) {
-    root.hidden = true;
+    root.setAttribute('hidden', '');
     root.classList.add('is-shop-content-disabled');
     root.style.setProperty('display', 'none', 'important');
     root.setAttribute('aria-hidden', 'true');
+    root.dataset.webDesignEnabled = 'false';
   } else if (isEnabled) {
-    root.hidden = false;
+    root.removeAttribute('hidden');
     root.classList.remove('is-shop-content-disabled');
     root.style.removeProperty('display');
     root.removeAttribute('aria-hidden');
+    root.dataset.webDesignEnabled = 'true';
   }
+
+  console.info(`[Web Design] ${name}:`, enabledValue, root);
 
   if (map.eyebrow) setText(document.querySelector(map.eyebrow), section.eyebrow);
   if (map.title) setText(document.querySelector(map.title), section.title);
@@ -217,19 +233,44 @@ function applyShopContent(content) {
   });
 }
 
-if (firebaseConfig?.projectId) {
-  const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const contentRef = doc(db, 'shopContent', 'home');
+async function startShopContent() {
+  if (!firebaseConfig?.projectId) {
+    console.error('[Web Design] No se encontró la configuración de Firebase.');
+    return;
+  }
 
-  onSnapshot(
-    contentRef,
-    (snapshot) => {
-      if (!snapshot.exists()) return;
-      applyShopContent(snapshot.data());
-    },
-    (error) => {
-      console.error('No se pudo cargar Web Design:', error);
+  try {
+    const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const contentRef = doc(db, 'shopContent', 'home');
+
+    // Aplica una lectura inicial y después mantiene el listener en tiempo real.
+    const initialSnapshot = await getDoc(contentRef);
+    if (initialSnapshot.exists()) {
+      console.info('[Web Design] Configuración inicial:', initialSnapshot.data());
+      applyShopContent(initialSnapshot.data());
+    } else {
+      console.warn('[Web Design] No existe shopContent/home.');
     }
-  );
+
+    onSnapshot(
+      contentRef,
+      (snapshot) => {
+        if (!snapshot.exists()) return;
+        console.info('[Web Design] Configuración actualizada:', snapshot.data());
+        applyShopContent(snapshot.data());
+      },
+      (error) => {
+        console.error('[Web Design] No se pudo escuchar shopContent/home:', error);
+      }
+    );
+  } catch (error) {
+    console.error('[Web Design] No se pudo iniciar:', error);
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', startShopContent, { once: true });
+} else {
+  startShopContent();
 }

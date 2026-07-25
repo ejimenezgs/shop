@@ -1,0 +1,6 @@
+# Private production secrets
+/private-config.php
+/api/private-config.php
+/service-account*.json
+*.pem
+.env
