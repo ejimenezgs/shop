@@ -405,18 +405,43 @@ function setupHierarchicalMobilePicker(root,options){
     if(open)renderRoot();
   });
 
+  menu.addEventListener('pointerdown',event=>{
+    // Keep taps inside the open menu from reaching outside-click handlers.
+    event.stopPropagation();
+  });
+
   menu.addEventListener('click',event=>{
+    event.preventDefault();
+    event.stopPropagation();
+
     const back=event.target.closest('[data-hier-back]');
-    if(back){renderRoot();return;}
+    if(back){
+      renderRoot();
+      root.classList.add('is-open');
+      button.setAttribute('aria-expanded','true');
+      return;
+    }
+
     const categoryButton=event.target.closest('[data-hier-category]');
     if(categoryButton){
       const category=categoryButton.dataset.hierCategory;
       const keys=submenuParents.has(category)?options.getSubcategories(category):[];
-      if(keys.length){renderSubmenu(category);return;}
+
+      // Categories with children only open the second level. They do not
+      // apply a filter or close the picker until the user chooses an option.
+      if(keys.length){
+        renderSubmenu(category);
+        root.classList.add('is-open');
+        button.setAttribute('aria-expanded','true');
+        requestAnimationFrame(()=>menu.scrollTo({top:0,behavior:'auto'}));
+        return;
+      }
+
       options.onSelect(category,'');
       close();
       return;
     }
+
     const subButton=event.target.closest('[data-hier-parent]');
     if(subButton){
       options.onSelect(subButton.dataset.hierParent,subButton.dataset.hierSubcategory||'');
@@ -424,7 +449,7 @@ function setupHierarchicalMobilePicker(root,options){
     }
   });
 
-  document.addEventListener('click',event=>{if(!root.contains(event.target))close();});
+  document.addEventListener('pointerdown',event=>{if(!root.contains(event.target))close();});
   document.addEventListener('keydown',event=>{if(event.key==='Escape'&&root.classList.contains('is-open')){close();button.focus();}});
   root._syncHierarchicalPicker=sync;
   root.dataset.hierarchicalPickerReady='true';
@@ -534,10 +559,18 @@ async function renderListing(){
 
     document.querySelectorAll('.products-filter__group').forEach(group=>{
       const trigger=group.querySelector('[data-main-filter]');
-      group.addEventListener('mouseenter',()=>trigger?.setAttribute('aria-expanded','true'));
-      group.addEventListener('mouseleave',()=>trigger?.setAttribute('aria-expanded','false'));
-      group.addEventListener('focusin',()=>trigger?.setAttribute('aria-expanded','true'));
-      group.addEventListener('focusout',event=>{if(!group.contains(event.relatedTarget))trigger?.setAttribute('aria-expanded','false');});
+      const open=()=>{
+        group.classList.add('is-flyout-open');
+        trigger?.setAttribute('aria-expanded','true');
+      };
+      const closeGroup=()=>{
+        group.classList.remove('is-flyout-open');
+        trigger?.setAttribute('aria-expanded','false');
+      };
+      group.addEventListener('mouseenter',open);
+      group.addEventListener('mouseleave',closeGroup);
+      group.addEventListener('focusin',open);
+      group.addEventListener('focusout',event=>{if(!group.contains(event.relatedTarget))closeGroup();});
     });
 
     const hierarchicalPicker=document.querySelector('[data-mobile-hierarchical-picker]');
