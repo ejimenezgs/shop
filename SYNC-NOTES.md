@@ -6,3 +6,11 @@
 - El Panel detecta el esquema remoto y crea en Firebase las secciones faltantes sin sobrescribir contenido existente.
 - El Shop lee `sectionOrder` desde `shopContent/home` y reordena los bloques automáticamente.
 - Hero está fijado al inicio y Contacto al final.
+
+- v64: Cookie banner unified across all Shop pages using the index design and shared localStorage consent key.
+
+
+## Shop v65
+- Product detail titles are no longer clamped or ellipsized.
+- Adaptive typography classes reduce title size progressively for long names while preserving complete text.
+- Desktop and mobile product detail layouts supported.

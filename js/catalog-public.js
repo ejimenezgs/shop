@@ -604,7 +604,14 @@ async function renderDetail(){
     const products=await loadPublicProducts();
     const product=products.find(p=>String(p.code).toLowerCase()===String(key).toLowerCase()||p.slug===key);
     if(!product)throw new Error('Producto no encontrado');
-    document.querySelectorAll('[data-product-title]').forEach(n=>n.textContent=product.displayName);
+    document.querySelectorAll('[data-product-title]').forEach(node=>{
+      const title=String(product.displayName||'Producto').trim();
+      node.textContent=title;
+      node.classList.remove('is-long-title','is-very-long-title','is-extra-long-title');
+      if(title.length>68)node.classList.add('is-extra-long-title');
+      else if(title.length>48)node.classList.add('is-very-long-title');
+      else if(title.length>32)node.classList.add('is-long-title');
+    });
     const codeNode=document.querySelector('[data-product-code]');if(codeNode)codeNode.textContent=product.code;
     const set=(selector,value)=>{const n=document.querySelector(selector);if(n)n.textContent=value||'—'};
     set('[data-product-description]',product.editorialDescription);set('[data-product-materials]',product.materials);set('[data-product-measures]',product.measures);set('[data-product-breadcrumb-name]',product.displayName);
