@@ -60,6 +60,17 @@ const updateSectionMotion = () => {
       opacity = eased;
       y = 76 * (1 - eased);
     } else if (rect.bottom > 0) {
+      // Contacto es la última sección antes del footer: al seguir bajando debe
+      // permanecer visible hasta salir físicamente del viewport. Al volver hacia
+      // arriba, la rama de entrada (rect.top > 0) conserva el desvanecimiento.
+      const isContact = section.classList.contains('contact-section');
+      if (isContact) {
+        opacity = 1;
+        y = 0;
+        getMotionTargets(section).forEach((target) => applyMotion(target, opacity, y));
+        return;
+      }
+
       // Salida progresiva. El hero debe irse antes para que no se vea dentro del bloque de Productos.
       const passed = -rect.top;
       const isHero = section.classList.contains('hero');
