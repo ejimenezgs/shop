@@ -10093,3 +10093,174 @@ body.has-about-modal {
     line-height: 1.85;
   }
 }
+
+/* v58: bloque Hospitality con la misma composicion editorial de About */
+.hospitality {
+  position: relative;
+  height: 100svh;
+  min-height: 100svh;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.hospitality__motion {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  height: 100svh;
+  min-height: 100svh;
+}
+
+.hospitality__media {
+  height: 100svh;
+  min-height: 100svh;
+  margin: 0;
+  overflow: hidden;
+}
+
+.hospitality__media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+}
+
+.hospitality__content {
+  height: 100svh;
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(96px, 9vw, 130px) clamp(54px, 6.5vw, 92px) clamp(74px, 7vw, 110px);
+  color: #1c1a1a;
+}
+
+.hospitality__text {
+  width: min(100%, 410px);
+}
+
+.hospitality__text h2 {
+  margin: 0 0 26px;
+  color: #1c1a1a;
+  font-family: var(--font-heading, Georgia, serif);
+  font-size: clamp(42px, 4.2vw, 68px);
+  font-weight: 400;
+  line-height: 0.98;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+
+.hospitality__text p {
+  margin: 0 0 15px;
+  max-width: 410px;
+  color: #1c1a1a;
+  font-size: clamp(10px, 0.82vw, 11.5px);
+  line-height: 1.56;
+}
+
+.hospitality__link {
+  width: fit-content;
+  margin-top: 60px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid rgba(28, 26, 26, 0.48);
+  color: #1c1a1a;
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: gap 260ms ease;
+}
+
+.hospitality__link span:last-child {
+  display: inline-block;
+  width: 22px;
+  height: 1px;
+  background: currentColor;
+  position: relative;
+  font-size: 0;
+}
+
+.hospitality__link span:last-child::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  border-top: 1px solid currentColor;
+  border-right: 1px solid currentColor;
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.hospitality__link:hover {
+  gap: 22px;
+}
+
+@media (max-width: 900px) {
+  .hospitality__motion {
+    grid-template-columns: 1fr;
+    grid-template-rows: 50svh 50svh;
+  }
+
+  .hospitality__media,
+  .hospitality__content {
+    height: 50svh;
+    min-height: 50svh;
+  }
+
+  .hospitality__content {
+    padding: 32px 24px 40px;
+  }
+
+  .hospitality__text {
+    width: min(100%, 420px);
+  }
+
+  .hospitality__text h2 {
+    margin-bottom: 18px;
+    font-size: 35px;
+  }
+
+  .hospitality__text p {
+    margin-bottom: 14px;
+    font-size: 10.8px;
+    line-height: 1.48;
+  }
+
+  .hospitality__link {
+    margin-top: 32px;
+  }
+}
+
+/* shop60: mantener visible la imagen de Hospitality en móvil */
+@media (max-width: 900px) {
+  .hospitality__media {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    min-height: 46svh !important;
+    height: 46svh !important;
+  }
+
+  .hospitality__media img {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center center !important;
+  }
+
+  .hospitality__motion {
+    grid-template-rows: 46svh 54svh;
+  }
+
+  .hospitality__content {
+    min-height: 54svh;
+    height: 54svh;
+  }
+}

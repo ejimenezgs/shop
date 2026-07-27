@@ -41,6 +41,16 @@ const sectionMap = {
     root: '[data-section="brands"]',
     image: '[data-content="brands-image"]'
   },
+  hospitality: {
+    root: '[data-section="hospitality"]',
+    title: '[data-content="hospitality-title"]',
+    description: [
+      '[data-content="hospitality-description"]',
+      '[data-content="hospitality-description-extra"]'
+    ],
+    button: '[data-content="hospitality-button"]',
+    image: '[data-content="hospitality-image"]'
+  },
   contact: {
     root: '[data-section="contact"]',
     eyebrow: '[data-content="contact-eyebrow"]',
@@ -181,6 +191,7 @@ function applySection(name, section) {
     showroom: '#showroom',
     about: '#about',
     brands: '#lifestyle',
+    hospitality: '#hospitality',
     contact: '#contacto'
   };
   const root = document.querySelector(map.root) || document.querySelector(fallbackRoots[name]);

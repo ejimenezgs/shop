@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=shop57" />
+  <link rel="stylesheet" href="css/styles.css?v=shop61" />
   <style id="web-design-critical">[data-section][hidden], [data-section].is-shop-content-disabled { display: none !important; }</style>
 </head>
 <body>
@@ -131,6 +131,26 @@
             <figure class="lifestyle-item" aria-label="Sofá de piel en sala">
               <img src="assets/lifestyle-sofa.webp" alt="Ambiente Casa Glick con sofá de piel color café en sala contemporánea" loading="lazy">
             </figure>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="hospitality scroll-section" id="hospitality" data-section="hospitality" aria-labelledby="hospitality-title">
+      <div class="hospitality__motion section-motion-content">
+        <figure class="hospitality__media" aria-label="Lobby y restaurante contemporáneo para proyectos hospitality">
+          <img data-content="hospitality-image" src="assets/hospitality-lounge.webp" alt="Espacio hospitality contemporáneo con lobby, restaurante y mobiliario en tonos cálidos" loading="lazy" />
+        </figure>
+
+        <div class="hospitality__content">
+          <div class="hospitality__text">
+            <h2 id="hospitality-title" data-content="hospitality-title">Hospitality</h2>
+            <p data-content="hospitality-description">Integramos soluciones de mobiliario para hoteles, restaurantes, desarrollos y espacios comerciales, cuidando cada detalle desde la selección hasta la instalación.</p>
+            <p data-content="hospitality-description-extra">Un enfoque coordinado que combina diseño, funcionalidad y ejecución para crear espacios memorables y consistentes.</p>
+            <a class="hospitality__link" href="#hospitality-modal" data-hospitality-modal-open data-content="hospitality-button">
+              <span>Conocer Hospitality</span>
+              <span aria-hidden="true">→</span>
+            </a>
           </div>
         </div>
       </div>
@@ -272,6 +292,57 @@
     </article>
   </div>
 
+
+  <div class="project-modal about-modal hospitality-modal" id="hospitality-modal" data-hospitality-modal aria-hidden="true">
+    <div class="project-modal__backdrop" data-hospitality-modal-close></div>
+    <article class="project-modal__panel about-modal__panel" role="dialog" aria-modal="true" aria-labelledby="hospitality-modal-title">
+      <button class="project-modal__close" type="button" aria-label="Cerrar" data-hospitality-modal-close>×</button>
+
+      <section class="about-modal__layout">
+        <aside class="about-modal__intro-panel">
+          <p class="project-modal__eyebrow about-modal__eyebrow">Hospitality</p>
+          <span class="project-modal__rule about-modal__rule" aria-hidden="true"></span>
+          <h2 id="hospitality-modal-title" class="about-modal__title">Espacios pensados para recibir, permanecer y volver.</h2>
+          <p class="about-modal__lead">
+            Integramos mobiliario, acabados y soluciones para hoteles, restaurantes, desarrollos y espacios comerciales, coordinando cada etapa desde la selección hasta la instalación.
+          </p>
+          <a class="btn btn-primary about-modal__cta" href="#contacto" data-hospitality-modal-cta>Hablemos de tu proyecto</a>
+        </aside>
+
+        <div class="about-modal__content" aria-label="Servicios Hospitality de Casa Glick">
+          <article class="about-modal__item">
+            <span class="about-modal__number">01</span>
+            <div>
+              <h3>Hoteles y desarrollos</h3>
+              <p>Soluciones para habitaciones, áreas comunes, terrazas y espacios de convivencia, adaptadas a la identidad y operación de cada proyecto.</p>
+            </div>
+          </article>
+          <article class="about-modal__item">
+            <span class="about-modal__number">02</span>
+            <div>
+              <h3>Restaurantes y espacios comerciales</h3>
+              <p>Mobiliario y configuraciones pensadas para combinar experiencia, durabilidad, circulación y una expresión visual coherente.</p>
+            </div>
+          </article>
+          <article class="about-modal__item">
+            <span class="about-modal__number">03</span>
+            <div>
+              <h3>Curaduría y personalización</h3>
+              <p>Seleccionamos firmas, materiales, medidas y acabados de acuerdo con el concepto, presupuesto y necesidades específicas del espacio.</p>
+            </div>
+          </article>
+          <article class="about-modal__item">
+            <span class="about-modal__number">04</span>
+            <div>
+              <h3>Coordinación e instalación</h3>
+              <p>Acompañamos el proyecto hasta su entrega, coordinando suministro, logística e instalación para lograr un resultado consistente.</p>
+            </div>
+          </article>
+        </div>
+      </section>
+    </article>
+  </div>
+
   <footer class="site-footer" aria-label="Pie de página Casa Glick">
     <div class="site-footer__inner">
       <div class="site-footer__brand"><img class="site-footer__brand-logo" src="assets/logo-footer-white.png" width="1308" height="132" alt="Casa Glick" loading="lazy" /></div>
@@ -294,12 +365,13 @@
     <span class="whatsapp-float__label">Hablar con un agente</span>
   </a>
 
-  <script src="js/cart.js?v=shop57"></script>
-  <script src="js/firebase-public-config.js?v=shop57"></script>
-  <script src="js/script.js?v=shop57"></script>
-  <script type="module" src="js/shop-content.js?v=shop57"></script>
-  <script type="module" src="js/contact-form.js?v=shop57"></script>
-  <script src="js/about-modal.js?v=shop57"></script>
+  <script src="js/cart.js?v=shop61"></script>
+  <script src="js/firebase-public-config.js?v=shop61"></script>
+  <script src="js/script.js?v=shop61"></script>
+  <script type="module" src="js/shop-content.js?v=shop61"></script>
+  <script type="module" src="js/contact-form.js?v=shop61"></script>
+  <script src="js/about-modal.js?v=shop61"></script>
+  <script src="js/hospitality-modal.js?v=shop61"></script>
 
   <aside class="cookie-banner" data-cookie-banner aria-hidden="true" aria-label="Cookie preferences">
     <div class="cookie-banner__content">
@@ -311,6 +383,6 @@
     </div>
   </aside>
 
-  <script src="js/cookie-consent.js?v=shop57"></script>
+  <script src="js/cookie-consent.js?v=shop61"></script>
 </body>
 </html>
