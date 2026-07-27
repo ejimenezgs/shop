@@ -10266,7 +10266,7 @@ body.has-about-modal {
 }
 
 
-/* shop66: product titles always fit inside a maximum of two lines. */
+/* shop67: product titles use the largest size that fits in a maximum of two lines. */
 body.product-detail-page [data-product-title] {
   display: block !important;
   overflow: hidden !important;

@@ -599,6 +599,7 @@ async function renderListing(){
 
 function fitProductTitleToTwoLines(node){
   if(!node)return;
+
   node.classList.add('is-fitting-title');
   node.style.fontSize='';
   node.style.lineHeight='';
@@ -607,30 +608,49 @@ function fitProductTitleToTwoLines(node){
   const mobile=window.matchMedia('(max-width: 820px)').matches;
   const computed=getComputedStyle(node);
   const startSize=parseFloat(computed.fontSize)||64;
-  const minimumSize=mobile?20:24;
-  const lineHeightRatio=1;
+  const minimumSize=mobile?22:26;
+  const lineHeightRatio=0.98;
+
+  const countRenderedLines=()=>{
+    const range=document.createRange();
+    range.selectNodeContents(node);
+    const rects=Array.from(range.getClientRects()).filter(rect=>rect.width>0&&rect.height>0);
+    range.detach?.();
+    const tops=[];
+    rects.forEach(rect=>{
+      if(!tops.some(top=>Math.abs(top-rect.top)<2))tops.push(rect.top);
+    });
+    return Math.max(1,tops.length);
+  };
+
+  const applySize=size=>{
+    node.style.fontSize=`${size}px`;
+    node.style.lineHeight=String(lineHeightRatio);
+    return countRenderedLines();
+  };
+
   let low=minimumSize;
   let high=startSize;
   let best=minimumSize;
 
-  const fits=size=>{
-    node.style.fontSize=`${size}px`;
-    node.style.lineHeight=String(lineHeightRatio);
-    const lineHeight=size*lineHeightRatio;
-    return node.scrollHeight<=lineHeight*2+2;
-  };
-
-  if(fits(high))best=high;
-  else{
-    for(let i=0;i<14;i+=1){
+  // Keep the largest possible type size that renders in no more than two lines.
+  if(applySize(high)<=2){
+    best=high;
+  }else{
+    for(let i=0;i<16;i+=1){
       const mid=(low+high)/2;
-      if(fits(mid)){best=mid;low=mid;}else high=mid;
+      if(applySize(mid)<=2){
+        best=mid;
+        low=mid;
+      }else{
+        high=mid;
+      }
     }
   }
 
   node.style.fontSize=`${best.toFixed(2)}px`;
   node.style.lineHeight=String(lineHeightRatio);
-  node.style.maxHeight=`${(best*lineHeightRatio*2+2).toFixed(2)}px`;
+  node.style.maxHeight=`${(best*lineHeightRatio*2+3).toFixed(2)}px`;
 }
 
 function scheduleProductTitleFit(){
