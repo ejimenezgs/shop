@@ -10266,54 +10266,22 @@ body.has-about-modal {
 }
 
 
-/* shop65: adaptive full product titles — never truncate product names. */
+/* shop66: product titles always fit inside a maximum of two lines. */
 body.product-detail-page [data-product-title] {
   display: block !important;
-  overflow: visible !important;
-  max-height: none !important;
+  overflow: hidden !important;
   white-space: normal !important;
   text-overflow: clip !important;
   -webkit-box-orient: initial !important;
   -webkit-line-clamp: unset !important;
   line-clamp: unset !important;
-  overflow-wrap: break-word;
+  overflow-wrap: normal;
   word-break: normal;
   text-wrap: balance;
+  max-height: none;
 }
 
-body.product-detail-page [data-product-title].is-long-title {
-  font-size: clamp(40px, 4.25vw, 56px) !important;
-  line-height: .96 !important;
-}
-body.product-detail-page [data-product-title].is-very-long-title {
-  font-size: clamp(35px, 3.65vw, 49px) !important;
-  line-height: .98 !important;
-}
-body.product-detail-page [data-product-title].is-extra-long-title {
-  font-size: clamp(30px, 3.15vw, 43px) !important;
-  line-height: 1 !important;
+body.product-detail-page [data-product-title].is-fitting-title {
+  transition: font-size 160ms ease;
 }
 
-@media (max-width: 820px) {
-  body.product-detail-page .product-info[data-mobile-product-sheet] [data-product-title] {
-    display: block !important;
-    overflow: visible !important;
-    white-space: normal !important;
-    text-overflow: clip !important;
-    max-height: none !important;
-    -webkit-line-clamp: unset !important;
-    line-clamp: unset !important;
-  }
-  body.product-detail-page .product-info[data-mobile-product-sheet] [data-product-title].is-long-title {
-    font-size: clamp(34px, 9.8vw, 47px) !important;
-    line-height: .94 !important;
-  }
-  body.product-detail-page .product-info[data-mobile-product-sheet] [data-product-title].is-very-long-title {
-    font-size: clamp(29px, 8.4vw, 41px) !important;
-    line-height: .97 !important;
-  }
-  body.product-detail-page .product-info[data-mobile-product-sheet] [data-product-title].is-extra-long-title {
-    font-size: clamp(25px, 7.2vw, 35px) !important;
-    line-height: 1 !important;
-  }
-}

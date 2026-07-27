@@ -597,6 +597,48 @@ async function renderListing(){
   }
 }
 
+function fitProductTitleToTwoLines(node){
+  if(!node)return;
+  node.classList.add('is-fitting-title');
+  node.style.fontSize='';
+  node.style.lineHeight='';
+  node.style.maxHeight='none';
+
+  const mobile=window.matchMedia('(max-width: 820px)').matches;
+  const computed=getComputedStyle(node);
+  const startSize=parseFloat(computed.fontSize)||64;
+  const minimumSize=mobile?20:24;
+  const lineHeightRatio=1;
+  let low=minimumSize;
+  let high=startSize;
+  let best=minimumSize;
+
+  const fits=size=>{
+    node.style.fontSize=`${size}px`;
+    node.style.lineHeight=String(lineHeightRatio);
+    const lineHeight=size*lineHeightRatio;
+    return node.scrollHeight<=lineHeight*2+2;
+  };
+
+  if(fits(high))best=high;
+  else{
+    for(let i=0;i<14;i+=1){
+      const mid=(low+high)/2;
+      if(fits(mid)){best=mid;low=mid;}else high=mid;
+    }
+  }
+
+  node.style.fontSize=`${best.toFixed(2)}px`;
+  node.style.lineHeight=String(lineHeightRatio);
+  node.style.maxHeight=`${(best*lineHeightRatio*2+2).toFixed(2)}px`;
+}
+
+function scheduleProductTitleFit(){
+  const run=()=>document.querySelectorAll('[data-product-title]').forEach(fitProductTitleToTwoLines);
+  requestAnimationFrame(()=>requestAnimationFrame(run));
+  if(document.fonts?.ready)document.fonts.ready.then(run).catch(()=>{});
+}
+
 async function renderDetail(){
   const root=document.querySelector('.product-detail');if(!root)return;
   const key=new URLSearchParams(location.search).get('product')||new URLSearchParams(location.search).get('id');if(!key)return;
@@ -605,13 +647,9 @@ async function renderDetail(){
     const product=products.find(p=>String(p.code).toLowerCase()===String(key).toLowerCase()||p.slug===key);
     if(!product)throw new Error('Producto no encontrado');
     document.querySelectorAll('[data-product-title]').forEach(node=>{
-      const title=String(product.displayName||'Producto').trim();
-      node.textContent=title;
-      node.classList.remove('is-long-title','is-very-long-title','is-extra-long-title');
-      if(title.length>68)node.classList.add('is-extra-long-title');
-      else if(title.length>48)node.classList.add('is-very-long-title');
-      else if(title.length>32)node.classList.add('is-long-title');
+      node.textContent=String(product.displayName||'Producto').trim();
     });
+    scheduleProductTitleFit();
     const codeNode=document.querySelector('[data-product-code]');if(codeNode)codeNode.textContent=product.code;
     const set=(selector,value)=>{const n=document.querySelector(selector);if(n)n.textContent=value||'—'};
     set('[data-product-description]',product.editorialDescription);set('[data-product-materials]',product.materials);set('[data-product-measures]',product.measures);set('[data-product-breadcrumb-name]',product.displayName);
@@ -624,6 +662,12 @@ async function renderDetail(){
     const quote=document.querySelector('[data-product-quote]');if(quote){const hasPrice=product.price!==null&&Number.isFinite(Number(product.price));const canAdd=hasStock&&hasPrice;if(canAdd){quote.textContent='Agregar a bolsa';quote.href='bolsa.html';quote.removeAttribute('target');quote.removeAttribute('rel');quote.onclick=event=>{event.preventDefault();window.CasaGlickCart?.add({id:product.id,code:product.code,name:product.displayName,price:Number(product.price),image:(product.images&&product.images[0])||catalog.FALLBACK_IMAGE,stock:Number(product.stock)});quote.classList.add('is-added');quote.textContent='Agregado a bolsa';setTimeout(()=>{quote.classList.remove('is-added');quote.textContent='Agregar a bolsa'},1300)}}else{quote.textContent='Cotizar';quote.target='_blank';quote.rel='noopener';quote.onclick=null;const reason=!hasStock?'sin stock':'sin precio';quote.href=`https://wa.me/525513004665?text=${encodeURIComponent(`Hola, quiero cotizar ${product.displayName} (${product.code}) de Casa Glick. Actualmente aparece ${reason}.`)}`}}
   }catch(error){console.error('No se pudo cargar el producto',error);document.querySelectorAll('.product-detail-skeleton').forEach(node=>node.classList.remove('product-detail-skeleton'))}
 }
+
+let productTitleResizeTimer;
+window.addEventListener('resize',()=>{
+  clearTimeout(productTitleResizeTimer);
+  productTitleResizeTimer=setTimeout(scheduleProductTitleFit,120);
+});
 
 renderListing();
 renderDetail();
