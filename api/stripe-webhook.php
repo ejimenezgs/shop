@@ -5,10 +5,13 @@ require_method('POST');
 
 $payload = (string)file_get_contents('php://input');
 $signature = (string)($_SERVER['HTTP_STRIPE_SIGNATURE'] ?? '');
+$config = [];
+$signatureVerified = false;
 try {
     $config = load_private_config();
     try {
         verify_stripe_signature($payload, $signature, (string)($config['stripe_webhook_secret'] ?? ''));
+        $signatureVerified = true;
     } catch (Throwable $signatureError) {
         error_log('stripe-webhook-signature: ' . $signatureError->getMessage());
         json_response(['error' => 'Firma de webhook inválida.'], 400);
@@ -122,5 +125,12 @@ try {
     json_response(['received' => true]);
 } catch (Throwable $error) {
     error_log('stripe-webhook: ' . $error->getMessage());
-    json_response(['error' => 'No se pudo procesar el webhook.'], 500);
+    $response = ['error' => 'No se pudo procesar el webhook.'];
+    if (
+        $signatureVerified
+        && strtolower(trim((string)($config['stripe_environment'] ?? ''))) === 'test'
+    ) {
+        $response['sandboxDetail'] = $error->getMessage() ?: 'Error interno sin detalle.';
+    }
+    json_response($response, 500);
 }
