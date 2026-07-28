@@ -29,6 +29,14 @@ try {
     if (mb_strlen($customerName) < 2 || mb_strlen($customerName) > 120 || strlen($customerPhone) !== 10) {
         throw new RuntimeException('Los datos del cliente no son válidos.');
     }
+    $postalCode = preg_replace('/\D+/', '', (string)($customer['postalCode'] ?? ''));
+    $postalNumber = (int)$postalCode;
+    if (strlen($postalCode) !== 5 || $postalNumber < 1000 || $postalNumber > 16999) {
+        throw new RuntimeException('Stripe está disponible únicamente para códigos postales de CDMX.');
+    }
+    if (($customer['delivery'] ?? '') === 'Envío a domicilio' && trim((string)($customer['address'] ?? '')) === '') {
+        throw new RuntimeException('Falta la dirección de entrega.');
+    }
 
     $existingSessionId = trim((string)($order['stripeSessionId'] ?? ''));
     if (preg_match('/^cs_(test|live)_[A-Za-z0-9]+$/', $existingSessionId)) {

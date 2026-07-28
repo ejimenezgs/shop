@@ -19,3 +19,10 @@
 - Permisos limitados mediante reglas para `stripe-backend@casaglick.com`.
 - El despacho libera el apartado únicamente después de que almacén haya aplicado la salida física en su sistema.
 - Caché: shop71auth.
+
+
+## shop72checkout
+- Checkout Stripe limitado a codigos postales de CDMX; exterior continua por WhatsApp.
+- Direccion condicional para entrega a domicilio y envio gratis en CDMX.
+- Nueva consulta publica limitada de estatus en order.html mediante api/order-status.php.
+- Boton Ver orden en confirmaciones asistida y Stripe.

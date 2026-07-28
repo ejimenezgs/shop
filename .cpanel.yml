@@ -12,6 +12,7 @@ deployment:
     - /bin/cp cookie-policy.html $DEPLOYPATH
     - /bin/cp checkout-success.html $DEPLOYPATH
     - /bin/cp checkout-cancel.html $DEPLOYPATH
+    - /bin/cp order.html $DEPLOYPATH
     - if [ -f 404.html ]; then /bin/cp 404.html $DEPLOYPATH; fi
     - /bin/rm -rf ${DEPLOYPATH}/assets
     - /bin/rm -rf ${DEPLOYPATH}/css

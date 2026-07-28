@@ -26,7 +26,7 @@ function isSafeLink(value){
   const url=trimmedString(value);
   if(!url || /^(javascript|data|file):/i.test(url)) return false;
   if(/^(https:\/\/|\/|\.\/|\.\.\/|#)/i.test(url)) return true;
-  return /^(index|productos|producto|bolsa|checkout|confirmacion|checkout-success|checkout-cancel|cookie-policy)\.html(?:[?#].*)?$/i.test(url);
+  return /^(index|productos|producto|bolsa|checkout|confirmacion|checkout-success|checkout-cancel|cookie-policy|order)\.html(?:[?#].*)?$/i.test(url);
 }
 function isSafeImageUrl(value){
   const url=trimmedString(value);

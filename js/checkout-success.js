@@ -3,6 +3,7 @@ const sessionId=params.get('session_id');
 const statusNode=document.querySelector('#stripe-success-status');
 const detailsNode=document.querySelector('#stripe-success-details');
 const retryNode=document.querySelector('#stripe-success-retry');
+const viewOrderNode=document.querySelector('#stripe-view-order');
 let attempts=0;
 const money=value=>new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(Number(value)||0);
 async function verify(){
@@ -23,6 +24,7 @@ async function verify(){
       totalNode.textContent=`${money(data.total)} MXN`;
       emailNode.textContent=String(data.email||'');
       detailsNode.append(folioNode,totalNode,emailNode);
+      if(viewOrderNode){viewOrderNode.href=`order.html?folio=${encodeURIComponent(String(data.folio||''))}`;viewOrderNode.hidden=!data.folio;}
       window.CasaGlickCart?.clear?.();
       sessionStorage.removeItem('casaGlickStripePendingOrder');
       return;
