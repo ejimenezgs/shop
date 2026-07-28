@@ -9,6 +9,7 @@ deployment:
     - /bin/cp bolsa.html $DEPLOYPATH
     - /bin/cp checkout.html $DEPLOYPATH
     - /bin/cp confirmacion.html $DEPLOYPATH
+    - /bin/cp cookie-policy.html $DEPLOYPATH
     - /bin/cp checkout-success.html $DEPLOYPATH
     - /bin/cp checkout-cancel.html $DEPLOYPATH
     - if [ -f 404.html ]; then /bin/cp 404.html $DEPLOYPATH; fi

@@ -41,7 +41,7 @@ Las reglas de `firestore.rules` deben publicarse en el mismo proyecto Firebase. 
 - creacion publica de ordenes validas;
 - lectura y seguimiento de ordenes solo desde el Panel autenticado.
 
-## Stripe Checkout (modo prueba)
+## Stripe Checkout (Sandbox)
 
 El documento `catalogSettings/admin` controla el flujo:
 
@@ -56,7 +56,11 @@ usando `private-config.example.php` como referencia, y guarda también ahí el J
 
 `https://shop.casaglick.com/api/stripe-webhook.php`
 
-Eventos mínimos: `checkout.session.completed`, `checkout.session.expired` y `payment_intent.payment_failed`.
+La cuenta de servicio es obligatoria también para crear la sesión, porque PHP valida la orden privada antes de llamar a Stripe.
+
+Eventos configurados: `checkout.session.completed`, `checkout.session.expired`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`, `payment_intent.payment_failed` y `charge.refunded`.
+
+La guía completa y la lista de pruebas están en `STRIPE-PHP-SETUP.md`.
 
 ## Web Design dinámico
 

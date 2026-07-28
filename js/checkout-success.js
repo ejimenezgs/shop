@@ -15,7 +15,14 @@ async function verify(){
     if(!response.ok) throw new Error(data.error||'No se pudo validar el pago.');
     if(data.confirmed){
       statusNode.textContent='Pago recibido';
-      detailsNode.innerHTML=`<strong>${data.folio||'Orden confirmada'}</strong><span>${money(data.total)} MXN</span><span>${data.email||''}</span>`;
+      detailsNode.replaceChildren();
+      const folioNode=document.createElement('strong');
+      const totalNode=document.createElement('span');
+      const emailNode=document.createElement('span');
+      folioNode.textContent=String(data.folio||'Orden confirmada');
+      totalNode.textContent=`${money(data.total)} MXN`;
+      emailNode.textContent=String(data.email||'');
+      detailsNode.append(folioNode,totalNode,emailNode);
       window.CasaGlickCart?.clear?.();
       sessionStorage.removeItem('casaGlickStripePendingOrder');
       return;

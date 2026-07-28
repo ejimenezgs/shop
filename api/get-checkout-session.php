@@ -10,6 +10,13 @@ try {
     $orderId = (string)($session['metadata']['orderId'] ?? $session['client_reference_id'] ?? '');
     $order = $orderId ? firestore_get($config, 'orders/' . $orderId) : null;
     if (!$order) throw new RuntimeException('No se encontró la orden.');
+    if (($order['paymentMethod'] ?? '') !== 'stripe'
+        || !hash_equals((string)($order['stripeSessionId'] ?? ''), $sessionId)) {
+        throw new RuntimeException('La sesión no corresponde a la orden.');
+    }
+    if (strtolower((string)($session['currency'] ?? '')) !== 'mxn') {
+        throw new RuntimeException('La moneda de la sesión no es válida.');
+    }
     $confirmed = ($session['payment_status'] ?? '') === 'paid' && ($order['paymentStatus'] ?? '') === 'paid';
     json_response([
         'confirmed' => $confirmed,

@@ -10,6 +10,41 @@ service cloud.firestore {
       ];
     }
 
+    function validOrderCreate() {
+      return request.resource.data.keys().hasOnly([
+          "folio", "status", "customer", "items", "subtotal", "total",
+          "createdAt", "createdAtClient", "source", "paymentMethod",
+          "paymentStatus", "stripeSessionId", "checkoutAttempt"
+        ])
+        && request.resource.data.keys().hasAll([
+          "folio", "status", "customer", "items", "subtotal", "total",
+          "createdAt", "createdAtClient", "source"
+        ])
+        && request.resource.data.folio is string
+        && request.resource.data.folio.size() >= 8
+        && request.resource.data.folio.size() <= 40
+        && request.resource.data.customer is map
+        && request.resource.data.items is list
+        && request.resource.data.items.size() > 0
+        && request.resource.data.items.size() <= 50
+        && request.resource.data.subtotal is number
+        && request.resource.data.total is number
+        && request.resource.data.subtotal >= 0
+        && request.resource.data.total >= 0
+        && request.resource.data.source == "web"
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.createdAtClient is string
+        && (
+          request.resource.data.status == "Nueva"
+          || (
+            request.resource.data.status == "Pendiente de pago"
+            && request.resource.data.paymentMethod == "stripe"
+            && request.resource.data.paymentStatus == "pending"
+            && request.resource.data.checkoutAttempt == 0
+          )
+        );
+    }
+
     match /catalogProductOverrides/{productId} {
       allow read: if true;
       allow create, update, delete: if isAdmin();
@@ -48,20 +83,7 @@ service cloud.firestore {
     }
 
     match /orders/{orderId} {
-      allow create: if request.resource.data.keys().hasAll([
-          "folio", "status", "customer", "items", "total", "createdAt"
-        ])
-        && request.resource.data.status in ["Nueva", "Pendiente de pago"]
-        && request.resource.data.items is list
-        && request.resource.data.items.size() > 0
-        && request.resource.data.items.size() <= 50
-        && (
-          request.resource.data.status == "Nueva"
-          || (
-            request.resource.data.paymentMethod == "stripe"
-            && request.resource.data.paymentStatus == "pending"
-          )
-        );
+      allow create: if validOrderCreate();
       allow read, update, delete: if isAdmin();
     }
 

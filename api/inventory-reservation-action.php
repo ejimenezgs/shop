@@ -11,7 +11,28 @@ try {
     $action = trim((string)($input['action'] ?? ''));
     $reason = trim((string)($input['reason'] ?? ''));
     if (!preg_match('/^[A-Za-z0-9_-]{8,128}$/', $orderId)) throw new RuntimeException('Orden inválida.');
-    if (!in_array($action, ['dispatch', 'release'], true)) throw new RuntimeException('Acción inválida.');
+    if (!in_array($action, ['dispatch', 'release', 'retry'], true)) throw new RuntimeException('Acción inválida.');
+
+    if ($action === 'retry') {
+        $order = firestore_get($config, 'orders/' . $orderId);
+        if (!$order || ($order['paymentStatus'] ?? '') !== 'paid') {
+            throw new RuntimeException('Solo se puede reintentar la reserva de una orden pagada.');
+        }
+        $items = is_array($order['items'] ?? null) ? $order['items'] : [];
+        $result = reserve_inventory_for_paid_order($config, $orderId, $items, 'manual-retry-' . time());
+        firestore_patch($config, 'orders/' . $orderId, [
+            'status' => 'Pagada',
+            'inventoryStatus' => $result['status'],
+            'inventoryError' => null,
+            'inventoryReservedAt' => new DateTimeImmutable('now', new DateTimeZone('UTC')),
+        ]);
+        json_response([
+            'ok' => true,
+            'orderId' => $orderId,
+            'inventoryStatus' => $result['status'],
+            'idempotent' => $result['idempotent'] ?? false,
+        ]);
+    }
 
     $targetStatus = $action === 'dispatch' ? 'dispatched' : 'released';
     $result = transition_inventory_reservation($config, $orderId, $targetStatus, $reason);

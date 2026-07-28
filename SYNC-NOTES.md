@@ -1,4 +1,4 @@
-# Casa Glick Shop v69
+# Casa Glick Shop v70 Sandbox Audit
 
 - Stripe Checkout dinámico con PHP.
 - Validación del precio y stock en servidor.
@@ -6,7 +6,13 @@
 - Cálculo público: disponible = existencia física - apartados.
 - Transacciones Firestore para evitar dobles reservas concurrentes.
 - Idempotencia por orden y evento de Stripe.
+- Reutilización segura de la orden y sesión al regresar desde cancelación.
+- Intentos nuevos para sesiones expiradas, sin duplicar la orden.
+- Validación del monto, moneda e ID de sesión en el webhook.
+- Consolidación de SKU repetidos antes de validar y reservar.
+- Paginación de colecciones Firestore con más de 500 documentos.
 - Estado de contingencia `reservation_failed` si el pago fue exitoso pero no pudo apartarse inventario.
-- Endpoint privado para convertir la reserva en despacho o liberarla.
+- Endpoint privado para reintentar, despachar o liberar una reserva.
+- Endpoint privado de diagnóstico para verificar la configuración Sandbox.
 - El despacho libera el apartado únicamente después de que almacén haya aplicado la salida física en su sistema.
-- Caché: shop69.
+- Caché: shop70sandbox.

@@ -15,10 +15,43 @@ const modeNote=document.querySelector('#checkout-mode-note');
 const checkoutIntro=document.querySelector('#checkout-intro');
 const money=v=>new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(Number(v)||0);
 const folio=()=>`CG-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Math.random().toString(36).slice(2,6).toUpperCase()}`;
+const STRIPE_PENDING_KEY='casaGlickStripePendingOrder';
+const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,char=>({
+  '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+}[char]));
+const safeImage=value=>{
+  try{
+    const url=new URL(String(value||''),location.href);
+    return url.protocol==='https:'||url.origin===location.origin
+      ? escapeHtml(url.href)
+      : 'assets/product-placeholder-cg.png';
+  }catch{
+    return 'assets/product-placeholder-cg.png';
+  }
+};
 
 function validPrice(value){
   const number=Number(value);
   return Number.isFinite(number)&&number>0;
+}
+
+function readPendingStripeOrder(){
+  try{
+    const value=JSON.parse(sessionStorage.getItem(STRIPE_PENDING_KEY)||'null');
+    return value&&typeof value==='object'?value:null;
+  }catch{
+    return null;
+  }
+}
+
+function stripeOrderSignature(orderItems,customer){
+  return JSON.stringify({
+    items:orderItems.map(item=>({
+      code:String(item.code||''),
+      quantity:Math.max(1,Number(item.quantity)||1)
+    })).sort((a,b)=>a.code.localeCompare(b.code)),
+    customer
+  });
 }
 
 function setMode(mode){
@@ -55,9 +88,9 @@ function renderSummary(){
         const hasPrice=validPrice(item.price);
         const lineTotal=hasPrice?Number(item.price)*quantity:0;
         return `<article class="checkout-summary-item">
-          <img src="${item.image||'assets/product-placeholder-cg.png'}" alt="">
+          <img src="${safeImage(item.image)}" alt="">
           <div class="checkout-summary-item__copy">
-            <strong>${item.name||item.code||'Producto'}</strong>
+            <strong>${escapeHtml(item.name||item.code||'Producto')}</strong>
             <span>${quantity} × ${hasPrice?money(item.price):'Precio a cotizar'}</span>
           </div>
           <b>${hasPrice?money(lineTotal):'Cotizar'}</b>
@@ -144,22 +177,46 @@ form.addEventListener('submit',async event=>{
 
     if(originalMode==='stripe'){
       if(orderItems.some(item=>!validPrice(item.price))) throw new Error('STRIPE_QUOTE_ITEM');
-      const order={
-        ...base,
-        status:'Pendiente de pago',
-        paymentMethod:'stripe',
-        paymentStatus:'pending',
-        stripeSessionId:null
-      };
-      const orderRef=await addDoc(collection(db,'orders'),order);
+      const signature=stripeOrderSignature(orderItems,customer);
+      const pending=readPendingStripeOrder();
+      let orderId='';
+      let activeFolio=orderFolio;
+      if(
+        pending?.signature===signature
+        && /^[A-Za-z0-9_-]{8,128}$/.test(String(pending.orderId||''))
+      ){
+        orderId=String(pending.orderId);
+        activeFolio=String(pending.folio||orderFolio);
+      }else{
+        const order={
+          ...base,
+          status:'Pendiente de pago',
+          paymentMethod:'stripe',
+          paymentStatus:'pending',
+          stripeSessionId:null,
+          checkoutAttempt:0
+        };
+        const orderRef=await addDoc(collection(db,'orders'),order);
+        orderId=orderRef.id;
+        sessionStorage.setItem(STRIPE_PENDING_KEY,JSON.stringify({
+          orderId,
+          folio:activeFolio,
+          signature
+        }));
+      }
       const response=await fetch('api/create-checkout-session.php',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({orderId:orderRef.id})
+        body:JSON.stringify({orderId})
       });
       const payload=await response.json().catch(()=>({}));
       if(!response.ok||!payload.url) throw new Error(payload.error||'STRIPE_SESSION_FAILED');
-      sessionStorage.setItem('casaGlickStripePendingOrder',JSON.stringify({orderId:orderRef.id,folio:orderFolio}));
+      sessionStorage.setItem(STRIPE_PENDING_KEY,JSON.stringify({
+        orderId,
+        folio:activeFolio,
+        signature,
+        sessionId:String(payload.sessionId||'')
+      }));
       window.location.assign(payload.url);
       return;
     }

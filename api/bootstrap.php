@@ -51,6 +51,7 @@ function load_private_config(): array {
     if ($documentRoot !== '') {
         $home = dirname(dirname($documentRoot));
         $candidates[] = $home . '/private/casa-glick-shop.php';
+        $candidates[] = dirname($documentRoot) . '/private/casa-glick-shop.php';
     }
     $candidates[] = dirname(__DIR__) . '/private-config.php'; // local-only fallback, gitignored
 
@@ -183,17 +184,28 @@ function firestore_get(array $config, string $path): ?array {
     return firestore_decode_fields($doc['fields'] ?? []);
 }
 
-function firestore_list(array $config, string $collection, int $pageSize = 1000): array {
-    $url = firestore_base($config) . '/' . rawurlencode($collection) . '?pageSize=' . $pageSize;
-    [$status, $body] = http_request($url, 'GET', ['Authorization: Bearer ' . firebase_access_token($config)]);
-    if ($status !== 200) throw new RuntimeException('No se pudo listar Firestore.');
-    $payload = json_decode($body, true);
+function firestore_list(array $config, string $collection, int $pageSize = 500): array {
+    $baseUrl = firestore_base($config) . '/' . rawurlencode($collection);
     $result = [];
-    foreach (($payload['documents'] ?? []) as $doc) {
-        $name = (string)($doc['name'] ?? '');
-        $id = rawurldecode(substr($name, strrpos($name, '/') + 1));
-        $result[] = ['id' => $id, 'data' => firestore_decode_fields($doc['fields'] ?? [])];
-    }
+    $pageToken = '';
+    do {
+        $query = ['pageSize' => max(1, min(1000, $pageSize))];
+        if ($pageToken !== '') $query['pageToken'] = $pageToken;
+        [$status, $body] = http_request(
+            $baseUrl . '?' . http_build_query($query),
+            'GET',
+            ['Authorization: Bearer ' . firebase_access_token($config)]
+        );
+        if ($status !== 200) throw new RuntimeException('No se pudo listar Firestore.');
+        $payload = json_decode($body, true);
+        if (!is_array($payload)) throw new RuntimeException('Firestore devolvió una lista inválida.');
+        foreach (($payload['documents'] ?? []) as $doc) {
+            $name = (string)($doc['name'] ?? '');
+            $id = rawurldecode(substr($name, strrpos($name, '/') + 1));
+            $result[] = ['id' => $id, 'data' => firestore_decode_fields($doc['fields'] ?? [])];
+        }
+        $pageToken = (string)($payload['nextPageToken'] ?? '');
+    } while ($pageToken !== '');
     return $result;
 }
 
@@ -305,6 +317,26 @@ function reservation_document_id(string $sku): string {
     return $normalized;
 }
 
+function aggregate_order_items(array $items): array {
+    $aggregated = [];
+    foreach ($items as $item) {
+        if (!is_array($item)) throw new RuntimeException('La orden contiene un producto inválido.');
+        $sku = trim((string)($item['code'] ?? $item['sku'] ?? $item['id'] ?? ''));
+        $key = normalize_lookup_key($sku);
+        if ($key === '') throw new RuntimeException('La orden contiene un SKU inválido.');
+        $quantity = (int)($item['quantity'] ?? 1);
+        if ($quantity < 1 || $quantity > 99) throw new RuntimeException("Cantidad inválida para {$sku}.");
+        if (!isset($aggregated[$key])) {
+            $aggregated[$key] = $item;
+            $aggregated[$key]['code'] = $sku;
+            $aggregated[$key]['quantity'] = 0;
+        }
+        $aggregated[$key]['quantity'] += $quantity;
+        if ($aggregated[$key]['quantity'] > 99) throw new RuntimeException("Cantidad inválida para {$sku}.");
+    }
+    return array_values($aggregated);
+}
+
 function inventory_snapshot(array $config): array {
     $inventory = fetch_inventory($config);
     $byCode = [];
@@ -322,6 +354,7 @@ function inventory_snapshot(array $config): array {
 
 function reserve_inventory_for_paid_order(array $config, string $orderId, array $items, string $eventId): array {
     if (!$items) throw new RuntimeException('La orden pagada no contiene productos para reservar.');
+    $items = aggregate_order_items($items);
     $physical = inventory_snapshot($config);
     $orderPath = 'inventoryReservationOrders/' . $orderId;
     $skuPaths = [];
@@ -416,11 +449,15 @@ function transition_inventory_reservation(array $config, string $orderId, string
                 $quantity = max(1, (int)($item['quantity'] ?? 1));
                 $path = $skuPaths[$sku];
                 $document = $documents[$path] ?? ['exists' => false, 'data' => []];
+                if (!$document['exists']) throw new RuntimeException("No existe el acumulado de reserva para {$sku}.");
                 $reservedBefore = max(0, (int)($document['data']['reservedQuantity'] ?? 0));
+                if ($reservedBefore < $quantity) throw new RuntimeException("La reserva acumulada de {$sku} es inconsistente.");
                 $reservedAfter = max(0, $reservedBefore - $quantity);
                 $fields = $document['data'];
                 $fields['sku'] = $sku;
                 $fields['reservedQuantity'] = $reservedAfter;
+                $physicalSnapshot = max(0, (int)($fields['physicalStockAtReservation'] ?? 0));
+                $fields['availableStock'] = max(0, $physicalSnapshot - $reservedAfter);
                 $fields['updatedAt'] = new DateTimeImmutable('now', new DateTimeZone('UTC'));
                 $writes[] = firestore_update_write($config, $path, $fields, (bool)$document['exists']);
             }
@@ -451,6 +488,13 @@ function require_inventory_admin_token(array $config): void {
 function stripe_request(array $config, string $path, array $params = [], string $method = 'POST', ?string $idempotencyKey = null): array {
     $secret = (string)($config['stripe_secret_key'] ?? '');
     if (!str_starts_with($secret, 'sk_test_') && !str_starts_with($secret, 'sk_live_')) throw new RuntimeException('Falta una clave secreta válida de Stripe.');
+    $environment = strtolower(trim((string)($config['stripe_environment'] ?? 'test')));
+    if ($environment === 'test' && !str_starts_with($secret, 'sk_test_')) {
+        throw new RuntimeException('La configuración está en modo Sandbox y requiere una clave sk_test_.');
+    }
+    if ($environment === 'live' && !str_starts_with($secret, 'sk_live_')) {
+        throw new RuntimeException('La configuración está en modo producción y requiere una clave sk_live_.');
+    }
     $headers = ['Authorization: Bearer ' . $secret];
     $body = null;
     $url = CG_STRIPE_API . $path;
@@ -538,7 +582,11 @@ function normalized_price(array $raw): array {
 }
 
 function normalized_stock(array $raw): int {
-    $total = parse_number(find_deep($raw, ['stockTotal','totalStock','existenciaTotal','totalExistencia','totalExistencias','stockDisponible','availableStock','existencias','stock','cantidad','quantity','qty']));
+    $total = parse_number(find_deep($raw, [
+        'disponible', 'stockDisponible', 'availableStock', 'stockTotal', 'totalStock',
+        'existenciaTotal', 'totalExistencia', 'totalExistencias', 'existencias',
+        'stock', 'cantidad', 'quantity', 'qty'
+    ]));
     return max(0, (int)floor($total ?? 0));
 }
 
@@ -567,6 +615,13 @@ function product_name(array $raw): string {
     return trim((string)(find_deep($raw, ['nombre','name','titulo','title','descripcionCorta']) ?? 'Producto'));
 }
 
+function product_image(array $raw): ?string {
+    $candidate = trim((string)(find_deep($raw, ['imagen','image','imageUrl','foto','photo']) ?? ''));
+    if ($candidate === '' || strlen($candidate) > 2048) return null;
+    if (!filter_var($candidate, FILTER_VALIDATE_URL)) return null;
+    return strtolower((string)parse_url($candidate, PHP_URL_SCHEME)) === 'https' ? $candidate : null;
+}
+
 function override_matches(array $record, string $code): bool {
     $data = $record['data'];
     $candidates = [$record['id']];
@@ -580,6 +635,7 @@ function override_matches(array $record, string $code): bool {
 
 function validate_order_items(array $config, array $requestedItems): array {
     if (!$requestedItems || count($requestedItems) > 50) throw new RuntimeException('La bolsa no contiene productos válidos.');
+    $requestedItems = aggregate_order_items($requestedItems);
     $inventory = fetch_inventory($config);
     $overrides = firestore_list($config, 'catalogProductOverrides');
     $reservationDocs = firestore_list($config, 'inventoryStockReservations');
@@ -598,7 +654,7 @@ function validate_order_items(array $config, array $requestedItems): array {
     $totalCents = 0;
     foreach ($requestedItems as $item) {
         $code = trim((string)($item['code'] ?? $item['id'] ?? ''));
-        $quantity = max(1, min(99, (int)($item['quantity'] ?? 1)));
+        $quantity = (int)($item['quantity'] ?? 1);
         $raw = $inventoryByCode[normalize_lookup_key($code)] ?? null;
         if (!$raw) throw new RuntimeException("El producto {$code} ya no existe.");
         $override = null;
@@ -616,6 +672,7 @@ function validate_order_items(array $config, array $requestedItems): array {
         $validated[] = [
             'code' => $code,
             'name' => $name,
+            'image' => product_image($raw),
             'quantity' => $quantity,
             'unitAmount' => $unitAmount,
             'stock' => $stock,
