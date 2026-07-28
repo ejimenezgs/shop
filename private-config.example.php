@@ -10,4 +10,6 @@ return [
     'firebase_service_account_path' => '/home/YOUR_CPANEL_USER/private/firebase-service-account.json',
     'site_url' => 'https://shop.casaglick.com',
     'inventory_url' => 'https://segel-inventario.vercel.app/api/catalogo',
+    // Long random token used only by the private dispatch/release endpoint.
+    'inventory_admin_token' => 'REPLACE_WITH_A_LONG_RANDOM_SECRET',
 ];

@@ -65,6 +65,15 @@ service cloud.firestore {
       allow read, update, delete: if isAdmin();
     }
 
+    match /inventoryStockReservations/{skuId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /inventoryReservationOrders/{orderId} {
+      allow read, write: if false;
+    }
+
     match /stripeWebhookEvents/{eventId} {
       allow read, write: if false;
     }

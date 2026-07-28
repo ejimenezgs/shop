@@ -5,6 +5,7 @@ require_method('POST');
 
 try {
     $config = load_private_config();
+    require_same_origin($config);
     $input = read_json_body();
     $orderId = trim((string)($input['orderId'] ?? ''));
     if (!preg_match('/^[A-Za-z0-9_-]{8,128}$/', $orderId)) throw new RuntimeException('Orden inválida.');
@@ -21,6 +22,7 @@ try {
     $siteUrl = rtrim((string)($config['site_url'] ?? 'https://shop.casaglick.com'), '/');
     $params = [
         'mode' => 'payment',
+        'payment_method_types' => ['card'],
         'customer_email' => trim((string)($customer['email'] ?? '')),
         'client_reference_id' => $orderId,
         'success_url' => $siteUrl . '/checkout-success.html?session_id={CHECKOUT_SESSION_ID}',
@@ -37,7 +39,8 @@ try {
         $params['line_items'][$index] = [
             'quantity' => $item['quantity'],
             'price_data' => [
-                        'unit_amount' => $item['unitAmount'],
+                'currency' => 'mxn',
+                'unit_amount' => $item['unitAmount'],
                 'product_data' => [
                     'name' => $item['name'],
                     'metadata' => ['code' => $item['code']],

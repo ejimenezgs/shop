@@ -73,6 +73,36 @@ async function readOverrides(){
   }
 }
 
+
+
+async function readInventoryReservations(){
+  if(!config.projectId)return{};
+  try{
+    const [{initializeApp,getApps},{collection,getDocs,getFirestore}]=await withTimeout(
+      Promise.all([
+        import('https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js'),
+        import('https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js')
+      ]),7000,'Firebase tardó demasiado en cargar'
+    );
+    const app=getApps().length?getApps()[0]:initializeApp(config);
+    const snapshot=await withTimeout(
+      getDocs(collection(getFirestore(app),'inventoryStockReservations')),
+      7000,'Firestore tardó demasiado en responder'
+    );
+    const result={};
+    snapshot.forEach(item=>{
+      const data=item.data()||{};
+      const sku=String(data.sku||item.id||'').trim();
+      if(!sku)return;
+      result[normalizeLookupKey(sku)]=Math.max(0,Number(data.reservedQuantity)||0);
+    });
+    return result;
+  }catch(error){
+    console.error('No se pudieron leer los apartados de inventario',error);
+    return{};
+  }
+}
+
 const COLOR_MAP={blanco:'#f5f5f2',white:'#f5f5f2',marfil:'#eee9df',ivory:'#eee9df',beige:'#d8c6ad',arena:'#cbb99f',negro:'#222222',black:'#222222',oscuro:'#2c2c2c',gris:'#8a8a86',gray:'#8a8a86',grey:'#8a8a86',cafe:'#6f4b35','café':'#6f4b35',brown:'#6f4b35',camel:'#b58f70',cognac:'#9a5b32',chocolate:'#4a2f24',rojo:'#9e3f36',red:'#9e3f36',vino:'#6f2733',burgundy:'#6f2733',azul:'#45627a',blue:'#45627a',verde:'#5e7058',green:'#5e7058',olivo:'#72745a',olive:'#72745a',amarillo:'#d4b24f',yellow:'#d4b24f',naranja:'#c9773c',orange:'#c9773c',rosa:'#c98f9d',pink:'#c98f9d',morado:'#74607f',purple:'#74607f',dorado:'#b89a58',gold:'#b89a58',plateado:'#aaaeb0',silver:'#aaaeb0',natural:'#b89c7a'};
 const colorItems=value=>{if(Array.isArray(value))return value.flatMap(colorItems);if(value&&typeof value==='object')return Object.values(value).flatMap(colorItems);const text=String(value??'').trim();if(!text||text==='—'||/^sin color$/i.test(text))return[];return text.split(/[,;|/\n]+/).map(v=>v.trim()).filter(Boolean)};
 const colorHex=label=>{const value=String(label||'').trim();const hex=value.match(/#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})\b/i);if(hex)return hex[0];const normalized=value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();for(const[name,color]of Object.entries(COLOR_MAP)){const key=name.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();if(normalized.includes(key))return color}return'#8a8178'};
@@ -202,13 +232,25 @@ function applyOverride(product,overrides){
 
 async function loadPublicProducts() {
   if (!catalog) throw new Error('CasaGlickCatalog no está disponible');
-  const [productsResult, overridesResult] = await Promise.allSettled([
+  const [productsResult, overridesResult, reservationsResult] = await Promise.allSettled([
     withTimeout(catalog.fetchProducts(), 12000, 'La API del inventario tardó demasiado en responder'),
-    readOverrides()
+    readOverrides(),
+    readInventoryReservations()
   ]);
   if (productsResult.status === 'rejected') throw productsResult.reason;
   const overrides = overridesResult.status === 'fulfilled' ? overridesResult.value : {};
-  return productsResult.value.map(product => applyOverride(product, overrides));
+  const reservations = reservationsResult.status === 'fulfilled' ? reservationsResult.value : {};
+  return productsResult.value.map(product => {
+    const configured=applyOverride(product,overrides);
+    const reserved=Math.max(0,Number(reservations[normalizeLookupKey(configured.code)])||0);
+    const physical=Math.max(0,Number(configured.stock)||0);
+    return{
+      ...configured,
+      physicalStock:physical,
+      reservedStock:reserved,
+      stock:Math.max(0,physical-reserved)
+    };
+  });
 }
 
 const LISTING_BATCH_SIZE = 12;

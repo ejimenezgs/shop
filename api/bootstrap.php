@@ -19,6 +19,23 @@ function require_method(string $method): void {
     }
 }
 
+
+function require_same_origin(array $config): void {
+    $siteUrl = rtrim((string)($config['site_url'] ?? ''), '/');
+    $expectedHost = strtolower((string)(parse_url($siteUrl, PHP_URL_HOST) ?? ''));
+    if ($expectedHost === '') return;
+
+    $origin = trim((string)($_SERVER['HTTP_ORIGIN'] ?? ''));
+    $referer = trim((string)($_SERVER['HTTP_REFERER'] ?? ''));
+    $source = $origin !== '' ? $origin : $referer;
+    if ($source === '') return; // Some privacy tools omit both headers.
+
+    $sourceHost = strtolower((string)(parse_url($source, PHP_URL_HOST) ?? ''));
+    if ($sourceHost === '' || !hash_equals($expectedHost, $sourceHost)) {
+        throw new RuntimeException('Origen no autorizado.');
+    }
+}
+
 function read_json_body(): array {
     $raw = file_get_contents('php://input');
     $data = json_decode($raw ?: '', true);
@@ -193,6 +210,244 @@ function firestore_patch(array $config, string $path, array $fields): void {
     if ($status < 200 || $status >= 300) throw new RuntimeException('No se pudo actualizar Firestore: ' . $body);
 }
 
+
+
+function firestore_document_name(array $config, string $path): string {
+    $projectId = rawurlencode((string)($config['firebase_project_id'] ?? ''));
+    if (!$projectId) throw new RuntimeException('Falta firebase_project_id.');
+    $segments = implode('/', array_map('rawurlencode', explode('/', trim($path, '/'))));
+    return "projects/{$projectId}/databases/(default)/documents/{$segments}";
+}
+
+function firestore_begin_transaction(array $config): string {
+    $projectId = rawurlencode((string)($config['firebase_project_id'] ?? ''));
+    $url = "https://firestore.googleapis.com/v1/projects/{$projectId}/databases/(default)/documents:beginTransaction";
+    [$status, $body] = http_request($url, 'POST', [
+        'Authorization: Bearer ' . firebase_access_token($config),
+        'Content-Type: application/json'
+    ], '{}');
+    $data = json_decode($body, true);
+    if ($status < 200 || $status >= 300 || empty($data['transaction'])) {
+        throw new RuntimeException('No se pudo iniciar la transacción de inventario.');
+    }
+    return (string)$data['transaction'];
+}
+
+function firestore_batch_get_transaction(array $config, array $paths, string $transaction): array {
+    $projectId = rawurlencode((string)($config['firebase_project_id'] ?? ''));
+    $url = "https://firestore.googleapis.com/v1/projects/{$projectId}/databases/(default)/documents:batchGet";
+    $documents = array_map(fn($path) => firestore_document_name($config, $path), $paths);
+    [$status, $body] = http_request($url, 'POST', [
+        'Authorization: Bearer ' . firebase_access_token($config),
+        'Content-Type: application/json'
+    ], json_encode(['documents' => $documents, 'transaction' => $transaction]));
+    if ($status < 200 || $status >= 300) throw new RuntimeException('No se pudo leer la reserva de inventario.');
+    $result = [];
+    $decoded = json_decode($body, true);
+    if (is_array($decoded) && array_is_list($decoded)) $rows = $decoded;
+    elseif (is_array($decoded)) $rows = [$decoded];
+    else {
+        $rows = [];
+        foreach (preg_split('/\r?\n/', trim($body)) as $line) {
+            if ($line === '') continue;
+            $row = json_decode($line, true);
+            if (is_array($row)) $rows[] = $row;
+        }
+    }
+    foreach ($rows as $row) {
+        if (!empty($row['found']['name'])) {
+            $name = (string)$row['found']['name'];
+            $result[$name] = [
+                'exists' => true,
+                'data' => firestore_decode_fields($row['found']['fields'] ?? []),
+                'updateTime' => (string)($row['found']['updateTime'] ?? '')
+            ];
+        } elseif (!empty($row['missing'])) {
+            $result[(string)$row['missing']] = ['exists' => false, 'data' => [], 'updateTime' => ''];
+        }
+    }
+    $mapped = [];
+    foreach ($paths as $path) {
+        $name = firestore_document_name($config, $path);
+        $mapped[$path] = $result[$name] ?? ['exists' => false, 'data' => [], 'updateTime' => ''];
+    }
+    return $mapped;
+}
+
+function firestore_commit_transaction(array $config, string $transaction, array $writes): void {
+    $projectId = rawurlencode((string)($config['firebase_project_id'] ?? ''));
+    $url = "https://firestore.googleapis.com/v1/projects/{$projectId}/databases/(default)/documents:commit";
+    [$status, $body] = http_request($url, 'POST', [
+        'Authorization: Bearer ' . firebase_access_token($config),
+        'Content-Type: application/json'
+    ], json_encode(['writes' => $writes, 'transaction' => $transaction]));
+    if ($status < 200 || $status >= 300) {
+        $payload = json_decode($body, true);
+        $message = $payload['error']['message'] ?? 'No se pudo guardar la reserva de inventario.';
+        throw new RuntimeException($message);
+    }
+}
+
+function firestore_update_write(array $config, string $path, array $fields, bool $exists): array {
+    $write = [
+        'update' => [
+            'name' => firestore_document_name($config, $path),
+            'fields' => firestore_encode_fields($fields),
+        ],
+    ];
+    if (!$exists) $write['currentDocument'] = ['exists' => false];
+    return $write;
+}
+
+function reservation_document_id(string $sku): string {
+    $normalized = normalize_lookup_key($sku);
+    if ($normalized === '') throw new RuntimeException('SKU inválido para reserva.');
+    return $normalized;
+}
+
+function inventory_snapshot(array $config): array {
+    $inventory = fetch_inventory($config);
+    $byCode = [];
+    foreach ($inventory as $raw) {
+        if (!is_array($raw)) continue;
+        $code = product_code($raw);
+        if ($code !== '') $byCode[normalize_lookup_key($code)] = [
+            'code' => $code,
+            'stock' => normalized_stock($raw),
+            'name' => product_name($raw),
+        ];
+    }
+    return $byCode;
+}
+
+function reserve_inventory_for_paid_order(array $config, string $orderId, array $items, string $eventId): array {
+    if (!$items) throw new RuntimeException('La orden pagada no contiene productos para reservar.');
+    $physical = inventory_snapshot($config);
+    $orderPath = 'inventoryReservationOrders/' . $orderId;
+    $skuPaths = [];
+    foreach ($items as $item) {
+        $sku = trim((string)($item['code'] ?? $item['sku'] ?? ''));
+        if ($sku === '') throw new RuntimeException('La orden contiene un SKU inválido.');
+        $skuPaths[$sku] = 'inventoryStockReservations/' . reservation_document_id($sku);
+    }
+
+    $attempts = 0;
+    while (++$attempts <= 4) {
+        $transaction = firestore_begin_transaction($config);
+        try {
+            $documents = firestore_batch_get_transaction($config, array_merge([$orderPath], array_values($skuPaths)), $transaction);
+            $existingOrder = $documents[$orderPath] ?? ['exists' => false, 'data' => []];
+            $existingStatus = (string)($existingOrder['data']['status'] ?? '');
+            if (in_array($existingStatus, ['reserved', 'dispatched'], true)) {
+                return ['status' => $existingStatus, 'idempotent' => true];
+            }
+
+            $writes = [];
+            $reservedItems = [];
+            foreach ($items as $item) {
+                $sku = trim((string)($item['code'] ?? $item['sku'] ?? ''));
+                $quantity = max(1, (int)($item['quantity'] ?? 1));
+                $key = normalize_lookup_key($sku);
+                if (!isset($physical[$key])) throw new RuntimeException("El producto {$sku} ya no existe en inventario.");
+                $path = $skuPaths[$sku];
+                $document = $documents[$path] ?? ['exists' => false, 'data' => []];
+                $reservedBefore = max(0, (int)($document['data']['reservedQuantity'] ?? 0));
+                $physicalStock = max(0, (int)$physical[$key]['stock']);
+                $availableBefore = max(0, $physicalStock - $reservedBefore);
+                if ($availableBefore < $quantity) {
+                    throw new RuntimeException("No hay disponibilidad suficiente para reservar {$sku}.");
+                }
+                $reservedAfter = $reservedBefore + $quantity;
+                $writes[] = firestore_update_write($config, $path, [
+                    'sku' => $sku,
+                    'reservedQuantity' => $reservedAfter,
+                    'physicalStockAtReservation' => $physicalStock,
+                    'availableStock' => max(0, $physicalStock - $reservedAfter),
+                    'updatedAt' => new DateTimeImmutable('now', new DateTimeZone('UTC')),
+                ], (bool)$document['exists']);
+                $reservedItems[] = [
+                    'sku' => $sku,
+                    'quantity' => $quantity,
+                    'physicalStockAtReservation' => $physicalStock,
+                ];
+            }
+
+            $writes[] = firestore_update_write($config, $orderPath, [
+                'orderId' => $orderId,
+                'status' => 'reserved',
+                'items' => $reservedItems,
+                'stripeEventId' => $eventId,
+                'reservedAt' => new DateTimeImmutable('now', new DateTimeZone('UTC')),
+                'updatedAt' => new DateTimeImmutable('now', new DateTimeZone('UTC')),
+            ], (bool)$existingOrder['exists']);
+            firestore_commit_transaction($config, $transaction, $writes);
+            return ['status' => 'reserved', 'items' => $reservedItems, 'idempotent' => false];
+        } catch (Throwable $error) {
+            if ($attempts >= 4 || !str_contains(strtolower($error->getMessage()), 'aborted')) throw $error;
+            usleep(120000 * $attempts);
+        }
+    }
+    throw new RuntimeException('No se pudo completar la reserva de inventario.');
+}
+
+function transition_inventory_reservation(array $config, string $orderId, string $targetStatus, string $reason = ''): array {
+    if (!in_array($targetStatus, ['dispatched', 'released'], true)) throw new RuntimeException('Estado de reserva inválido.');
+    $orderPath = 'inventoryReservationOrders/' . $orderId;
+    $attempts = 0;
+    while (++$attempts <= 4) {
+        $transaction = firestore_begin_transaction($config);
+        try {
+            $initial = firestore_batch_get_transaction($config, [$orderPath], $transaction);
+            $reservation = $initial[$orderPath] ?? ['exists' => false, 'data' => []];
+            if (!$reservation['exists']) throw new RuntimeException('La orden no tiene una reserva activa.');
+            $currentStatus = (string)($reservation['data']['status'] ?? '');
+            if ($currentStatus === $targetStatus) return ['status' => $targetStatus, 'idempotent' => true];
+            if ($currentStatus !== 'reserved') throw new RuntimeException('La reserva ya fue procesada.');
+            $items = is_array($reservation['data']['items'] ?? null) ? $reservation['data']['items'] : [];
+            $skuPaths = [];
+            foreach ($items as $item) {
+                $sku = trim((string)($item['sku'] ?? ''));
+                $skuPaths[$sku] = 'inventoryStockReservations/' . reservation_document_id($sku);
+            }
+            $documents = firestore_batch_get_transaction($config, array_values($skuPaths), $transaction);
+            $writes = [];
+            foreach ($items as $item) {
+                $sku = trim((string)($item['sku'] ?? ''));
+                $quantity = max(1, (int)($item['quantity'] ?? 1));
+                $path = $skuPaths[$sku];
+                $document = $documents[$path] ?? ['exists' => false, 'data' => []];
+                $reservedBefore = max(0, (int)($document['data']['reservedQuantity'] ?? 0));
+                $reservedAfter = max(0, $reservedBefore - $quantity);
+                $fields = $document['data'];
+                $fields['sku'] = $sku;
+                $fields['reservedQuantity'] = $reservedAfter;
+                $fields['updatedAt'] = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+                $writes[] = firestore_update_write($config, $path, $fields, (bool)$document['exists']);
+            }
+            $orderFields = $reservation['data'];
+            $orderFields['status'] = $targetStatus;
+            $orderFields['reason'] = $reason;
+            $orderFields[$targetStatus === 'dispatched' ? 'dispatchedAt' : 'releasedAt'] = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+            $orderFields['updatedAt'] = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+            $writes[] = firestore_update_write($config, $orderPath, $orderFields, true);
+            firestore_commit_transaction($config, $transaction, $writes);
+            return ['status' => $targetStatus, 'idempotent' => false];
+        } catch (Throwable $error) {
+            if ($attempts >= 4 || !str_contains(strtolower($error->getMessage()), 'aborted')) throw $error;
+            usleep(120000 * $attempts);
+        }
+    }
+    throw new RuntimeException('No se pudo actualizar la reserva.');
+}
+
+function require_inventory_admin_token(array $config): void {
+    $expected = trim((string)($config['inventory_admin_token'] ?? ''));
+    $provided = trim((string)($_SERVER['HTTP_X_INVENTORY_ADMIN_TOKEN'] ?? ''));
+    if ($expected === '' || $provided === '' || !hash_equals($expected, $provided)) {
+        throw new RuntimeException('No autorizado para modificar reservas.');
+    }
+}
+
 function stripe_request(array $config, string $path, array $params = [], string $method = 'POST', ?string $idempotencyKey = null): array {
     $secret = (string)($config['stripe_secret_key'] ?? '');
     if (!str_starts_with($secret, 'sk_test_') && !str_starts_with($secret, 'sk_live_')) throw new RuntimeException('Falta una clave secreta válida de Stripe.');
@@ -327,6 +582,12 @@ function validate_order_items(array $config, array $requestedItems): array {
     if (!$requestedItems || count($requestedItems) > 50) throw new RuntimeException('La bolsa no contiene productos válidos.');
     $inventory = fetch_inventory($config);
     $overrides = firestore_list($config, 'catalogProductOverrides');
+    $reservationDocs = firestore_list($config, 'inventoryStockReservations');
+    $reservedBySku = [];
+    foreach ($reservationDocs as $record) {
+        $sku = trim((string)($record['data']['sku'] ?? $record['id'] ?? ''));
+        if ($sku !== '') $reservedBySku[normalize_lookup_key($sku)] = max(0, (int)($record['data']['reservedQuantity'] ?? 0));
+    }
     $inventoryByCode = [];
     foreach ($inventory as $raw) {
         if (!is_array($raw)) continue;
@@ -343,14 +604,24 @@ function validate_order_items(array $config, array $requestedItems): array {
         $override = null;
         foreach ($overrides as $candidate) if (override_matches($candidate, $code)) { $override = $candidate['data']; break; }
         if (!$override || ($override['published'] ?? false) !== true) throw new RuntimeException("El producto {$code} no está disponible para compra.");
-        $stock = normalized_stock($raw);
-        if ($stock < $quantity) throw new RuntimeException("Stock insuficiente para {$code}.");
+        $physicalStock = normalized_stock($raw);
+        $reservedStock = max(0, (int)($reservedBySku[normalize_lookup_key($code)] ?? 0));
+        $stock = max(0, $physicalStock - $reservedStock);
+        if ($stock < $quantity) throw new RuntimeException("Stock disponible insuficiente para {$code}.");
         $prices = normalized_price($raw);
         $price = $prices['price'];
         if ($price === null || $price <= 0) throw new RuntimeException("El producto {$code} requiere cotización y no puede pagarse en Stripe.");
         $unitAmount = (int)round($price * 100);
         $name = trim((string)($override['displayName'] ?? '')) ?: product_name($raw);
-        $validated[] = ['code' => $code, 'name' => $name, 'quantity' => $quantity, 'unitAmount' => $unitAmount, 'stock' => $stock];
+        $validated[] = [
+            'code' => $code,
+            'name' => $name,
+            'quantity' => $quantity,
+            'unitAmount' => $unitAmount,
+            'stock' => $stock,
+            'physicalStock' => $physicalStock,
+            'reservedStock' => $reservedStock,
+        ];
         $totalCents += $unitAmount * $quantity;
     }
     return ['items' => $validated, 'totalCents' => $totalCents];

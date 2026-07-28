@@ -1,16 +1,12 @@
-# Shop Web Design dinámico v63
+# Casa Glick Shop v69
 
-- `js/shop-content-schema.js` es el esquema maestro compartido con el Panel.
-- Para registrar un bloque nuevo, se agrega su definición a ese archivo y su HTML usa `data-section="clave"`.
-- Los campos estándar usan `data-content="clave-title"`, `clave-description`, `clave-image`, `clave-button` y `clave-eyebrow`.
-- El Panel detecta el esquema remoto y crea en Firebase las secciones faltantes sin sobrescribir contenido existente.
-- El Shop lee `sectionOrder` desde `shopContent/home` y reordena los bloques automáticamente.
-- Hero está fijado al inicio y Contacto al final.
-
-- v64: Cookie banner unified across all Shop pages using the index design and shared localStorage consent key.
-
-
-## Shop v65
-- Product detail titles are no longer clamped or ellipsized.
-- Adaptive typography classes reduce title size progressively for long names while preserving complete text.
-- Desktop and mobile product detail layouts supported.
+- Stripe Checkout dinámico con PHP.
+- Validación del precio y stock en servidor.
+- Reserva automática de unidades al confirmar un pago.
+- Cálculo público: disponible = existencia física - apartados.
+- Transacciones Firestore para evitar dobles reservas concurrentes.
+- Idempotencia por orden y evento de Stripe.
+- Estado de contingencia `reservation_failed` si el pago fue exitoso pero no pudo apartarse inventario.
+- Endpoint privado para convertir la reserva en despacho o liberarla.
+- El despacho libera el apartado únicamente después de que almacén haya aplicado la salida física en su sistema.
+- Caché: shop69.
