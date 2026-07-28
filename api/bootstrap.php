@@ -155,7 +155,11 @@ function firestore_encode_value(mixed $value): array {
     if (is_float($value)) return ['doubleValue' => $value];
     if ($value instanceof DateTimeInterface) return ['timestampValue' => $value->format(DateTimeInterface::RFC3339_EXTENDED)];
     if (is_array($value)) {
-        $isList = array_keys($value) === range(0, count($value) - 1);
+        // JSON arrays such as Stripe's `tax_ids: []` decode to an empty PHP
+        // array. Treat an empty array as a Firestore array; encoding it as a
+        // map would serialize `fields` as [] instead of the required object.
+        if ($value === []) return ['arrayValue' => ['values' => []]];
+        $isList = array_is_list($value);
         if ($isList) return ['arrayValue' => ['values' => array_map('firestore_encode_value', $value)]];
         return ['mapValue' => ['fields' => firestore_encode_fields($value)]];
     }
