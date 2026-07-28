@@ -52,11 +52,9 @@ El backend PHP está en `api/`. No contiene secretos. Crea fuera de `public_html
 
 `/home/TU_USUARIO/private/casa-glick-shop.php`
 
-usando `private-config.example.php` como referencia, y guarda también ahí el JSON de la cuenta de servicio de Firebase. El webhook de Stripe debe apuntar a:
+usando `private-config.example.php` como referencia. PHP inicia sesión con el usuario técnico `stripe-backend@casaglick.com` de Firebase Authentication; no necesita una clave JSON de cuenta de servicio. El webhook de Stripe debe apuntar a:
 
 `https://shop.casaglick.com/api/stripe-webhook.php`
-
-La cuenta de servicio es obligatoria también para crear la sesión, porque PHP valida la orden privada antes de llamar a Stripe.
 
 Eventos configurados: `checkout.session.completed`, `checkout.session.expired`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`, `payment_intent.payment_failed` y `charge.refunded`.
 

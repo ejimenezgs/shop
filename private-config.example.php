@@ -8,8 +8,12 @@ return [
     'stripe_secret_key' => 'sk_test_REPLACE_ME',
     'stripe_webhook_secret' => 'whsec_REPLACE_ME',
     'firebase_project_id' => 'casaglick-439b2',
-    // Prefer a path to the downloaded Firebase service account JSON.
-    'firebase_service_account_path' => '/home/YOUR_CPANEL_USER/private/firebase-service-account.json',
+    // Dedicated Firebase Authentication user used only by the PHP backend.
+    'firebase_web_api_key' => 'AIzaSyBu4DJAxE_mn7MsVZNa-PMu-WNuFNsEPGU',
+    'firebase_auth_email' => 'stripe-backend@casaglick.com',
+    'firebase_auth_password' => 'REPLACE_WITH_A_LONG_RANDOM_PASSWORD',
+    // Optional extra identity check. Leave empty or copy the UID from Firebase Authentication.
+    'firebase_auth_uid' => '',
     'site_url' => 'https://shop.casaglick.com',
     'inventory_url' => 'https://segel-inventario.vercel.app/api/catalogo',
     // Long random token used only by the private dispatch/release endpoint.

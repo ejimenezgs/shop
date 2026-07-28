@@ -1,23 +1,41 @@
-# Casa Glick Shop — Stripe Sandbox con PHP
+# Casa Glick Shop — Stripe Sandbox con PHP y Firebase Authentication
 
-Esta versión usa Stripe Checkout alojado. Las claves privadas nunca deben colocarse en HTML, JavaScript, Firestore, GitHub ni dentro de `public_html`.
+Esta versión usa Stripe Checkout alojado y un usuario técnico de Firebase Authentication. No requiere una clave JSON de cuenta de servicio ni una excepción de políticas de Google Cloud.
 
-## 1. Requisitos del servidor
+## 1. Requisitos
 
 - PHP 8.0 o superior; PHP 8.2 recomendado.
-- Extensiones `curl`, `openssl`, `json` y `mbstring`.
+- Extensiones `curl`, `json` y `mbstring`.
 - HTTPS activo en `https://shop.casaglick.com`.
-- Acceso de escritura al directorio privado de la cuenta cPanel.
+- Acceso al archivo privado fuera de `public_html`.
 
-## 2. Configuración privada
+## 2. Crear el usuario técnico de Firebase
 
-Crea fuera de `public_html`:
+En Firebase:
+
+1. Abre **Authentication**.
+2. En **Sign-in method**, habilita **Correo electrónico/contraseña**.
+3. En **Users**, selecciona **Add user**.
+4. Usa exactamente:
 
 ```text
-/home/TU_USUARIO_CPANEL/private/casa-glick-shop.php
+stripe-backend@casaglick.com
 ```
 
-Usa `private-config.example.php` como base:
+5. Genera una contraseña aleatoria larga y única.
+6. Opcionalmente copia el UID del usuario para verificar también su identidad desde PHP.
+
+Este usuario no debe utilizarse para entrar al Panel ni agregarse a la lista de administradores. Las reglas incluidas solo le permiten operar órdenes, webhooks y reservas.
+
+## 3. Configuración privada
+
+Crea o actualiza:
+
+```text
+/home/gyu5la0fbzjq/private/casa-glick-shop.php
+```
+
+Usa:
 
 ```php
 <?php
@@ -25,37 +43,38 @@ return [
     'stripe_environment' => 'test',
     'stripe_secret_key' => 'sk_test_...',
     'stripe_webhook_secret' => 'whsec_...',
+
     'firebase_project_id' => 'casaglick-439b2',
-    'firebase_service_account_path' => '/home/TU_USUARIO_CPANEL/private/firebase-service-account.json',
+    'firebase_web_api_key' => 'AIzaSyBu4DJAxE_mn7MsVZNa-PMu-WNuFNsEPGU',
+    'firebase_auth_email' => 'stripe-backend@casaglick.com',
+    'firebase_auth_password' => 'CONTRASEÑA_ALEATORIA_DEL_USUARIO_TECNICO',
+    'firebase_auth_uid' => '',
+
     'site_url' => 'https://shop.casaglick.com',
     'inventory_url' => 'https://segel-inventario.vercel.app/api/catalogo',
-    'inventory_admin_token' => 'UN_SECRETO_LARGO_Y_ALEATORIO',
+    'inventory_admin_token' => 'OTRO_SECRETO_LARGO_Y_ALEATORIO',
 ];
 ```
 
-`stripe_environment: test` impide usar accidentalmente una clave `sk_live_...` durante las pruebas.
+Si copiaste el UID del usuario, colócalo en `firebase_auth_uid`. Si no, déjalo como cadena vacía.
 
-## 3. Firebase Admin es obligatorio
+No subas este archivo a GitHub ni lo coloques dentro de `public_html`.
 
-El PHP necesita una cuenta de servicio porque:
+## 4. Publicar las reglas
 
-- lee la orden privada antes de crear la sesión;
-- corrige precios y total desde el servidor;
-- procesa el webhook;
-- actualiza estados;
-- crea y libera reservas mediante transacciones.
+Publica el archivo `firestore.rules` incluido antes de probar.
 
-Guarda el JSON únicamente en:
+Las reglas:
 
-```text
-/home/TU_USUARIO_CPANEL/private/firebase-service-account.json
-```
+- mantienen el catálogo y la configuración con lectura pública;
+- permiten creación pública validada de órdenes;
+- permiten al correo técnico leer y actualizar órdenes;
+- permiten al correo técnico crear y modificar reservas y eventos de Stripe;
+- no conceden al usuario técnico acceso general de administrador.
 
-Sin este archivo, **ni siquiera se puede abrir Stripe Checkout con esta arquitectura**, porque el endpoint debe leer y validar la orden privada antes de crear la sesión.
+Las solicitudes PHP usan un Firebase ID token y, por tanto, están sujetas a estas reglas.
 
-Si Google Cloud bloquea la creación del JSON mediante `iam.disableServiceAccountKeyCreation`, se requiere una excepción limitada al proyecto `casaglick` o migrar el backend a un entorno con credenciales administradas.
-
-## 4. Webhook de Stripe Sandbox
+## 5. Webhook de Stripe Sandbox
 
 Crea el endpoint en la misma cuenta Sandbox de la clave `sk_test_...`:
 
@@ -72,9 +91,9 @@ Eventos:
 - `payment_intent.payment_failed`
 - `charge.refunded`
 
-Copia el secreto de firma `whsec_...` a la configuración privada. El webhook devuelve `400` para firmas inválidas y `500` para fallos internos recuperables, permitiendo que Stripe reintente.
+Copia el secreto `whsec_...` al archivo privado.
 
-## 5. Activar el modo Stripe
+## 6. Activar Stripe desde el Panel
 
 En `catalogSettings/admin`:
 
@@ -83,29 +102,36 @@ stripeEnabled: true
 checkoutMode: stripe
 ```
 
-Si el documento no responde o ambos campos están ausentes, el frontend conserva el modo asistido.
+No actives Stripe hasta que el diagnóstico indique que todo está listo.
 
-## 6. Diagnóstico privado
+## 7. Diagnóstico privado
 
-Una vez desplegado, consulta:
+Consulta:
 
 ```text
 GET https://shop.casaglick.com/api/stripe-readiness.php
-X-Inventory-Admin-Token: TU_TOKEN_PRIVADO
+X-Inventory-Admin-Token: TU_INVENTORY_ADMIN_TOKEN
 ```
 
-La respuesta `readyForSandbox: true` confirma PHP, extensiones, HTTPS, clave de prueba, secreto del webhook, Firebase, Firestore e inventario. Nunca devuelve secretos.
+Debe devolver:
 
-## 7. Pruebas
+```json
+{
+  "readyForSandbox": true
+}
+```
 
-1. Publica `firestore.rules`.
-2. Activa Stripe desde el Panel.
-3. Agrega un producto publicado con precio y stock.
-4. Completa checkout.
-5. Confirma que Stripe abre en Sandbox y moneda MXN.
-6. Paga con `4242 4242 4242 4242`, fecha futura y cualquier CVC.
-7. En Stripe, confirma `200` para `checkout.session.completed`.
-8. En Firestore, confirma:
+El diagnóstico verifica PHP, extensiones, HTTPS, clave de prueba, secreto del webhook, autenticación de Firebase, permisos Firestore e inventario. Nunca devuelve contraseñas ni claves.
+
+## 8. Prueba de pago
+
+1. Mantén Stripe en modo prueba.
+2. Agrega un producto publicado con precio y stock.
+3. Completa checkout.
+4. Confirma que Stripe abre en MXN.
+5. Usa `4242 4242 4242 4242`, fecha futura y cualquier CVC.
+6. En Stripe, confirma `200` para `checkout.session.completed`.
+7. En Firestore, confirma:
 
 ```text
 paymentStatus: paid
@@ -113,23 +139,9 @@ status: Pagada
 inventoryStatus: reserved
 ```
 
-9. Reenvía el mismo evento y comprueba que `reservedQuantity` no aumenta otra vez.
-10. Cancela otro intento y vuelve al checkout: debe reutilizar la misma orden y sesión abierta.
-11. Prueba una tarjeta rechazada, por ejemplo `4000 0000 0000 0002`: no debe crearse reserva.
-
-## 8. Seguridad y validaciones incluidas
-
-- Productos Stripe generados dinámicamente; no se duplica el catálogo.
-- Precio, publicación y stock consultados nuevamente en servidor.
-- Total del navegador ignorado y reemplazado por el cálculo del servidor.
-- Firma del webhook verificada con el cuerpo original.
-- Moneda, monto, orden e ID de sesión verificados antes de confirmar.
-- Idempotencia por orden e intento de Checkout.
-- Eventos Stripe registrados y reservas idempotentes.
-- SKU repetidos consolidados antes de validar stock.
-- Sesiones abiertas reutilizadas; sesiones expiradas crean un intento nuevo sobre la misma orden.
-- Colecciones Firestore paginadas.
-- Reservas realizadas mediante transacción.
+8. Reenvía el mismo evento y verifica que `reservedQuantity` no aumente nuevamente.
+9. Cancela otro intento y regresa al checkout: debe reutilizar la misma orden y sesión abierta.
+10. Prueba `4000 0000 0000 0002`: no debe generarse reserva.
 
 ## 9. Reservas y almacén
 
@@ -143,13 +155,7 @@ Colecciones:
 - `inventoryReservationOrders/{orderId}`
 - `stripeWebhookEvents/{eventId}`
 
-Si el pago fue confirmado pero la reserva falla, la orden queda:
-
-```text
-status: Pagada - revisar inventario
-paymentStatus: paid
-inventoryStatus: reservation_failed
-```
+Acciones privadas:
 
 ### Reintentar una reserva
 
@@ -159,34 +165,44 @@ inventoryStatus: reservation_failed
 
 ### Confirmar despacho
 
-Úsalo solo después de que almacén haya descontado físicamente la salida:
+Úsalo después de que almacén haya descontado físicamente la salida:
 
 ```json
 {"orderId":"ID_FIRESTORE","action":"dispatch","reason":"Despacho confirmado"}
 ```
 
-### Liberar por cancelación
+### Liberar una reserva
 
 ```json
 {"orderId":"ID_FIRESTORE","action":"release","reason":"Cancelación confirmada"}
 ```
 
-Los tres usan:
+Endpoint y encabezado:
 
 ```text
 POST /api/inventory-reservation-action.php
-X-Inventory-Admin-Token: TU_TOKEN_PRIVADO
+X-Inventory-Admin-Token: TU_INVENTORY_ADMIN_TOKEN
 Content-Type: application/json
 ```
 
-No expongas ese token en el navegador.
+## 10. Seguridad incluida
 
-## 10. Paso a producción
+- No existe una clave privada JSON.
+- La contraseña técnica vive fuera de `public_html`.
+- El usuario técnico tiene permisos limitados mediante reglas.
+- Precios, publicación y stock se validan nuevamente en PHP.
+- El total enviado por el navegador se ignora.
+- El webhook valida firma, sesión, orden, moneda y monto.
+- Las reservas son transaccionales e idempotentes.
+- Los SKU repetidos se consolidan antes de reservar.
+- Stripe Sandbox exige `sk_test_...` mientras `stripe_environment` sea `test`.
 
-Solo después de completar Sandbox:
+## 11. Paso a producción
 
-1. Crear el webhook en la cuenta Stripe de Casa Glick.
-2. Sustituir por `sk_live_...` y el nuevo `whsec_...`.
-3. Cambiar `stripe_environment` a `live`.
-4. Ejecutar una compra real controlada de bajo monto.
-5. Confirmar orden, webhook, reserva, reembolso y despacho.
+Después de completar todas las pruebas:
+
+1. Crea el webhook en la cuenta Stripe de Casa Glick.
+2. Sustituye por `sk_live_...` y el nuevo `whsec_...`.
+3. Cambia `stripe_environment` a `live`.
+4. Mantén las mismas credenciales técnicas de Firebase.
+5. Ejecuta una compra real controlada y verifica pago, reserva, reembolso y despacho.

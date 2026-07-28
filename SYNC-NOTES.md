@@ -1,4 +1,4 @@
-# Casa Glick Shop v70 Sandbox Audit
+# Casa Glick Shop v71 Firebase Auth
 
 - Stripe Checkout dinámico con PHP.
 - Validación del precio y stock en servidor.
@@ -14,5 +14,8 @@
 - Estado de contingencia `reservation_failed` si el pago fue exitoso pero no pudo apartarse inventario.
 - Endpoint privado para reintentar, despachar o liberar una reserva.
 - Endpoint privado de diagnóstico para verificar la configuración Sandbox.
+- Autenticación PHP mediante un usuario técnico de Firebase Authentication.
+- No requiere JSON de cuenta de servicio ni excepción de Google Cloud.
+- Permisos limitados mediante reglas para `stripe-backend@casaglick.com`.
 - El despacho libera el apartado únicamente después de que almacén haya aplicado la salida física en su sistema.
-- Caché: shop70sandbox.
+- Caché: shop71auth.

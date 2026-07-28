@@ -2,7 +2,8 @@
 declare(strict_types=1);
 
 const CG_STRIPE_API = 'https://api.stripe.com/v1';
-const CG_FIRESTORE_SCOPE = 'https://www.googleapis.com/auth/datastore';
+const CG_FIREBASE_AUTH_API = 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword';
+const CG_FIREBASE_BACKEND_EMAIL = 'stripe-backend@casaglick.com';
 
 function json_response(array $payload, int $status = 200): never {
     http_response_code($status);
@@ -64,10 +65,6 @@ function load_private_config(): array {
     throw new RuntimeException('Falta la configuración privada del servidor.');
 }
 
-function base64url_encode(string $data): string {
-    return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
-}
-
 function http_request(string $url, string $method = 'GET', array $headers = [], ?string $body = null): array {
     $ch = curl_init($url);
     curl_setopt_array($ch, [
@@ -87,48 +84,44 @@ function http_request(string $url, string $method = 'GET', array $headers = [], 
     return [$status, $response];
 }
 
-function firebase_service_account(array $config): array {
-    if (!empty($config['firebase_service_account']) && is_array($config['firebase_service_account'])) {
-        return $config['firebase_service_account'];
-    }
-    $path = (string)($config['firebase_service_account_path'] ?? '');
-    if (!$path || !is_file($path)) throw new RuntimeException('Falta la cuenta de servicio de Firebase.');
-    $data = json_decode((string)file_get_contents($path), true);
-    if (!is_array($data)) throw new RuntimeException('La cuenta de servicio de Firebase no es válida.');
-    return $data;
-}
-
 function firebase_access_token(array $config): string {
     static $token = null;
     if ($token) return $token;
-    $service = firebase_service_account($config);
-    $now = time();
-    $header = base64url_encode(json_encode(['alg' => 'RS256', 'typ' => 'JWT']));
-    $claims = base64url_encode(json_encode([
-        'iss' => $service['client_email'],
-        'scope' => CG_FIRESTORE_SCOPE,
-        'aud' => 'https://oauth2.googleapis.com/token',
-        'iat' => $now,
-        'exp' => $now + 3500,
-    ]));
-    $unsigned = $header . '.' . $claims;
-    $signature = '';
-    if (!openssl_sign($unsigned, $signature, $service['private_key'], OPENSSL_ALGO_SHA256)) {
-        throw new RuntimeException('No se pudo firmar la autenticación de Firebase.');
+
+    $apiKey = trim((string)($config['firebase_web_api_key'] ?? ''));
+    $email = strtolower(trim((string)($config['firebase_auth_email'] ?? '')));
+    $password = (string)($config['firebase_auth_password'] ?? '');
+    if ($apiKey === '' || $email === '' || $password === '') {
+        throw new RuntimeException('Faltan las credenciales del usuario técnico de Firebase.');
     }
-    $jwt = $unsigned . '.' . base64url_encode($signature);
+    if (!hash_equals(CG_FIREBASE_BACKEND_EMAIL, $email)) {
+        throw new RuntimeException('El correo técnico de Firebase no coincide con el autorizado.');
+    }
+
     [$status, $response] = http_request(
-        'https://oauth2.googleapis.com/token',
+        CG_FIREBASE_AUTH_API . '?key=' . rawurlencode($apiKey),
         'POST',
-        ['Content-Type: application/x-www-form-urlencoded'],
-        http_build_query([
-            'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-            'assertion' => $jwt,
-        ])
+        ['Content-Type: application/json'],
+        json_encode([
+            'email' => $email,
+            'password' => $password,
+            'returnSecureToken' => true,
+        ], JSON_UNESCAPED_SLASHES)
     );
     $data = json_decode($response, true);
-    if ($status !== 200 || empty($data['access_token'])) throw new RuntimeException('Firebase rechazó la cuenta de servicio.');
-    return $token = $data['access_token'];
+    if ($status !== 200 || empty($data['idToken'])) {
+        $reason = (string)($data['error']['message'] ?? 'unknown_error');
+        error_log('firebase-auth: ' . $reason);
+        throw new RuntimeException('Firebase rechazó al usuario técnico.');
+    }
+    if (!hash_equals($email, strtolower((string)($data['email'] ?? '')))) {
+        throw new RuntimeException('Firebase devolvió una identidad inesperada.');
+    }
+    $expectedUid = trim((string)($config['firebase_auth_uid'] ?? ''));
+    if ($expectedUid !== '' && !hash_equals($expectedUid, (string)($data['localId'] ?? ''))) {
+        throw new RuntimeException('El UID del usuario técnico no coincide con la configuración.');
+    }
+    return $token = (string)$data['idToken'];
 }
 
 function firestore_base(array $config): string {

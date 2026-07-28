@@ -10,6 +10,12 @@ service cloud.firestore {
       ];
     }
 
+    function isStripeBackend() {
+      return isSignedIn()
+        && request.auth.token.email == "stripe-backend@casaglick.com"
+        && request.auth.token.firebase.sign_in_provider == "password";
+    }
+
     function validOrderCreate() {
       return request.resource.data.keys().hasOnly([
           "folio", "status", "customer", "items", "subtotal", "total",
@@ -84,20 +90,21 @@ service cloud.firestore {
 
     match /orders/{orderId} {
       allow create: if validOrderCreate();
-      allow read, update, delete: if isAdmin();
+      allow read, update: if isAdmin() || isStripeBackend();
+      allow delete: if isAdmin();
     }
 
     match /inventoryStockReservations/{skuId} {
       allow read: if true;
-      allow write: if false;
+      allow write: if isStripeBackend();
     }
 
     match /inventoryReservationOrders/{orderId} {
-      allow read, write: if false;
+      allow read, write: if isStripeBackend();
     }
 
     match /stripeWebhookEvents/{eventId} {
-      allow read, write: if false;
+      allow read, write: if isStripeBackend();
     }
 
     match /{document=**} {

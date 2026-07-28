@@ -18,13 +18,14 @@ try {
         'stripeEnvironment' => (string)($config['stripe_environment'] ?? 'test'),
         'stripeTestKey' => str_starts_with((string)($config['stripe_secret_key'] ?? ''), 'sk_test_'),
         'webhookSecret' => str_starts_with((string)($config['stripe_webhook_secret'] ?? ''), 'whsec_'),
-        'firebaseServiceAccount' => false,
+        'firebaseAuthEmail' => (string)($config['firebase_auth_email'] ?? ''),
+        'firebaseAuthentication' => false,
         'firestore' => false,
         'inventory' => false,
     ];
 
-    firebase_service_account($config);
-    $checks['firebaseServiceAccount'] = true;
+    firebase_access_token($config);
+    $checks['firebaseAuthentication'] = true;
     firestore_get($config, 'catalogSettings/admin');
     $checks['firestore'] = true;
     $checks['inventory'] = count(fetch_inventory($config)) > 0;
@@ -38,7 +39,7 @@ try {
         $checks['httpsSiteUrl'],
         $checks['stripeTestKey'],
         $checks['webhookSecret'],
-        $checks['firebaseServiceAccount'],
+        $checks['firebaseAuthentication'],
         $checks['firestore'],
         $checks['inventory'],
     ], true);
