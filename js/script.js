@@ -171,168 +171,241 @@ window.addEventListener('resize', requestMotionUpdate);
 updateNavbarState();
 requestAnimationFrame(updateSectionMotion);
 
-// Lifestyle carousel: desktop infinite loop + edge-hover auto-scroll, vertical gallery on mobile
-const lifestyleTracks = document.querySelectorAll('.lifestyle__track');
-lifestyleTracks.forEach((track) => {
-  const section = track.closest('.lifestyle');
-  const carousel = track.closest('.lifestyle__carousel');
-  const originalItems = Array.from(track.children);
-  if (!section || !carousel || !originalItems.length) return;
+// Lifestyle carousel: Womo-style infinite loop, cursor steering, direct drag and image lightbox
+(() => {
+  const pageTracks = document.querySelectorAll('.lifestyle__track');
+  if (!pageTracks.length) return;
 
-  if (!track.dataset.loopCloned) {
-    for (let copy = 0; copy < 2; copy += 1) {
-      originalItems.forEach((item) => {
-        const clone = item.cloneNode(true);
-        clone.setAttribute('aria-hidden', 'true');
-        clone.classList.add('is-loop-clone');
-        track.appendChild(clone);
-      });
-    }
-    track.dataset.loopCloned = 'true';
-  }
+  const lightbox = (() => {
+    const overlay = document.createElement('div');
+    overlay.className = 'lifestyle-lightbox';
+    overlay.setAttribute('aria-hidden', 'true');
+    overlay.innerHTML = `
+      <div class="lifestyle-lightbox__backdrop" data-lifestyle-lightbox-close></div>
+      <figure class="lifestyle-lightbox__panel" role="dialog" aria-modal="true" aria-label="Vista ampliada de imagen lifestyle">
+        <button class="lifestyle-lightbox__close" type="button" aria-label="Cerrar imagen" data-lifestyle-lightbox-close>×</button>
+        <img class="lifestyle-lightbox__image" alt="" />
+      </figure>
+    `;
+    document.body.appendChild(overlay);
 
-  const isMobileGallery = () => window.matchMedia('(max-width: 700px)').matches;
+    const image = overlay.querySelector('.lifestyle-lightbox__image');
+    let lastTrigger = null;
 
-  let isDown = false;
-  let startX = 0;
-  let scrollStart = 0;
-  let edgeSpeed = 0;
-  let rafId = null;
+    const close = ({ restoreFocus = true } = {}) => {
+      overlay.classList.remove('is-open');
+      overlay.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('has-lifestyle-lightbox');
+      if (restoreFocus && lastTrigger instanceof HTMLElement) lastTrigger.focus({ preventScroll: true });
+    };
 
-  const getLoopWidth = () => Math.max(1, track.scrollWidth / 3);
+    const open = (src, alt, trigger) => {
+      if (!src) return;
+      lastTrigger = trigger || null;
+      image.src = src;
+      image.alt = alt || 'Imagen lifestyle Casa Glick';
+      overlay.classList.add('is-open');
+      overlay.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('has-lifestyle-lightbox');
+      requestAnimationFrame(() => overlay.querySelector('.lifestyle-lightbox__close')?.focus({ preventScroll: true }));
+    };
 
-  const setLoopStart = () => {
-    if (isMobileGallery()) return;
-    const loopWidth = getLoopWidth();
-    if (!track.dataset.loopReady || track.scrollLeft < 4) {
-      track.scrollLeft = loopWidth;
-      track.dataset.loopReady = 'true';
-    }
-  };
-
-  const normalizeLoop = () => {
-    if (isMobileGallery()) return;
-    const loopWidth = getLoopWidth();
-    if (track.scrollLeft >= loopWidth * 2) {
-      track.scrollLeft -= loopWidth;
-    } else if (track.scrollLeft <= 2) {
-      track.scrollLeft += loopWidth;
-    }
-  };
-
-  const sectionIsActive = () => {
-    const rect = section.getBoundingClientRect();
-    const vh = window.innerHeight || document.documentElement.clientHeight;
-    return rect.top < vh * 0.9 && rect.bottom > vh * 0.1;
-  };
-
-  const stopEdgeScroll = () => {
-    edgeSpeed = 0;
-    if (rafId) {
-      cancelAnimationFrame(rafId);
-      rafId = null;
-    }
-  };
-
-  const edgeTick = () => {
-    if (!edgeSpeed || isDown || isMobileGallery() || !sectionIsActive()) {
-      rafId = null;
-      return;
-    }
-
-    track.scrollLeft += edgeSpeed;
-    normalizeLoop();
-    rafId = requestAnimationFrame(edgeTick);
-  };
-
-  const startEdgeScroll = () => {
-    if (!rafId && edgeSpeed) rafId = requestAnimationFrame(edgeTick);
-  };
-
-  const updateEdgeSpeed = (event) => {
-    if (isDown || isMobileGallery() || !sectionIsActive()) {
-      stopEdgeScroll();
-      return;
-    }
-
-    const rect = carousel.getBoundingClientRect();
-    const yInside = event.clientY >= rect.top && event.clientY <= rect.bottom;
-    const xInside = event.clientX >= rect.left && event.clientX <= rect.right;
-    if (!xInside || !yInside) {
-      stopEdgeScroll();
-      return;
-    }
-
-    const edgeZone = Math.min(220, Math.max(90, rect.width * 0.24));
-    const maxSpeed = 8.5;
-
-    if (event.clientX >= rect.right - edgeZone) {
-      const progress = (event.clientX - (rect.right - edgeZone)) / edgeZone;
-      edgeSpeed = maxSpeed * Math.max(0.18, progress);
-      startEdgeScroll();
-    } else if (event.clientX <= rect.left + edgeZone) {
-      const progress = ((rect.left + edgeZone) - event.clientX) / edgeZone;
-      edgeSpeed = -maxSpeed * Math.max(0.18, progress);
-      startEdgeScroll();
-    } else {
-      stopEdgeScroll();
-    }
-  };
-
-  const stopDrag = () => {
-    if (!isDown) return;
-    isDown = false;
-    track.classList.remove('is-dragging');
-    normalizeLoop();
-  };
-
-  track.addEventListener('pointerdown', (event) => {
-    if (isMobileGallery()) return;
-    setLoopStart();
-    isDown = true;
-    stopEdgeScroll();
-    track.classList.add('is-dragging');
-    startX = event.pageX;
-    scrollStart = track.scrollLeft;
-    track.setPointerCapture(event.pointerId);
-  });
-
-  track.addEventListener('pointermove', (event) => {
-    if (isMobileGallery() || !isDown) return;
-    const walk = (event.pageX - startX) * 1.08;
-    track.scrollLeft = scrollStart - walk;
-    normalizeLoop();
-  });
-
-  carousel.addEventListener('pointerenter', (event) => {
-    setLoopStart();
-    updateEdgeSpeed(event);
-  }, { passive: true });
-  carousel.addEventListener('pointermove', updateEdgeSpeed, { passive: true });
-  carousel.addEventListener('pointerleave', stopEdgeScroll);
-
-  track.addEventListener('pointerup', stopDrag);
-  track.addEventListener('pointercancel', stopDrag);
-  track.addEventListener('scroll', normalizeLoop, { passive: true });
-
-  window.addEventListener('blur', stopEdgeScroll);
-  window.addEventListener('scroll', () => {
-    if (!sectionIsActive()) stopEdgeScroll();
-  }, { passive: true });
-  window.addEventListener('resize', () => {
-    stopEdgeScroll();
-    if (isMobileGallery()) {
-      track.dataset.loopReady = '';
-      return;
-    }
-    requestAnimationFrame(() => {
-      setLoopStart();
-      normalizeLoop();
+    overlay.querySelectorAll('[data-lifestyle-lightbox-close]').forEach((button) => button.addEventListener('click', () => close()));
+    overlay.querySelector('.lifestyle-lightbox__panel')?.addEventListener('click', (event) => event.stopPropagation());
+    window.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && overlay.classList.contains('is-open')) close();
     });
-  });
 
-  requestAnimationFrame(setLoopStart);
-});
+    return { open };
+  })();
+
+  pageTracks.forEach((track) => {
+    const carousel = track.closest('.lifestyle__carousel');
+    if (!carousel) return;
+
+    const sourceItems = Array.from(track.querySelectorAll('.lifestyle-item')).map((item) => item.cloneNode(true));
+    if (!sourceItems.length) return;
+
+    const mobileQuery = window.matchMedia('(max-width: 700px)');
+    let currentMode = '';
+    let loopWidth = 0;
+    let pointerDown = false;
+    let pointerId = null;
+    let dragStartX = 0;
+    let dragStartScroll = 0;
+    let movedDuringPointer = false;
+    let pointerStartItem = null;
+    let blockClickUntil = 0;
+    let cursorVelocity = 0;
+    let animationFrame = 0;
+    let lastFrameTime = 0;
+
+    const isDesktop = () => !mobileQuery.matches;
+
+    const makeGroups = (groupSize, cloneClass = '') => {
+      const fragment = document.createDocumentFragment();
+      for (let index = 0; index < sourceItems.length; index += groupSize) {
+        const group = document.createElement('div');
+        group.className = `lifestyle-group${cloneClass ? ` ${cloneClass}` : ''}`;
+        sourceItems.slice(index, index + groupSize).forEach((item) => {
+          const clone = item.cloneNode(true);
+          if (cloneClass) clone.setAttribute('aria-hidden', 'true');
+          group.appendChild(clone);
+        });
+        fragment.appendChild(group);
+      }
+      return fragment;
+    };
+
+    const measureLoop = () => {
+      const groups = Array.from(track.children);
+      const setCount = groups.length / 3;
+      const first = groups[setCount];
+      const after = groups[setCount * 2];
+      loopWidth = first && after ? after.offsetLeft - first.offsetLeft : track.scrollWidth / 3;
+    };
+
+    const normalizeLoop = () => {
+      if (loopWidth <= 1) return;
+      if (carousel.scrollLeft >= loopWidth * 2) carousel.scrollLeft -= loopWidth;
+      else if (carousel.scrollLeft < loopWidth * 0.25) carousel.scrollLeft += loopWidth;
+    };
+
+    const build = () => {
+      const mode = isDesktop() ? 'desktop' : 'mobile';
+      if (mode === currentMode && track.children.length) return;
+      currentMode = mode;
+      stopMotion();
+
+      const groupSize = mode === 'desktop' ? 3 : 2;
+      const fragment = document.createDocumentFragment();
+      fragment.appendChild(makeGroups(groupSize, 'is-loop-clone'));
+      fragment.appendChild(makeGroups(groupSize));
+      fragment.appendChild(makeGroups(groupSize, 'is-loop-clone'));
+      track.replaceChildren(fragment);
+      requestAnimationFrame(() => {
+        measureLoop();
+        carousel.scrollLeft = loopWidth;
+      });
+    };
+
+    function stopMotion() {
+      cursorVelocity = 0;
+      lastFrameTime = 0;
+      if (animationFrame) cancelAnimationFrame(animationFrame);
+      animationFrame = 0;
+    }
+
+    const motionTick = (time) => {
+      if (!isDesktop() || pointerDown || Math.abs(cursorVelocity) < 0.01) {
+        animationFrame = 0;
+        return;
+      }
+      if (!lastFrameTime) lastFrameTime = time;
+      const delta = Math.min(32, time - lastFrameTime);
+      lastFrameTime = time;
+      carousel.scrollLeft += cursorVelocity * delta;
+      normalizeLoop();
+      animationFrame = requestAnimationFrame(motionTick);
+    };
+
+    const updateCursorVelocity = (clientX) => {
+      if (!isDesktop() || pointerDown) return;
+      const rect = carousel.getBoundingClientRect();
+      const normalized = ((clientX - rect.left) / rect.width) * 2 - 1;
+      const deadZone = 0.12;
+      if (Math.abs(normalized) <= deadZone) {
+        stopMotion();
+        return;
+      }
+      const strength = (Math.abs(normalized) - deadZone) / (1 - deadZone);
+      cursorVelocity = Math.sign(normalized) * (0.112 + strength * 0.434);
+      if (!animationFrame) animationFrame = requestAnimationFrame(motionTick);
+    };
+
+    carousel.addEventListener('pointerenter', (event) => updateCursorVelocity(event.clientX));
+    carousel.addEventListener('pointermove', (event) => {
+      if (pointerDown && event.pointerId === pointerId) {
+        const deltaX = event.clientX - dragStartX;
+        if (Math.abs(deltaX) > 5) movedDuringPointer = true;
+        carousel.scrollLeft = dragStartScroll - deltaX * 1.12;
+        normalizeLoop();
+        event.preventDefault();
+        return;
+      }
+      updateCursorVelocity(event.clientX);
+    });
+    carousel.addEventListener('pointerleave', () => {
+      if (!pointerDown) stopMotion();
+    });
+
+    carousel.addEventListener('pointerdown', (event) => {
+      if (!isDesktop() || event.pointerType === 'touch' || event.button !== 0) return;
+      pointerDown = true;
+      pointerId = event.pointerId;
+      dragStartX = event.clientX;
+      dragStartScroll = carousel.scrollLeft;
+      movedDuringPointer = false;
+      pointerStartItem = event.target.closest('.lifestyle-item');
+      carousel.classList.add('is-dragging');
+      stopMotion();
+      try { carousel.setPointerCapture(pointerId); } catch (error) {}
+      event.preventDefault();
+    });
+
+    const endPointer = (event) => {
+      if (!pointerDown || (event && pointerId !== null && event.pointerId !== pointerId)) return;
+      const shouldOpen = !movedDuringPointer && pointerStartItem;
+      const itemToOpen = pointerStartItem;
+      pointerDown = false;
+      pointerId = null;
+      pointerStartItem = null;
+      carousel.classList.remove('is-dragging');
+      normalizeLoop();
+      blockClickUntil = performance.now() + 240;
+      if (shouldOpen) {
+        const image = itemToOpen.querySelector('img');
+        if (image) lightbox.open(image.currentSrc || image.src, image.alt, itemToOpen);
+      }
+    };
+
+    carousel.addEventListener('pointerup', endPointer);
+    carousel.addEventListener('pointercancel', endPointer);
+    carousel.addEventListener('lostpointercapture', endPointer);
+    carousel.addEventListener('dragstart', (event) => event.preventDefault());
+    carousel.addEventListener('scroll', normalizeLoop, { passive: true });
+    carousel.addEventListener('touchend', () => window.setTimeout(normalizeLoop, 80), { passive: true });
+
+    carousel.addEventListener('wheel', (event) => {
+      if (!isDesktop()) return;
+      const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+      carousel.scrollLeft += delta;
+      normalizeLoop();
+      event.preventDefault();
+    }, { passive: false });
+
+    carousel.addEventListener('click', (event) => {
+      if (performance.now() < blockClickUntil || isDesktop()) {
+        event.preventDefault();
+        return;
+      }
+      const item = event.target.closest('.lifestyle-item');
+      const image = item?.querySelector('img');
+      if (image) lightbox.open(image.currentSrc || image.src, image.alt, item);
+    });
+
+    let resizeTimer = 0;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(() => {
+        currentMode = '';
+        build();
+      }, 120);
+    });
+
+    build();
+  });
+})();
 
 
 // Products listing page filters
