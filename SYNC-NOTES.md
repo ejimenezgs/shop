@@ -71,3 +71,5 @@
 - v88: Added semantic SEO captions to static and dynamically generated product/content images without changing visual layouts. Added a tenth Lifestyle image using assets/about-materials-new.webp.
 
 - v89: Brevo transactional emails integrated into the Stripe webhook. Successful paid orders send a branded confirmation to the customer and an internal new-sale notification to contacto@gruposegel.com. Firestore stores status, attempts, timestamps and Brevo message IDs; email failures are logged without blocking payment confirmation.
+
+- v90: Added Brevo transactional emails for assisted/WhatsApp orders. Customers receive “Recibimos tu solicitud” with an order summary and Continue on WhatsApp button; contacto@gruposegel.com receives a clearly marked pending-payment request. Added server endpoint with same-origin check, per-order dispatch token, age validation, idempotency, Firestore delivery status, and non-blocking failure handling.

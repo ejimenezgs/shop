@@ -943,3 +943,190 @@ function send_paid_order_emails(array $config, array $order, string $orderId): a
         'internalMessageId' => $internalId,
     ];
 }
+
+function assisted_item_amount_label(array $item): string {
+    $quantity = max(1, (int)($item['quantity'] ?? 1));
+    $price = is_numeric($item['price'] ?? null) ? (float)$item['price'] : 0.0;
+    return $price > 0 ? cg_money($price * $quantity) : 'Por cotizar';
+}
+
+function assisted_order_items_email_rows(array $items): string {
+    $rows = '';
+    foreach ($items as $item) {
+        if (!is_array($item)) continue;
+        $name = trim((string)($item['name'] ?? $item['code'] ?? 'Producto Casa Glick'));
+        $code = trim((string)($item['code'] ?? ''));
+        $quantity = max(1, (int)($item['quantity'] ?? 1));
+        $rows .= '<tr>'
+            . '<td style="padding:14px 0;border-bottom:1px solid #e8e5df;">'
+            . '<strong style="display:block;color:#1d1d1b;font-size:14px;">' . html_escape($name) . '</strong>'
+            . ($code !== '' ? '<span style="color:#777;font-size:12px;">' . html_escape($code) . '</span>' : '')
+            . '</td>'
+            . '<td style="padding:14px 8px;border-bottom:1px solid #e8e5df;text-align:center;color:#555;font-size:14px;">' . $quantity . '</td>'
+            . '<td style="padding:14px 0;border-bottom:1px solid #e8e5df;text-align:right;color:#1d1d1b;font-size:14px;">' . html_escape(assisted_item_amount_label($item)) . '</td>'
+            . '</tr>';
+    }
+    return $rows;
+}
+
+function assisted_order_items_text(array $items): string {
+    $lines = [];
+    foreach ($items as $item) {
+        if (!is_array($item)) continue;
+        $name = trim((string)($item['name'] ?? $item['code'] ?? 'Producto Casa Glick'));
+        $quantity = max(1, (int)($item['quantity'] ?? 1));
+        $lines[] = $quantity . ' x ' . $name . ' — ' . assisted_item_amount_label($item);
+    }
+    return implode("\n", $lines);
+}
+
+function build_assisted_whatsapp_url(array $order): string {
+    $customer = is_array($order['customer'] ?? null) ? $order['customer'] : [];
+    $items = is_array($order['items'] ?? null) ? $order['items'] : [];
+    $folio = trim((string)($order['folio'] ?? ''));
+    $total = (float)($order['total'] ?? 0);
+    $lines = [];
+    foreach ($items as $item) {
+        if (!is_array($item)) continue;
+        $quantity = max(1, (int)($item['quantity'] ?? 1));
+        $name = trim((string)($item['name'] ?? 'Producto Casa Glick'));
+        $code = trim((string)($item['code'] ?? ''));
+        $label = assisted_item_amount_label($item);
+        $lines[] = '• ' . $quantity . ' × ' . $name . ($code !== '' ? ' (' . $code . ')' : '') . ' — ' . $label;
+    }
+    $message = "Hola, generé la solicitud {$folio} en Casa Glick.\n\n"
+        . implode("\n", $lines)
+        . "\n\nTotal estimado: " . cg_money($total)
+        . "\nEntrega: " . (string)($customer['delivery'] ?? 'Por confirmar')
+        . "\nCódigo Postal: " . (string)($customer['postalCode'] ?? '');
+    if (($customer['delivery'] ?? '') === 'Envío a domicilio' && trim((string)($customer['address'] ?? '')) !== '') {
+        $message .= "\nDirección: " . trim((string)$customer['address']);
+    }
+    $message .= "\nCliente: " . (string)($customer['name'] ?? '')
+        . "\nTeléfono: " . (string)($customer['phone'] ?? '');
+    return 'https://wa.me/525513004665?text=' . rawurlencode($message);
+}
+
+function build_customer_assisted_order_email(array $config, array $order, string $orderId): array {
+    $customer = is_array($order['customer'] ?? null) ? $order['customer'] : [];
+    $items = is_array($order['items'] ?? null) ? $order['items'] : [];
+    $name = trim((string)($customer['firstName'] ?? $customer['name'] ?? 'cliente')) ?: 'cliente';
+    $folio = trim((string)($order['folio'] ?? $orderId));
+    $total = (float)($order['total'] ?? 0);
+    $delivery = trim((string)($customer['delivery'] ?? 'Por confirmar'));
+    $address = trim((string)($customer['address'] ?? ''));
+    $postalCode = trim((string)($customer['postalCode'] ?? ''));
+    $whatsappUrl = build_assisted_whatsapp_url($order);
+    $subject = 'Recibimos tu solicitud ' . $folio . ' | Casa Glick';
+
+    $html = '<!doctype html><html><body style="margin:0;background:#f4f2ee;font-family:Arial,Helvetica,sans-serif;color:#1d1d1b;">'
+        . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f2ee;padding:32px 12px;"><tr><td align="center">'
+        . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:680px;background:#fff;border-collapse:collapse;">'
+        . '<tr><td style="padding:34px 40px 18px;text-align:center;font-size:22px;letter-spacing:2px;font-weight:600;">CASA GLICK</td></tr>'
+        . '<tr><td style="padding:10px 40px 34px;">'
+        . '<p style="margin:0 0 10px;color:#777;font-size:12px;letter-spacing:1.4px;text-transform:uppercase;">Solicitud recibida</p>'
+        . '<h1 style="margin:0 0 18px;font-family:Georgia,serif;font-size:34px;font-weight:400;line-height:1.15;">Gracias, ' . html_escape($name) . '.</h1>'
+        . '<p style="margin:0 0 20px;color:#555;font-size:15px;line-height:1.7;">Recibimos tu selección de productos. Continúa por WhatsApp para que un asesor confirme disponibilidad, entrega y forma de pago.</p>'
+        . '<p style="margin:0 0 26px;padding:14px 16px;background:#f7f6f3;color:#6a6258;font-size:12px;line-height:1.6;">Esta solicitud todavía no representa una compra pagada ni una reserva definitiva de inventario.</p>'
+        . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;background:#f7f6f3;">'
+        . '<tr><td style="padding:16px 18px;color:#777;font-size:12px;text-transform:uppercase;">Solicitud</td><td style="padding:16px 18px;text-align:right;font-weight:600;">' . html_escape($folio) . '</td></tr>'
+        . '<tr><td style="padding:0 18px 16px;color:#777;font-size:12px;text-transform:uppercase;">Entrega</td><td style="padding:0 18px 16px;text-align:right;">' . html_escape($delivery) . '</td></tr>'
+        . ($postalCode !== '' ? '<tr><td style="padding:0 18px 16px;color:#777;font-size:12px;text-transform:uppercase;">Código postal</td><td style="padding:0 18px 16px;text-align:right;">' . html_escape($postalCode) . '</td></tr>' : '')
+        . ($address !== '' ? '<tr><td style="padding:0 18px 16px;color:#777;font-size:12px;text-transform:uppercase;vertical-align:top;">Dirección</td><td style="padding:0 18px 16px;text-align:right;line-height:1.5;">' . html_escape($address) . '</td></tr>' : '')
+        . '</table>'
+        . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">'
+        . '<thead><tr><th style="padding:10px 0;text-align:left;color:#777;font-size:11px;text-transform:uppercase;border-bottom:1px solid #1d1d1b;">Producto</th><th style="padding:10px 8px;text-align:center;color:#777;font-size:11px;text-transform:uppercase;border-bottom:1px solid #1d1d1b;">Cant.</th><th style="padding:10px 0;text-align:right;color:#777;font-size:11px;text-transform:uppercase;border-bottom:1px solid #1d1d1b;">Importe</th></tr></thead>'
+        . '<tbody>' . assisted_order_items_email_rows($items) . '</tbody>'
+        . '<tfoot><tr><td colspan="2" style="padding:20px 0 0;font-weight:600;">Total estimado</td><td style="padding:20px 0 0;text-align:right;font-size:18px;font-weight:600;">' . html_escape(cg_money($total)) . '</td></tr></tfoot>'
+        . '</table>'
+        . '<div style="padding:30px 0 8px;text-align:center;"><a href="' . html_escape($whatsappUrl) . '" style="display:inline-block;background:#1d1d1b;color:#fff;text-decoration:none;padding:15px 28px;font-size:12px;letter-spacing:1px;text-transform:uppercase;">Continuar por WhatsApp</a></div>'
+        . '<p style="margin:24px 0 0;color:#777;font-size:12px;line-height:1.6;text-align:center;">También puedes responder este correo y te atenderemos desde contacto@gruposegel.com.</p>'
+        . '</td></tr></table></td></tr></table></body></html>';
+
+    $text = "CASA GLICK\n\nRecibimos tu solicitud, {$name}.\n"
+        . "Continúa por WhatsApp para confirmar disponibilidad, entrega y forma de pago.\n"
+        . "Esta solicitud aún no representa una compra pagada ni una reserva definitiva.\n\n"
+        . "Solicitud: {$folio}\nEntrega: {$delivery}\n"
+        . ($postalCode !== '' ? "Código postal: {$postalCode}\n" : '')
+        . ($address !== '' ? "Dirección: {$address}\n" : '')
+        . "\nProductos:\n" . assisted_order_items_text($items)
+        . "\n\nTotal estimado: " . cg_money($total)
+        . "\n\nContinuar por WhatsApp: {$whatsappUrl}\n";
+
+    return ['subject' => $subject, 'html' => $html, 'text' => $text, 'whatsappUrl' => $whatsappUrl];
+}
+
+function build_internal_assisted_order_email(array $config, array $order, string $orderId): array {
+    $customer = is_array($order['customer'] ?? null) ? $order['customer'] : [];
+    $items = is_array($order['items'] ?? null) ? $order['items'] : [];
+    $folio = trim((string)($order['folio'] ?? $orderId));
+    $name = trim((string)($customer['name'] ?? 'Cliente'));
+    $email = trim((string)($customer['email'] ?? ''));
+    $phone = trim((string)($customer['phone'] ?? ''));
+    $delivery = trim((string)($customer['delivery'] ?? 'Por confirmar'));
+    $address = trim((string)($customer['address'] ?? ''));
+    $comments = trim((string)($customer['comments'] ?? ''));
+    $total = (float)($order['total'] ?? 0);
+    $whatsappUrl = build_assisted_whatsapp_url($order);
+    $subject = 'Nueva solicitud pendiente ' . $folio . ' | Casa Glick Shop';
+    $html = '<!doctype html><html><body style="margin:0;background:#f4f2ee;font-family:Arial,Helvetica,sans-serif;color:#1d1d1b;">'
+        . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f2ee;padding:28px 12px;"><tr><td align="center">'
+        . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:720px;background:#fff;border-collapse:collapse;">'
+        . '<tr><td style="padding:30px 36px 16px;text-align:center;font-size:20px;letter-spacing:2px;font-weight:600;">CASA GLICK</td></tr>'
+        . '<tr><td style="padding:12px 36px 34px;">'
+        . '<p style="margin:0 0 8px;color:#777;font-size:12px;text-transform:uppercase;letter-spacing:1.4px;">Solicitud por WhatsApp · pendiente de pago</p>'
+        . '<h1 style="margin:0 0 22px;font-family:Georgia,serif;font-size:32px;font-weight:400;">' . html_escape($folio) . '</h1>'
+        . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f7f6f3;margin-bottom:24px;">'
+        . '<tr><td style="padding:14px 18px;color:#777;font-size:12px;">CLIENTE</td><td style="padding:14px 18px;text-align:right;font-weight:600;">' . html_escape($name) . '</td></tr>'
+        . '<tr><td style="padding:0 18px 14px;color:#777;font-size:12px;">CORREO</td><td style="padding:0 18px 14px;text-align:right;">' . html_escape($email) . '</td></tr>'
+        . '<tr><td style="padding:0 18px 14px;color:#777;font-size:12px;">TELÉFONO</td><td style="padding:0 18px 14px;text-align:right;">' . html_escape($phone) . '</td></tr>'
+        . '<tr><td style="padding:0 18px 14px;color:#777;font-size:12px;">ENTREGA</td><td style="padding:0 18px 14px;text-align:right;">' . html_escape($delivery) . '</td></tr>'
+        . ($address !== '' ? '<tr><td style="padding:0 18px 14px;color:#777;font-size:12px;vertical-align:top;">DIRECCIÓN</td><td style="padding:0 18px 14px;text-align:right;line-height:1.5;">' . html_escape($address) . '</td></tr>' : '')
+        . ($comments !== '' ? '<tr><td style="padding:0 18px 14px;color:#777;font-size:12px;vertical-align:top;">COMENTARIOS</td><td style="padding:0 18px 14px;text-align:right;line-height:1.5;">' . html_escape($comments) . '</td></tr>' : '')
+        . '</table>'
+        . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">'
+        . '<tbody>' . assisted_order_items_email_rows($items) . '</tbody>'
+        . '<tfoot><tr><td colspan="2" style="padding:20px 0 0;font-weight:600;">Total estimado</td><td style="padding:20px 0 0;text-align:right;font-size:18px;font-weight:600;">' . html_escape(cg_money($total)) . '</td></tr></tfoot>'
+        . '</table>'
+        . '<div style="padding:28px 0 0;text-align:center;"><a href="' . html_escape($whatsappUrl) . '" style="display:inline-block;background:#1d1d1b;color:#fff;text-decoration:none;padding:14px 26px;font-size:12px;text-transform:uppercase;letter-spacing:1px;">Abrir conversación en WhatsApp</a></div>'
+        . '</td></tr></table></td></tr></table></body></html>';
+    $text = "NUEVA SOLICITUD CASA GLICK — PENDIENTE DE PAGO\n\nSolicitud: {$folio}\nCliente: {$name}\nCorreo: {$email}\nTeléfono: {$phone}\nEntrega: {$delivery}\n"
+        . ($address !== '' ? "Dirección: {$address}\n" : '')
+        . ($comments !== '' ? "Comentarios: {$comments}\n" : '')
+        . "\nProductos:\n" . assisted_order_items_text($items)
+        . "\n\nTotal estimado: " . cg_money($total)
+        . "\n\nWhatsApp: {$whatsappUrl}\n";
+    return ['subject' => $subject, 'html' => $html, 'text' => $text];
+}
+
+function send_assisted_order_emails(array $config, array $order, string $orderId): array {
+    $customer = is_array($order['customer'] ?? null) ? $order['customer'] : [];
+    $customerEmail = trim((string)($customer['email'] ?? ''));
+    if (!filter_var($customerEmail, FILTER_VALIDATE_EMAIL)) {
+        throw new RuntimeException('La solicitud no tiene un correo de cliente válido.');
+    }
+    $settings = brevo_settings($config);
+    $customerMessage = build_customer_assisted_order_email($config, $order, $orderId);
+    $internalMessage = build_internal_assisted_order_email($config, $order, $orderId);
+    $customerId = brevo_send_email(
+        $config,
+        [['email' => $customerEmail, 'name' => (string)($customer['name'] ?? '')]],
+        $customerMessage['subject'],
+        $customerMessage['html'],
+        $customerMessage['text'],
+        ['assisted-order-request', 'casa-glick-shop']
+    );
+    $internalId = brevo_send_email(
+        $config,
+        [['email' => (string)$settings['internal_recipient'], 'name' => 'Casa Glick']],
+        $internalMessage['subject'],
+        $internalMessage['html'],
+        $internalMessage['text'],
+        ['assisted-order-internal', 'casa-glick-shop']
+    );
+    return [
+        'customerMessageId' => $customerId,
+        'internalMessageId' => $internalId,
+        'whatsappUrl' => $customerMessage['whatsappUrl'],
+    ];
+}

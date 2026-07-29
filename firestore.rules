@@ -20,7 +20,8 @@ service cloud.firestore {
       return request.resource.data.keys().hasOnly([
           "folio", "status", "customer", "items", "subtotal", "total",
           "createdAt", "createdAtClient", "source", "paymentMethod",
-          "paymentStatus", "stripeSessionId", "checkoutAttempt"
+          "paymentStatus", "stripeSessionId", "checkoutAttempt",
+          "emailDispatchToken", "assistedRequestEmail"
         ])
         && request.resource.data.keys().hasAll([
           "folio", "status", "customer", "items", "subtotal", "total",

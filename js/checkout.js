@@ -26,6 +26,7 @@ const money=v=>new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).
 const folio=()=>`CG-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Math.random().toString(36).slice(2,6).toUpperCase()}`;
 const STRIPE_PENDING_KEY='casaGlickStripePendingOrder';
 const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+const randomHex=bytes=>{const values=new Uint8Array(bytes);crypto.getRandomValues(values);return Array.from(values,value=>value.toString(16).padStart(2,'0')).join('');};
 const safeImage=value=>{try{const url=new URL(String(value||''),location.href);return url.protocol==='https:'||url.origin===location.origin?escapeHtml(url.href):'assets/product-placeholder-cg.png';}catch{return 'assets/product-placeholder-cg.png';}};
 
 function validPrice(value){const number=Number(value);return Number.isFinite(number)&&number>0;}
@@ -105,11 +106,20 @@ form.addEventListener('submit',async event=>{
       if(pending?.signature===signature&&/^[A-Za-z0-9_-]{8,128}$/.test(String(pending.orderId||''))){orderId=String(pending.orderId);activeFolio=String(pending.folio||orderFolio);}else{const order={...base,status:'Pendiente de pago',paymentMethod:'stripe',paymentStatus:'pending',stripeSessionId:null,checkoutAttempt:0};const orderRef=await addDoc(collection(db,'orders'),order);orderId=orderRef.id;sessionStorage.setItem(STRIPE_PENDING_KEY,JSON.stringify({orderId,folio:activeFolio,signature}));}
       const response=await fetch('api/create-checkout-session.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({orderId})});const payload=await response.json().catch(()=>({}));if(!response.ok||!payload.url)throw new Error(payload.error||'STRIPE_SESSION_FAILED');sessionStorage.setItem(STRIPE_PENDING_KEY,JSON.stringify({orderId,folio:activeFolio,signature,sessionId:String(payload.sessionId||'')}));window.location.assign(payload.url);return;
     }
-    const order={...base,status:'Nueva',paymentMethod:'assisted',paymentStatus:'not_applicable'};await addDoc(collection(db,'orders'),order);
+    const dispatchToken=randomHex(24);
+    const order={...base,status:'Nueva',paymentMethod:'assisted',paymentStatus:'not_applicable',emailDispatchToken:dispatchToken,assistedRequestEmail:{status:'pending',attempts:0}};
+    const orderRef=await addDoc(collection(db,'orders'),order);
     const lines=items.map(item=>{const quantity=Number(item.quantity)||1;return `• ${quantity} × ${item.name} (${item.code}) — ${validPrice(item.price)?money(Number(item.price)*quantity):'Precio a cotizar'}`;});
     const addressLine=data.delivery==='Envío a domicilio'?`\nDirección: ${data.address}`:'';
-    const text=`Hola, generé la orden ${orderFolio} en Casa Glick.\n\n${lines.join('\n')}\n\nTotal estimado: ${money(total)} MXN\nEntrega: ${data.delivery}\nCódigo Postal: ${customer.postalCode}${addressLine}\nCliente: ${customer.name}\nTeléfono: ${data.phone}`;
-    const url=`https://wa.me/525513004665?text=${encodeURIComponent(text)}`;sessionStorage.setItem('casaGlickOrderConfirmation',JSON.stringify({folio:orderFolio,whatsappUrl:url,total:Number(total)||0,itemCount:orderItems.reduce((sum,item)=>sum+item.quantity,0)}));cart.clear();window.location.href=`confirmacion.html?folio=${encodeURIComponent(orderFolio)}`;
+    const text=`Hola, generé la solicitud ${orderFolio} en Casa Glick.\n\n${lines.join('\n')}\n\nTotal estimado: ${money(total)} MXN\nEntrega: ${data.delivery}\nCódigo Postal: ${customer.postalCode}${addressLine}\nCliente: ${customer.name}\nTeléfono: ${data.phone}`;
+    let url=`https://wa.me/525513004665?text=${encodeURIComponent(text)}`;
+    try{
+      const notificationResponse=await fetch('api/send-assisted-order-emails.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({orderId:orderRef.id,dispatchToken})});
+      const notificationPayload=await notificationResponse.json().catch(()=>({}));
+      if(notificationResponse.ok&&notificationPayload.whatsappUrl)url=String(notificationPayload.whatsappUrl);
+      else console.warn('No se pudo enviar el correo de solicitud:',notificationPayload.error||notificationResponse.status);
+    }catch(notificationError){console.warn('No se pudo enviar el correo de solicitud:',notificationError);}
+    sessionStorage.setItem('casaGlickOrderConfirmation',JSON.stringify({folio:orderFolio,whatsappUrl:url,total:Number(total)||0,itemCount:orderItems.reduce((sum,item)=>sum+item.quantity,0)}));cart.clear();window.location.href=`confirmacion.html?folio=${encodeURIComponent(orderFolio)}`;
   }catch(err){console.error('Error al generar la orden:',err);const firebaseCode=String(err?.code||'');if(err?.message==='NAME_REQUIRED')error.textContent='Ingresa tu nombre.';else if(err?.message==='LASTNAME_REQUIRED')error.textContent='Ingresa tu apellido.';else if(err?.message==='PHONE_INVALID')error.textContent='Ingresa un teléfono válido de 10 números.';else if(err?.message==='POSTAL_INVALID')error.textContent='Ingresa un código postal válido de 5 números.';else if(err?.message==='ADDRESS_REQUIRED')error.textContent='Ingresa la dirección completa para la entrega a domicilio.';else if(err?.message==='EMPTY_CART')error.textContent='Tu bolsa está vacía.';else if(err?.message==='STRIPE_CDMX_ONLY')error.textContent='El pago con Stripe está disponible únicamente para entregas en CDMX.';else if(err?.message==='STRIPE_QUOTE_ITEM')error.textContent='La bolsa contiene un producto que requiere cotización. Retíralo para pagar con Stripe.';else if(firebaseCode.includes('permission-denied'))error.textContent='Firebase rechazó la orden. Revisa las reglas de Firestore para el modo seleccionado.';else error.textContent=String(err?.message||'').startsWith('STRIPE_')?'No fue posible iniciar el pago. Inténtalo nuevamente.':(err?.message||'No fue posible procesar la orden. Revisa tu conexión e inténtalo de nuevo.');submitButton.disabled=false;updateCheckoutMode();}
 });
 init();
