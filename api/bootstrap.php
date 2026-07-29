@@ -694,3 +694,252 @@ function verify_stripe_signature(string $payload, string $header, string $secret
     foreach ($signatures as $signature) if (hash_equals($expected, $signature)) return;
     throw new RuntimeException('Firma de webhook inválida.');
 }
+
+const CG_BREVO_EMAIL_API = 'https://api.brevo.com/v3/smtp/email';
+
+function html_escape(mixed $value): string {
+    return htmlspecialchars((string)$value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+}
+
+function cg_money(mixed $value): string {
+    return '$' . number_format((float)$value, 2, '.', ',') . ' MXN';
+}
+
+function brevo_settings(array $config): array {
+    $settings = is_array($config['brevo'] ?? null) ? $config['brevo'] : [];
+    if (empty($settings['enabled'])) {
+        throw new RuntimeException('Brevo no está habilitado.');
+    }
+    $required = ['api_key', 'sender_name', 'sender_email', 'reply_to_email', 'internal_recipient'];
+    foreach ($required as $field) {
+        if (trim((string)($settings[$field] ?? '')) === '') {
+            throw new RuntimeException('Falta la configuración de Brevo: ' . $field . '.');
+        }
+    }
+    if (!filter_var((string)$settings['sender_email'], FILTER_VALIDATE_EMAIL)
+        || !filter_var((string)$settings['reply_to_email'], FILTER_VALIDATE_EMAIL)
+        || !filter_var((string)$settings['internal_recipient'], FILTER_VALIDATE_EMAIL)) {
+        throw new RuntimeException('La configuración de correo de Brevo no es válida.');
+    }
+    return $settings;
+}
+
+function brevo_send_email(
+    array $config,
+    array $recipients,
+    string $subject,
+    string $htmlContent,
+    string $textContent,
+    array $tags = []
+): string {
+    $settings = brevo_settings($config);
+    $to = [];
+    foreach ($recipients as $recipient) {
+        $email = trim((string)($recipient['email'] ?? ''));
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) continue;
+        $entry = ['email' => $email];
+        $name = trim((string)($recipient['name'] ?? ''));
+        if ($name !== '') $entry['name'] = $name;
+        $to[] = $entry;
+    }
+    if (!$to) throw new RuntimeException('No hay destinatarios válidos para Brevo.');
+
+    $payload = [
+        'sender' => [
+            'name' => (string)$settings['sender_name'],
+            'email' => (string)$settings['sender_email'],
+        ],
+        'to' => $to,
+        'replyTo' => [
+            'name' => (string)($settings['reply_to_name'] ?? $settings['sender_name']),
+            'email' => (string)$settings['reply_to_email'],
+        ],
+        'subject' => $subject,
+        'htmlContent' => $htmlContent,
+        'textContent' => $textContent,
+    ];
+    if ($tags) $payload['tags'] = array_values(array_filter(array_map('strval', $tags)));
+
+    [$status, $body] = http_request(
+        CG_BREVO_EMAIL_API,
+        'POST',
+        [
+            'Accept: application/json',
+            'Content-Type: application/json',
+            'api-key: ' . (string)$settings['api_key'],
+        ],
+        json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+    );
+    $decoded = json_decode($body, true);
+    if ($status < 200 || $status >= 300) {
+        $message = is_array($decoded) ? (string)($decoded['message'] ?? '') : '';
+        throw new RuntimeException('Brevo rechazó el correo' . ($message !== '' ? ': ' . $message : '.'));
+    }
+    return (string)($decoded['messageId'] ?? '');
+}
+
+function order_items_email_rows(array $items): string {
+    $rows = '';
+    foreach ($items as $item) {
+        if (!is_array($item)) continue;
+        $name = trim((string)($item['name'] ?? $item['code'] ?? 'Producto Casa Glick'));
+        $code = trim((string)($item['code'] ?? ''));
+        $quantity = max(1, (int)($item['quantity'] ?? 1));
+        $price = is_numeric($item['price'] ?? null) ? (float)$item['price'] : 0.0;
+        $lineTotal = $price * $quantity;
+        $rows .= '<tr>'
+            . '<td style="padding:14px 0;border-bottom:1px solid #e8e5df;">'
+            . '<strong style="display:block;color:#1d1d1b;font-size:14px;">' . html_escape($name) . '</strong>'
+            . ($code !== '' ? '<span style="color:#777;font-size:12px;">' . html_escape($code) . '</span>' : '')
+            . '</td>'
+            . '<td style="padding:14px 8px;border-bottom:1px solid #e8e5df;text-align:center;color:#555;font-size:14px;">' . $quantity . '</td>'
+            . '<td style="padding:14px 0;border-bottom:1px solid #e8e5df;text-align:right;color:#1d1d1b;font-size:14px;">' . html_escape(cg_money($lineTotal)) . '</td>'
+            . '</tr>';
+    }
+    return $rows;
+}
+
+function order_items_text(array $items): string {
+    $lines = [];
+    foreach ($items as $item) {
+        if (!is_array($item)) continue;
+        $name = trim((string)($item['name'] ?? $item['code'] ?? 'Producto Casa Glick'));
+        $quantity = max(1, (int)($item['quantity'] ?? 1));
+        $price = is_numeric($item['price'] ?? null) ? (float)$item['price'] : 0.0;
+        $lines[] = $quantity . ' x ' . $name . ' — ' . cg_money($price * $quantity);
+    }
+    return implode("\n", $lines);
+}
+
+function build_customer_order_email(array $config, array $order, string $orderId): array {
+    $customer = is_array($order['customer'] ?? null) ? $order['customer'] : [];
+    $items = is_array($order['items'] ?? null) ? $order['items'] : [];
+    $name = trim((string)($customer['firstName'] ?? ''));
+    if ($name === '') $name = trim((string)($customer['name'] ?? ''));
+    if ($name === '') $name = 'cliente';
+    $folio = trim((string)($order['folio'] ?? $orderId));
+    $total = (float)($order['total'] ?? 0);
+    $delivery = trim((string)($customer['delivery'] ?? 'Por confirmar'));
+    $address = trim((string)($customer['address'] ?? ''));
+    $postalCode = trim((string)($customer['postalCode'] ?? ''));
+    $siteUrl = rtrim((string)($config['site_url'] ?? 'https://shop.casaglick.com'), '/');
+    $orderUrl = $siteUrl . '/order.html?folio=' . rawurlencode($folio);
+
+    $subject = 'Confirmación de compra ' . $folio . ' | Casa Glick';
+    $html = '<!doctype html><html><body style="margin:0;background:#f4f2ee;font-family:Arial,Helvetica,sans-serif;color:#1d1d1b;">'
+        . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f2ee;padding:32px 12px;"><tr><td align="center">'
+        . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:680px;background:#fff;border-collapse:collapse;">'
+        . '<tr><td style="padding:34px 40px 18px;text-align:center;font-size:22px;letter-spacing:2px;font-weight:600;">CASA GLICK</td></tr>'
+        . '<tr><td style="padding:10px 40px 34px;">'
+        . '<p style="margin:0 0 10px;color:#777;font-size:12px;letter-spacing:1.4px;text-transform:uppercase;">Pago confirmado</p>'
+        . '<h1 style="margin:0 0 18px;font-family:Georgia,serif;font-size:34px;font-weight:400;line-height:1.15;">Gracias por tu compra, ' . html_escape($name) . '.</h1>'
+        . '<p style="margin:0 0 26px;color:#555;font-size:15px;line-height:1.7;">Recibimos correctamente tu pago. Nuestro equipo dará seguimiento a la preparación y entrega de tu pedido.</p>'
+        . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;background:#f7f6f3;">'
+        . '<tr><td style="padding:16px 18px;color:#777;font-size:12px;text-transform:uppercase;">Orden</td><td style="padding:16px 18px;text-align:right;font-weight:600;">' . html_escape($folio) . '</td></tr>'
+        . '<tr><td style="padding:0 18px 16px;color:#777;font-size:12px;text-transform:uppercase;">Entrega</td><td style="padding:0 18px 16px;text-align:right;">' . html_escape($delivery) . '</td></tr>'
+        . ($postalCode !== '' ? '<tr><td style="padding:0 18px 16px;color:#777;font-size:12px;text-transform:uppercase;">Código postal</td><td style="padding:0 18px 16px;text-align:right;">' . html_escape($postalCode) . '</td></tr>' : '')
+        . ($address !== '' ? '<tr><td style="padding:0 18px 16px;color:#777;font-size:12px;text-transform:uppercase;vertical-align:top;">Dirección</td><td style="padding:0 18px 16px;text-align:right;line-height:1.5;">' . html_escape($address) . '</td></tr>' : '')
+        . '</table>'
+        . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">'
+        . '<thead><tr><th style="padding:10px 0;text-align:left;color:#777;font-size:11px;text-transform:uppercase;border-bottom:1px solid #1d1d1b;">Producto</th><th style="padding:10px 8px;text-align:center;color:#777;font-size:11px;text-transform:uppercase;border-bottom:1px solid #1d1d1b;">Cant.</th><th style="padding:10px 0;text-align:right;color:#777;font-size:11px;text-transform:uppercase;border-bottom:1px solid #1d1d1b;">Importe</th></tr></thead>'
+        . '<tbody>' . order_items_email_rows($items) . '</tbody>'
+        . '<tfoot><tr><td colspan="2" style="padding:20px 0 0;font-weight:600;">Total pagado</td><td style="padding:20px 0 0;text-align:right;font-size:18px;font-weight:600;">' . html_escape(cg_money($total)) . '</td></tr></tfoot>'
+        . '</table>'
+        . '<div style="padding:30px 0 8px;text-align:center;"><a href="' . html_escape($orderUrl) . '" style="display:inline-block;background:#1d1d1b;color:#fff;text-decoration:none;padding:15px 28px;font-size:12px;letter-spacing:1px;text-transform:uppercase;">Consultar mi orden</a></div>'
+        . '<p style="margin:24px 0 0;color:#777;font-size:12px;line-height:1.6;text-align:center;">¿Tienes alguna duda? Responde este correo o escríbenos a contacto@gruposegel.com.</p>'
+        . '</td></tr></table></td></tr></table></body></html>';
+
+    $text = "CASA GLICK\n\nGracias por tu compra, {$name}.\nTu pago fue confirmado correctamente.\n\n"
+        . "Orden: {$folio}\nEntrega: {$delivery}\n"
+        . ($postalCode !== '' ? "Código postal: {$postalCode}\n" : '')
+        . ($address !== '' ? "Dirección: {$address}\n" : '')
+        . "\nProductos:\n" . order_items_text($items)
+        . "\n\nTotal pagado: " . cg_money($total)
+        . "\n\nConsulta tu orden: {$orderUrl}\n";
+
+    return ['subject' => $subject, 'html' => $html, 'text' => $text];
+}
+
+function build_internal_order_email(array $config, array $order, string $orderId): array {
+    $customer = is_array($order['customer'] ?? null) ? $order['customer'] : [];
+    $items = is_array($order['items'] ?? null) ? $order['items'] : [];
+    $folio = trim((string)($order['folio'] ?? $orderId));
+    $name = trim((string)($customer['name'] ?? 'Cliente'));
+    $email = trim((string)($customer['email'] ?? ''));
+    $phone = trim((string)($customer['phone'] ?? ''));
+    $delivery = trim((string)($customer['delivery'] ?? 'Por confirmar'));
+    $address = trim((string)($customer['address'] ?? ''));
+    $postalCode = trim((string)($customer['postalCode'] ?? ''));
+    $comments = trim((string)($customer['comments'] ?? ''));
+    $total = (float)($order['total'] ?? 0);
+    $siteUrl = rtrim((string)($config['site_url'] ?? 'https://shop.casaglick.com'), '/');
+    $orderUrl = $siteUrl . '/order.html?folio=' . rawurlencode($folio);
+
+    $subject = 'Nueva compra ' . $folio . ' | Casa Glick Shop';
+    $html = '<!doctype html><html><body style="margin:0;background:#f4f2ee;font-family:Arial,Helvetica,sans-serif;color:#1d1d1b;">'
+        . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f2ee;padding:28px 12px;"><tr><td align="center">'
+        . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:720px;background:#fff;border-collapse:collapse;">'
+        . '<tr><td style="padding:30px 36px 16px;text-align:center;font-size:20px;letter-spacing:2px;font-weight:600;">CASA GLICK</td></tr>'
+        . '<tr><td style="padding:12px 36px 34px;">'
+        . '<p style="margin:0 0 8px;color:#777;font-size:12px;text-transform:uppercase;letter-spacing:1.4px;">Nueva venta confirmada</p>'
+        . '<h1 style="margin:0 0 22px;font-family:Georgia,serif;font-size:32px;font-weight:400;">' . html_escape($folio) . '</h1>'
+        . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f7f6f3;margin-bottom:24px;">'
+        . '<tr><td style="padding:14px 18px;color:#777;font-size:12px;">CLIENTE</td><td style="padding:14px 18px;text-align:right;font-weight:600;">' . html_escape($name) . '</td></tr>'
+        . '<tr><td style="padding:0 18px 14px;color:#777;font-size:12px;">CORREO</td><td style="padding:0 18px 14px;text-align:right;">' . html_escape($email) . '</td></tr>'
+        . '<tr><td style="padding:0 18px 14px;color:#777;font-size:12px;">TELÉFONO</td><td style="padding:0 18px 14px;text-align:right;">' . html_escape($phone) . '</td></tr>'
+        . '<tr><td style="padding:0 18px 14px;color:#777;font-size:12px;">ENTREGA</td><td style="padding:0 18px 14px;text-align:right;">' . html_escape($delivery) . '</td></tr>'
+        . ($postalCode !== '' ? '<tr><td style="padding:0 18px 14px;color:#777;font-size:12px;">CÓDIGO POSTAL</td><td style="padding:0 18px 14px;text-align:right;">' . html_escape($postalCode) . '</td></tr>' : '')
+        . ($address !== '' ? '<tr><td style="padding:0 18px 14px;color:#777;font-size:12px;vertical-align:top;">DIRECCIÓN</td><td style="padding:0 18px 14px;text-align:right;line-height:1.5;">' . html_escape($address) . '</td></tr>' : '')
+        . ($comments !== '' ? '<tr><td style="padding:0 18px 14px;color:#777;font-size:12px;vertical-align:top;">COMENTARIOS</td><td style="padding:0 18px 14px;text-align:right;line-height:1.5;">' . html_escape($comments) . '</td></tr>' : '')
+        . '</table>'
+        . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">'
+        . '<thead><tr><th style="padding:10px 0;text-align:left;color:#777;font-size:11px;border-bottom:1px solid #1d1d1b;">PRODUCTO</th><th style="padding:10px 8px;text-align:center;color:#777;font-size:11px;border-bottom:1px solid #1d1d1b;">CANT.</th><th style="padding:10px 0;text-align:right;color:#777;font-size:11px;border-bottom:1px solid #1d1d1b;">IMPORTE</th></tr></thead>'
+        . '<tbody>' . order_items_email_rows($items) . '</tbody>'
+        . '<tfoot><tr><td colspan="2" style="padding:20px 0 0;font-weight:600;">Total pagado</td><td style="padding:20px 0 0;text-align:right;font-size:18px;font-weight:600;">' . html_escape(cg_money($total)) . '</td></tr></tfoot>'
+        . '</table>'
+        . '<div style="padding:28px 0 0;text-align:center;"><a href="' . html_escape($orderUrl) . '" style="display:inline-block;background:#1d1d1b;color:#fff;text-decoration:none;padding:14px 26px;font-size:12px;text-transform:uppercase;letter-spacing:1px;">Consultar orden</a></div>'
+        . '</td></tr></table></td></tr></table></body></html>';
+
+    $text = "NUEVA COMPRA CASA GLICK\n\nOrden: {$folio}\nCliente: {$name}\nCorreo: {$email}\nTeléfono: {$phone}\nEntrega: {$delivery}\n"
+        . ($postalCode !== '' ? "Código postal: {$postalCode}\n" : '')
+        . ($address !== '' ? "Dirección: {$address}\n" : '')
+        . ($comments !== '' ? "Comentarios: {$comments}\n" : '')
+        . "\nProductos:\n" . order_items_text($items)
+        . "\n\nTotal: " . cg_money($total)
+        . "\n\nConsultar orden: {$orderUrl}\n";
+
+    return ['subject' => $subject, 'html' => $html, 'text' => $text];
+}
+
+function send_paid_order_emails(array $config, array $order, string $orderId): array {
+    $customer = is_array($order['customer'] ?? null) ? $order['customer'] : [];
+    $customerEmail = trim((string)($customer['email'] ?? ''));
+    if (!filter_var($customerEmail, FILTER_VALIDATE_EMAIL)) {
+        throw new RuntimeException('La orden no tiene un correo de cliente válido.');
+    }
+    $settings = brevo_settings($config);
+    $customerMessage = build_customer_order_email($config, $order, $orderId);
+    $internalMessage = build_internal_order_email($config, $order, $orderId);
+
+    $customerId = brevo_send_email(
+        $config,
+        [['email' => $customerEmail, 'name' => (string)($customer['name'] ?? '')]],
+        $customerMessage['subject'],
+        $customerMessage['html'],
+        $customerMessage['text'],
+        ['order-confirmation', 'casa-glick-shop']
+    );
+    $internalId = brevo_send_email(
+        $config,
+        [['email' => (string)$settings['internal_recipient'], 'name' => 'Casa Glick']],
+        $internalMessage['subject'],
+        $internalMessage['html'],
+        $internalMessage['text'],
+        ['new-order', 'casa-glick-shop']
+    );
+
+    return [
+        'customerMessageId' => $customerId,
+        'internalMessageId' => $internalId,
+    ];
+}

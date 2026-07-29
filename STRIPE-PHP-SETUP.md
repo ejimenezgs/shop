@@ -206,3 +206,13 @@ Después de completar todas las pruebas:
 3. Cambia `stripe_environment` a `live`.
 4. Mantén las mismas credenciales técnicas de Firebase.
 5. Ejecuta una compra real controlada y verifica pago, reserva, reembolso y despacho.
+
+
+## Brevo transactional email
+
+The Stripe webhook now sends two messages after a paid Checkout session:
+
+- Customer confirmation from `Casa Glick <no-reply@casaglick.com>`.
+- Internal sale notification to `contacto@gruposegel.com`.
+
+Keep the Brevo API key only in the private configuration file outside `public_html`, under the nested `brevo` array shown in `private-config.example.php`. The webhook stores delivery attempts and Brevo message IDs under `orders/{orderId}.confirmationEmail`. Brevo failures are logged but do not change the paid status of the order.

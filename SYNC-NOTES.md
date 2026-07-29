@@ -69,3 +69,5 @@
 - v86: Centered the active Lifestyle column on mobile with symmetric side insets while preserving the approved two-square-image column layout and infinite loop.
 
 - v88: Added semantic SEO captions to static and dynamically generated product/content images without changing visual layouts. Added a tenth Lifestyle image using assets/about-materials-new.webp.
+
+- v89: Brevo transactional emails integrated into the Stripe webhook. Successful paid orders send a branded confirmation to the customer and an internal new-sale notification to contacto@gruposegel.com. Firestore stores status, attempts, timestamps and Brevo message IDs; email failures are logged without blocking payment confirmation.

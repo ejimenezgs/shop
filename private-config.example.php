@@ -18,4 +18,15 @@ return [
     'inventory_url' => 'https://segel-inventario.vercel.app/api/catalogo',
     // Long random token used only by the private dispatch/release endpoint.
     'inventory_admin_token' => 'REPLACE_WITH_A_LONG_RANDOM_SECRET',
+
+    // Brevo transactional email configuration.
+    'brevo' => [
+        'enabled' => true,
+        'api_key' => 'xkeysib-REPLACE_ME',
+        'sender_name' => 'Casa Glick',
+        'sender_email' => 'no-reply@casaglick.com',
+        'reply_to_email' => 'contacto@gruposegel.com',
+        'reply_to_name' => 'Casa Glick',
+        'internal_recipient' => 'contacto@gruposegel.com',
+    ],
 ];

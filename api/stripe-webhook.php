@@ -278,6 +278,120 @@ try {
                     ]
                 );
             }
+
+            // Enviar correos después de confirmar el pago. Un fallo de Brevo
+            // se registra en la orden, pero nunca revierte ni bloquea la compra.
+            try {
+                $latestOrder = firestore_get(
+                    $config,
+                    'orders/' . $orderId
+                ) ?? $order;
+
+                $emailState = is_array(
+                    $latestOrder['confirmationEmail'] ?? null
+                )
+                    ? $latestOrder['confirmationEmail']
+                    : [];
+
+                if (($emailState['status'] ?? '') !== 'sent') {
+                    $emailAttempts = max(
+                        0,
+                        (int) ($emailState['attempts'] ?? 0)
+                    ) + 1;
+
+                    firestore_patch(
+                        $config,
+                        'orders/' . $orderId,
+                        [
+                            'confirmationEmail' => [
+                                'status' => 'sending',
+                                'attempts' => $emailAttempts,
+                                'lastAttemptAt' =>
+                                    new DateTimeImmutable(
+                                        'now',
+                                        new DateTimeZone('UTC')
+                                    ),
+                            ],
+                        ]
+                    );
+
+                    $emailResult = send_paid_order_emails(
+                        $config,
+                        $latestOrder,
+                        $orderId
+                    );
+
+                    firestore_patch(
+                        $config,
+                        'orders/' . $orderId,
+                        [
+                            'confirmationEmail' => [
+                                'status' => 'sent',
+                                'attempts' => $emailAttempts,
+                                'sentAt' =>
+                                    new DateTimeImmutable(
+                                        'now',
+                                        new DateTimeZone('UTC')
+                                    ),
+                                'customerMessageId' =>
+                                    (string) (
+                                        $emailResult['customerMessageId']
+                                        ?? ''
+                                    ),
+                                'internalMessageId' =>
+                                    (string) (
+                                        $emailResult['internalMessageId']
+                                        ?? ''
+                                    ),
+                            ],
+                        ]
+                    );
+                }
+            } catch (Throwable $emailError) {
+                error_log(
+                    'brevo-order-email: '
+                    . $emailError->getMessage()
+                );
+
+                try {
+                    $latestOrder = $latestOrder ?? $order;
+                    $emailState = is_array(
+                        $latestOrder['confirmationEmail'] ?? null
+                    )
+                        ? $latestOrder['confirmationEmail']
+                        : [];
+                    $emailAttempts = max(
+                        0,
+                        (int) ($emailState['attempts'] ?? 0)
+                    ) + 1;
+
+                    firestore_patch(
+                        $config,
+                        'orders/' . $orderId,
+                        [
+                            'confirmationEmail' => [
+                                'status' => 'failed',
+                                'attempts' => $emailAttempts,
+                                'failedAt' =>
+                                    new DateTimeImmutable(
+                                        'now',
+                                        new DateTimeZone('UTC')
+                                    ),
+                                'error' => mb_substr(
+                                    $emailError->getMessage(),
+                                    0,
+                                    500
+                                ),
+                            ],
+                        ]
+                    );
+                } catch (Throwable $emailLogError) {
+                    error_log(
+                        'brevo-order-email-log: '
+                        . $emailLogError->getMessage()
+                    );
+                }
+            }
         } elseif (
             $type === 'checkout.session.expired'
         ) {
