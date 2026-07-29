@@ -8,6 +8,10 @@ const number=document.querySelector('#order-status-number');
 const payment=document.querySelector('#order-status-payment');
 const inventory=document.querySelector('#order-status-inventory');
 const whatsapp=document.querySelector('#order-status-whatsapp');
+const itemsContainer=document.querySelector('#order-status-items');
+const totalElement=document.querySelector('#order-status-total');
+const totalCaption=document.querySelector('#order-status-total-caption');
+const totalLabel=document.querySelector('#order-status-total-label');
 const params=new URLSearchParams(location.search);
 
 const statusCopy={
@@ -31,6 +35,38 @@ function render(data){
   number.textContent=folio;
   payment.textContent=paymentCopy[data.paymentStatus]||data.paymentStatus||'No aplica';
   inventory.textContent=inventoryCopy[data.inventoryStatus]||data.inventoryStatus||'En seguimiento';
+
+  const currency=data.currency||'MXN';
+  const money=new Intl.NumberFormat('es-MX',{style:'currency',currency,maximumFractionDigits:2});
+  const orderItems=Array.isArray(data.items)?data.items:[];
+  itemsContainer.replaceChildren();
+  orderItems.forEach(item=>{
+    const row=document.createElement('article');
+    row.className='order-status-item';
+    const info=document.createElement('div');
+    const name=document.createElement('strong');
+    name.textContent=item.name||'Producto Casa Glick';
+    const meta=document.createElement('span');
+    const sku=item.sku?` · ${item.sku}`:'';
+    meta.textContent=`Cantidad: ${Math.max(1,Number(item.quantity)||1)}${sku}`;
+    info.append(name,meta);
+    const amount=document.createElement('strong');
+    amount.textContent=money.format(Number(item.lineTotal)||0);
+    row.append(info,amount);
+    itemsContainer.appendChild(row);
+  });
+  if(!orderItems.length){
+    const empty=document.createElement('p');
+    empty.className='order-status-items__empty';
+    empty.textContent='El detalle de artículos no está disponible para esta orden.';
+    itemsContainer.appendChild(empty);
+  }
+  const isPendingAssisted=data.status==='Nueva'||(data.paymentMethod==='assisted'&&data.paymentStatus!=='paid');
+  const caption=isPendingAssisted?'Total a pagar':'Total de la orden';
+  totalCaption.textContent=caption;
+  totalLabel.textContent=caption;
+  totalElement.textContent=money.format(Number(data.total)||0);
+
   whatsapp.href=`https://wa.me/525513004665?text=${encodeURIComponent(`Hola, quiero consultar el estado de mi orden ${folio}.`)}`;
   result.hidden=false;
 }

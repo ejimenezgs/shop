@@ -24,11 +24,31 @@ try {
         'Entregada' => 'La orden fue marcada como entregada.',
         'Cancelada' => 'La orden fue cancelada. Contáctanos si necesitas ayuda.',
     ];
+    $publicItems = [];
+    foreach (($matched['items'] ?? []) as $item) {
+        if (!is_array($item)) continue;
+        $quantity = max(1, (int)($item['quantity'] ?? 1));
+        $unitPrice = (float)($item['unitPrice'] ?? $item['price'] ?? 0);
+        $lineTotal = (float)($item['lineTotal'] ?? ($unitPrice * $quantity));
+        $publicItems[] = [
+            'name' => trim((string)($item['name'] ?? $item['title'] ?? 'Producto Casa Glick')),
+            'sku' => trim((string)($item['sku'] ?? $item['code'] ?? '')),
+            'quantity' => $quantity,
+            'unitPrice' => $unitPrice,
+            'lineTotal' => $lineTotal,
+        ];
+    }
+
     json_response([
         'folio' => (string)($matched['folio'] ?? $folio),
         'status' => $status,
         'paymentStatus' => (string)($matched['paymentStatus'] ?? ''),
+        'paymentMethod' => (string)($matched['paymentMethod'] ?? ''),
         'inventoryStatus' => (string)($matched['inventoryStatus'] ?? ''),
+        'currency' => (string)($matched['currency'] ?? 'MXN'),
+        'subtotal' => (float)($matched['subtotal'] ?? 0),
+        'total' => (float)($matched['total'] ?? $matched['subtotal'] ?? 0),
+        'items' => $publicItems,
         'message' => $messages[$status] ?? 'Tu orden está registrada y continúa en seguimiento.',
     ]);
 } catch (Throwable $error) {

@@ -72,4 +72,4 @@
 
 - v89: Brevo transactional emails integrated into the Stripe webhook. Successful paid orders send a branded confirmation to the customer and an internal new-sale notification to contacto@gruposegel.com. Firestore stores status, attempts, timestamps and Brevo message IDs; email failures are logged without blocking payment confirmation.
 
-- v90: Added Brevo transactional emails for assisted/WhatsApp orders. Customers receive “Recibimos tu solicitud” with an order summary and Continue on WhatsApp button; contacto@gruposegel.com receives a clearly marked pending-payment request. Added server endpoint with same-origin check, per-order dispatch token, age validation, idempotency, Firestore delivery status, and non-blocking failure handling.
+- v91: Consulta de orden muestra artículos, cantidades y total; en órdenes asistidas usa “Total a pagar”. Confirmación cambia a “Continuar en WhatsApp”, botón Ver orden outline y mayor separación antes de Volver a productos.

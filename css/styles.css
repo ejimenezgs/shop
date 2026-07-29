@@ -10575,3 +10575,26 @@ body.has-lifestyle-lightbox {
   white-space: nowrap !important;
   border: 0 !important;
 }
+
+
+/* shop91: order detail and confirmation actions */
+.order-status-purchase { margin-top: 28px; border-top: 1px solid rgba(37,36,34,.14); }
+.order-status-purchase__heading { display:flex; justify-content:space-between; gap:20px; padding:16px 0 12px; color:#8a867f; font:500 8px Montserrat,sans-serif; letter-spacing:.12em; text-transform:uppercase; }
+.order-status-items { display:grid; border-top:1px solid rgba(37,36,34,.1); }
+.order-status-item { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:22px; padding:17px 0; border-bottom:1px solid rgba(37,36,34,.1); }
+.order-status-item > div { display:grid; gap:6px; min-width:0; }
+.order-status-item strong { font:500 11px/1.45 Montserrat,sans-serif; }
+.order-status-item > div strong { overflow-wrap:anywhere; }
+.order-status-item span { color:#8a867f; font:400 9px/1.5 Montserrat,sans-serif; letter-spacing:.04em; text-transform:uppercase; }
+.order-status-items__empty { margin:0; padding:18px 0; color:#77736d; font:400 11px/1.7 Montserrat,sans-serif; }
+.order-status-total { display:flex; justify-content:space-between; align-items:baseline; gap:24px; padding:20px 0 2px; }
+.order-status-total span { font:500 9px Montserrat,sans-serif; letter-spacing:.12em; text-transform:uppercase; }
+.order-status-total strong { font:500 25px/1.1 "Cormorant Garamond",serif; }
+.confirmation-view-order { width:100%; margin-top:26px; background:transparent !important; color:#252422 !important; border:1px solid #252422 !important; }
+.confirmation-view-order:hover { background:#252422 !important; color:#fff !important; }
+.confirmation-view-order + .confirmation-products { margin-top:28px; }
+@media(max-width:620px){
+  .order-status-purchase__heading strong{display:none}
+  .order-status-item{gap:14px}
+  .order-status-total strong{font-size:22px}
+}
