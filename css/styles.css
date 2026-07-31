@@ -10598,3 +10598,9 @@ body.has-lifestyle-lightbox {
   .order-status-item{gap:14px}
   .order-status-total strong{font-size:22px}
 }
+
+/* shop92: allow vertical page scroll while Lifestyle remains horizontally swipeable */
+@media (max-width:700px){
+  .lifestyle,.lifestyle__motion{touch-action:pan-y pinch-zoom;}
+  .lifestyle__carousel{touch-action:pan-x pan-y pinch-zoom;overscroll-behavior-x:contain;overscroll-behavior-y:auto;}
+}
