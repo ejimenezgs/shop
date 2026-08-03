@@ -52,14 +52,38 @@ function setButton(element,section){
   if(text){ remember(element); const target=element.querySelector('span:not([aria-hidden="true"])'); if(target)target.textContent=text; else element.textContent=text; }
   if(element.tagName==='A' && isSafeLink(url)){ remember(element); element.setAttribute('href',url); }
 }
+const latestImageUrl = new WeakMap();
 function setImage(image,source,value){
-  const url=trimmedString(value); if(!image || !isSafeImageUrl(url)) return; remember(image); if(source)remember(source);
-  const originalSrc=originals.get(image)?.src||image.getAttribute('src');
-  const originalSrcset=source?(originals.get(source)?.srcset||source.getAttribute('srcset')):null;
-  const probe=new Image();
-  probe.onload=()=>{ image.setAttribute('src',url); if(source)source.setAttribute('srcset',url); };
-  probe.onerror=()=>{ if(originalSrc)image.setAttribute('src',originalSrc); if(source&&originalSrcset)source.setAttribute('srcset',originalSrcset); };
-  probe.src=url;
+  const url=trimmedString(value); if(!image || !isSafeImageUrl(url)) return;
+  remember(image); if(source)remember(source);
+  latestImageUrl.set(image,url);
+  image.setAttribute('src',url);
+  if(source)source.setAttribute('srcset',url);
+}
+function validObject(value){ return value && typeof value==='object' && !Array.isArray(value) ? value : {}; }
+function mergeValidObjects(base,override){
+  const result={...validObject(base)};
+  Object.entries(validObject(override)).forEach(([key,value])=>{
+    if(value===undefined || value===null) return;
+    if(typeof value==='string' && !value.trim()) return;
+    if(validObject(value)===value && validObject(result[key])===result[key]) result[key]=mergeValidObjects(result[key],value);
+    else result[key]=value;
+  });
+  return result;
+}
+const productCategoryImageFields = Object.freeze({
+  interior:'interiorImageUrl',
+  exterior:'exteriorImageUrl',
+  habitacion:'habitacionImageUrl',
+  decoracion:'decoracionImageUrl'
+});
+function applyProductCategoryImages(products){
+  const section=validObject(products);
+  Object.entries(productCategoryImageFields).forEach(([category,field])=>{
+    const image=document.querySelector(`[data-product-category-image="${category}"]`);
+    const url=trimmedString(section[field]);
+    if(image && isSafeImageUrl(url)) setImage(image,null,url);
+  });
 }
 function dynamicMapFor(name){
   const prefix=`${name}-`;
@@ -85,6 +109,7 @@ function applySection(name,section){
   if(map.title) setText(document.querySelector(map.title),section.title);
   if(map.description) setDescription(map.description,section.description);
   if(map.button) setButton(document.querySelector(map.button),section);
+  if(name==='products') applyProductCategoryImages(section);
   if(map.image){
     let image=document.querySelector(map.image), source=map.imageSource?document.querySelector(map.imageSource):null;
     if(image?.tagName==='PICTURE'){ source=image.querySelector('source'); image=image.querySelector('img'); }
@@ -112,9 +137,9 @@ function applyShopContent(content){
   const nested=content.sections&&typeof content.sections==='object'?content.sections:{};
   const keys=new Set([...schema.map(def=>def.key),...Object.keys(nested),...Object.keys(specialMap)]);
   keys.forEach(name=>{
-    const direct=content[name]&&typeof content[name]==='object'?content[name]:null;
-    const section=nested[name]&&typeof nested[name]==='object'?nested[name]:null;
-    applySection(name,direct||section||{});
+    const direct=validObject(content[name]);
+    const section=validObject(nested[name]);
+    applySection(name,mergeValidObjects(section,direct));
   });
 }
 async function startShopContent(){
