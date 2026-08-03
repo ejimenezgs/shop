@@ -72,10 +72,10 @@ function mergeValidObjects(base,override){
   return result;
 }
 const productCategoryImageFields = Object.freeze({
-  interior:'interiorImageUrl',
-  exterior:'exteriorImageUrl',
-  habitacion:'habitacionImageUrl',
-  decoracion:'decoracionImageUrl'
+  interior:'categoryInteriorImageUrl',
+  exterior:'categoryExteriorImageUrl',
+  habitacion:'categoryHabitacionImageUrl',
+  decoracion:'categoryDecoracionImageUrl'
 });
 function applyProductCategoryImages(products){
   const section=validObject(products);
