@@ -23,6 +23,7 @@ try {
         'Despachada' => 'Tu pedido salió del almacén.',
         'Entregada' => 'La orden fue marcada como entregada.',
         'Cancelada' => 'La orden fue cancelada. Contáctanos si necesitas ayuda.',
+        'No completado' => 'El proceso de pago no se completó. Puedes iniciar una nueva compra cuando lo desees.',
     ];
     $publicItems = [];
     foreach (($matched['items'] ?? []) as $item) {
