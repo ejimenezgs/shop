@@ -484,13 +484,13 @@ function require_inventory_admin_token(array $config): void {
 
 function stripe_request(array $config, string $path, array $params = [], string $method = 'POST', ?string $idempotencyKey = null): array {
     $secret = (string)($config['stripe_secret_key'] ?? '');
-    if (!str_starts_with($secret, 'sk_test_') && !str_starts_with($secret, 'sk_live_')) throw new RuntimeException('Falta una clave secreta válida de Stripe.');
+    if (!str_starts_with($secret, 'sk_test_') && !str_starts_with($secret, 'sk_live_') && !str_starts_with($secret, 'rk_test_') && !str_starts_with($secret, 'rk_live_')) throw new RuntimeException('Falta una clave privada válida de Stripe.');
     $environment = strtolower(trim((string)($config['stripe_environment'] ?? 'test')));
-    if ($environment === 'test' && !str_starts_with($secret, 'sk_test_')) {
-        throw new RuntimeException('La configuración está en modo Sandbox y requiere una clave sk_test_.');
+    if ($environment === 'test' && !str_starts_with($secret, 'sk_test_') && !str_starts_with($secret, 'rk_test_')) {
+        throw new RuntimeException('La configuración está en modo Sandbox y requiere una clave sk_test_ o rk_test_.');
     }
-    if ($environment === 'live' && !str_starts_with($secret, 'sk_live_')) {
-        throw new RuntimeException('La configuración está en modo producción y requiere una clave sk_live_.');
+    if ($environment === 'live' && !str_starts_with($secret, 'sk_live_') && !str_starts_with($secret, 'rk_live_')) {
+        throw new RuntimeException('La configuración está en modo producción y requiere una clave sk_live_ o rk_live_.');
     }
     $headers = ['Authorization: Bearer ' . $secret];
     $body = null;
