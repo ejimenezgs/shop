@@ -21,6 +21,7 @@
       // The site remains usable when storage is unavailable.
     }
     document.documentElement.dataset.cookieConsent = 'accepted';
+    window.dispatchEvent(new CustomEvent('casa-glick:cookie-consent', { detail: { status: 'accepted' } }));
     banner.classList.remove('is-visible');
     banner.setAttribute('aria-hidden', 'true');
   };
