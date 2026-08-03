@@ -73,3 +73,9 @@
 - v89: Brevo transactional emails integrated into the Stripe webhook. Successful paid orders send a branded confirmation to the customer and an internal new-sale notification to contacto@gruposegel.com. Firestore stores status, attempts, timestamps and Brevo message IDs; email failures are logged without blocking payment confirmation.
 
 - v91: Consulta de orden muestra artículos, cantidades y total; en órdenes asistidas usa “Total a pagar”. Confirmación cambia a “Continuar en WhatsApp”, botón Ver orden outline y mayor separación antes de Volver a productos.
+
+- v92: customer email footer now directs users to contacto@gruposegel.com without suggesting replies to no-reply. Public order detail view hides the lookup form after success, adds a back-chevron for another lookup, and shows item quantities, unit prices, line totals, and total paid/to pay.
+
+- v93: Added Privacy Notice page adapted for shop.casaglick.com, added Privacy Notice link to every cookie banner, added legal links in main Shop footers, and updated asset cache to shop93privacy.
+
+- v94: Cookie banner legal links now point to the centralized Casa Glick root policies at casaglick.com/cookie-policy.html and casaglick.com/privacy-policy.html. Local Shop legal pages remain available but are no longer linked from the floating cookie banner.

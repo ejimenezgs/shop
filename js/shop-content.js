@@ -61,37 +61,6 @@ function setImage(image,source,value){
   probe.onerror=()=>{ if(originalSrc)image.setAttribute('src',originalSrc); if(source&&originalSrcset)source.setAttribute('srcset',originalSrcset); };
   probe.src=url;
 }
-
-function boolEnabled(value){ return !(value===false || value===0 || value==='false'); }
-function applyProductsCategories(section){
-  const map={interior:'categoryInteriorImageUrl',exterior:'categoryExteriorImageUrl',habitacion:'categoryHabitacionImageUrl',decoracion:'categoryDecoracionImageUrl'};
-  Object.entries(map).forEach(([category,field])=>document.querySelectorAll(`[data-product-category-image="${category}"]`).forEach(img=>setImage(img,null,section[field])));
-}
-function applyGallery(section,type){
-  const isLifestyle=type==='lifestyle';
-  const selector=isLifestyle?'[data-lifestyle-slot]':'[data-showroom-slot]';
-  const prefix=isLifestyle?'image':'galleryImage';
-  document.querySelectorAll(selector).forEach(item=>{
-    const slot=Number(item.dataset[isLifestyle?'lifestyleSlot':'showroomSlot']);
-    const image=item.querySelector('img');
-    const enabled=boolEnabled(section[`${prefix}${slot}Enabled`]);
-    item.hidden=!enabled;
-    item.style.setProperty('display',enabled?'':'none',enabled?'':'important');
-    if(enabled) setImage(image,null,section[`${prefix}${slot}Url`]);
-  });
-}
-function applyModal(section,prefix){
-  setText(document.querySelector(`[data-content="${prefix}-modal-eyebrow"]`),section.modalEyebrow);
-  setText(document.querySelector(`[data-content="${prefix}-modal-title"]`),section.modalTitle);
-  setDescription(`[data-content="${prefix}-modal-description"]`,section.modalDescription);
-  const button=document.querySelector(`[data-content="${prefix}-modal-button"]`);
-  if(button) setButton(button,{buttonText:section.modalButtonText,buttonUrl:section.modalButtonUrl});
-  for(let i=1;i<=4;i++){
-    setText(document.querySelector(`[data-content="${prefix}-modal-item-${i}-title"]`),section[`modalItem${i}Title`]);
-    setDescription(`[data-content="${prefix}-modal-item-${i}-description"]`,section[`modalItem${i}Description`]);
-  }
-}
-
 function dynamicMapFor(name){
   const prefix=`${name}-`;
   return {
@@ -116,11 +85,6 @@ function applySection(name,section){
   if(map.title) setText(document.querySelector(map.title),section.title);
   if(map.description) setDescription(map.description,section.description);
   if(map.button) setButton(document.querySelector(map.button),section);
-  if(name==='products') applyProductsCategories(section);
-  if(name==='brands') applyGallery(section,'lifestyle');
-  if(name==='showroom') applyGallery(section,'showroom');
-  if(name==='about') applyModal(section,'about');
-  if(name==='hospitality') applyModal(section,'hospitality');
   if(map.image){
     let image=document.querySelector(map.image), source=map.imageSource?document.querySelector(map.imageSource):null;
     if(image?.tagName==='PICTURE'){ source=image.querySelector('source'); image=image.querySelector('img'); }

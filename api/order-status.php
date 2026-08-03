@@ -28,11 +28,12 @@ try {
     foreach (($matched['items'] ?? []) as $item) {
         if (!is_array($item)) continue;
         $quantity = max(1, (int)($item['quantity'] ?? 1));
-        $unitPrice = (float)($item['unitPrice'] ?? $item['price'] ?? 0);
+        $unitPrice = (float)($item['unitPrice'] ?? $item['price'] ?? $item['unit_amount'] ?? 0);
+        if ($unitPrice > 100000) $unitPrice = $unitPrice / 100;
         $lineTotal = (float)($item['lineTotal'] ?? ($unitPrice * $quantity));
         $publicItems[] = [
-            'name' => trim((string)($item['name'] ?? $item['title'] ?? 'Producto Casa Glick')),
-            'sku' => trim((string)($item['sku'] ?? $item['code'] ?? '')),
+            'name' => trim((string)($item['name'] ?? $item['title'] ?? $item['productName'] ?? 'Producto Casa Glick')),
+            'sku' => trim((string)($item['sku'] ?? $item['code'] ?? $item['productCode'] ?? '')),
             'quantity' => $quantity,
             'unitPrice' => $unitPrice,
             'lineTotal' => $lineTotal,

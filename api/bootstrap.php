@@ -846,7 +846,7 @@ function build_customer_order_email(array $config, array $order, string $orderId
         . '<tfoot><tr><td colspan="2" style="padding:20px 0 0;font-weight:600;">Total pagado</td><td style="padding:20px 0 0;text-align:right;font-size:18px;font-weight:600;">' . html_escape(cg_money($total)) . '</td></tr></tfoot>'
         . '</table>'
         . '<div style="padding:30px 0 8px;text-align:center;"><a href="' . html_escape($orderUrl) . '" style="display:inline-block;background:#1d1d1b;color:#fff;text-decoration:none;padding:15px 28px;font-size:12px;letter-spacing:1px;text-transform:uppercase;">Consultar mi orden</a></div>'
-        . '<p style="margin:24px 0 0;color:#777;font-size:12px;line-height:1.6;text-align:center;">¿Tienes alguna duda? Responde este correo o escríbenos a contacto@gruposegel.com.</p>'
+        . '<p style="margin:24px 0 0;color:#777;font-size:12px;line-height:1.6;text-align:center;">¿Tienes alguna duda? Escríbenos a contacto@gruposegel.com y nuestro equipo te ayudará.</p>'
         . '</td></tr></table></td></tr></table></body></html>';
 
     $text = "CASA GLICK\n\nGracias por tu compra, {$name}.\nTu pago fue confirmado correctamente.\n\n"
@@ -1040,7 +1040,7 @@ function build_customer_assisted_order_email(array $config, array $order, string
         . '<tfoot><tr><td colspan="2" style="padding:20px 0 0;font-weight:600;">Total estimado</td><td style="padding:20px 0 0;text-align:right;font-size:18px;font-weight:600;">' . html_escape(cg_money($total)) . '</td></tr></tfoot>'
         . '</table>'
         . '<div style="padding:30px 0 8px;text-align:center;"><a href="' . html_escape($whatsappUrl) . '" style="display:inline-block;background:#1d1d1b;color:#fff;text-decoration:none;padding:15px 28px;font-size:12px;letter-spacing:1px;text-transform:uppercase;">Continuar por WhatsApp</a></div>'
-        . '<p style="margin:24px 0 0;color:#777;font-size:12px;line-height:1.6;text-align:center;">También puedes responder este correo y te atenderemos desde contacto@gruposegel.com.</p>'
+        . '<p style="margin:24px 0 0;color:#777;font-size:12px;line-height:1.6;text-align:center;">¿Necesitas ayuda con tu solicitud? Escríbenos a contacto@gruposegel.com y nuestro equipo te atenderá.</p>'
         . '</td></tr></table></td></tr></table></body></html>';
 
     $text = "CASA GLICK\n\nRecibimos tu solicitud, {$name}.\n"
