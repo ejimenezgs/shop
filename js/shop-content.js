@@ -28,10 +28,31 @@ function isSafeLink(value){
   if(/^(https:\/\/|\/|\.\/|\.\.\/|#)/i.test(url)) return true;
   return /^(index|productos|producto|bolsa|checkout|confirmacion|checkout-success|checkout-cancel|cookie-policy|order)\.html(?:[?#].*)?$/i.test(url);
 }
-function isSafeImageUrl(value){
-  const url=trimmedString(value);
-  return Boolean(url && !/^(javascript|data|file):/i.test(url) && /^(https:\/\/|\/|\.\/|\.\.\/|assets\/)/i.test(url));
+const allowedImageHosts = new Set([
+  'assets.casaglick.com',
+  'shop.casaglick.com',
+  'casaglick.com',
+  'www.casaglick.com'
+]);
+function normalizeImageUrl(value){
+  const raw=trimmedString(value);
+  if(!raw || /^(javascript|data|file|blob):/i.test(raw)) return '';
+
+  // Preserve project-relative fallbacks exactly as they are stored in HTML/Firebase.
+  if(/^(\/|\.\/|\.\.\/|assets\/)/i.test(raw)) return raw;
+
+  try{
+    const parsed=new URL(raw);
+    if(parsed.protocol!=='https:') return '';
+    if(!allowedImageHosts.has(parsed.hostname.toLowerCase())) return '';
+    // Return the original absolute URL. Never prepend location.origin or convert it
+    // into a relative Shop path, because dynamic files live on a shared subdomain.
+    return raw;
+  }catch{
+    return '';
+  }
 }
+function isSafeImageUrl(value){ return Boolean(normalizeImageUrl(value)); }
 function setText(element,value){
   const text=trimmedString(value); if(!element || !text) return; remember(element);
   const childSpans=Array.from(element.children).filter(child=>child.tagName==='SPAN');
@@ -54,9 +75,12 @@ function setButton(element,section){
 }
 const latestImageUrl = new WeakMap();
 function setImage(image,source,value){
-  const url=trimmedString(value); if(!image || !isSafeImageUrl(url)) return;
+  const url=normalizeImageUrl(value); if(!image || !url) return;
   remember(image); if(source)remember(source);
+  if(latestImageUrl.get(image)===url) return;
   latestImageUrl.set(image,url);
+  // Apply immediately. There is intentionally no preload promise that could
+  // finish late and restore an older Firebase URL.
   image.setAttribute('src',url);
   if(source)source.setAttribute('srcset',url);
 }
