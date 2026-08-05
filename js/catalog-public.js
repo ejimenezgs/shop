@@ -622,42 +622,8 @@ async function renderListing(){
       onSelect:(filter,subcategory)=>resetListing(filter,subcategory)
     });
 
-    // Progressive rendering with two independent triggers. IntersectionObserver
-    // remains the primary mechanism, while the scroll/resize fallback prevents
-    // the catalog from stopping after the first batch in browsers or layouts
-    // where the 1px sentinel is not reported reliably.
-    const loadMoreIfNeeded=()=>{
-      if(renderedCount>=filteredProducts.length)return;
-      const threshold=window.innerHeight+900;
-      let safety=0;
-      while(renderedCount<filteredProducts.length&&sentinel.getBoundingClientRect().top<=threshold&&safety<20){
-        appendBatch();
-        safety+=1;
-      }
-    };
-
-    let observer=null;
-    if('IntersectionObserver' in window){
-      observer=new IntersectionObserver(entries=>{
-        if(entries.some(entry=>entry.isIntersecting)){
-          appendBatch();
-          requestAnimationFrame(loadMoreIfNeeded);
-        }
-      },{rootMargin:'900px 0px'});
-      observer.observe(sentinel);
-    }
-
-    let progressiveTicking=false;
-    const scheduleProgressiveLoad=()=>{
-      if(progressiveTicking)return;
-      progressiveTicking=true;
-      requestAnimationFrame(()=>{
-        progressiveTicking=false;
-        loadMoreIfNeeded();
-      });
-    };
-    window.addEventListener('scroll',scheduleProgressiveLoad,{passive:true});
-    window.addEventListener('resize',scheduleProgressiveLoad,{passive:true});
+    const observer=new IntersectionObserver(entries=>{if(entries.some(entry=>entry.isIntersecting))appendBatch();},{rootMargin:'600px 0px'});
+    observer.observe(sentinel);
 
     window.addEventListener('popstate',()=>{
       const next=new URLSearchParams(location.search);
@@ -665,7 +631,6 @@ async function renderListing(){
     });
 
     resetListing(activeFilter,activeSubcategory,false);
-    requestAnimationFrame(loadMoreIfNeeded);
   }catch(error){
     console.error('No se pudo cargar el catálogo público',error);
     list.innerHTML='<p class="products-empty">No fue posible cargar los productos. Recarga la página para intentarlo nuevamente.</p>';
@@ -743,7 +708,6 @@ async function renderDetail(){
     const products=await loadPublicProducts();
     const product=products.find(p=>String(p.code).toLowerCase()===String(key).toLowerCase()||p.slug===key);
     if(!product)throw new Error('Producto no encontrado');
-    window.CasaGlickMetaPixel?.track?.('ViewContent',{content_ids:[String(product.code||product.id||key)],content_name:String(product.displayName||product.name||product.code||'Producto'),content_category:String(product.category||''),content_type:'product',value:Number.isFinite(Number(product.price))?Number(product.price):0,currency:'MXN'});
     document.querySelectorAll('[data-product-title]').forEach(node=>{
       node.textContent=String(product.displayName||'Producto').trim();
     });

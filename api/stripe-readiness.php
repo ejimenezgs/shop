@@ -16,7 +16,7 @@ try {
         'mbstring' => extension_loaded('mbstring'),
         'httpsSiteUrl' => str_starts_with((string)($config['site_url'] ?? ''), 'https://'),
         'stripeEnvironment' => (string)($config['stripe_environment'] ?? 'test'),
-        'stripeTestKey' => str_starts_with((string)($config['stripe_secret_key'] ?? ''), 'sk_test_') || str_starts_with((string)($config['stripe_secret_key'] ?? ''), 'rk_test_'),
+        'stripeTestKey' => str_starts_with((string)($config['stripe_secret_key'] ?? ''), 'sk_test_'),
         'webhookSecret' => str_starts_with((string)($config['stripe_webhook_secret'] ?? ''), 'whsec_'),
         'firebaseAuthEmail' => (string)($config['firebase_auth_email'] ?? ''),
         'firebaseAuthentication' => false,

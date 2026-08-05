@@ -23,18 +23,16 @@ try {
         'Despachada' => 'Tu pedido salió del almacén.',
         'Entregada' => 'La orden fue marcada como entregada.',
         'Cancelada' => 'La orden fue cancelada. Contáctanos si necesitas ayuda.',
-        'No completado' => 'El proceso de pago no se completó. Puedes iniciar una nueva compra cuando lo desees.',
     ];
     $publicItems = [];
     foreach (($matched['items'] ?? []) as $item) {
         if (!is_array($item)) continue;
         $quantity = max(1, (int)($item['quantity'] ?? 1));
-        $unitPrice = (float)($item['unitPrice'] ?? $item['price'] ?? $item['unit_amount'] ?? 0);
-        if ($unitPrice > 100000) $unitPrice = $unitPrice / 100;
+        $unitPrice = (float)($item['unitPrice'] ?? $item['price'] ?? 0);
         $lineTotal = (float)($item['lineTotal'] ?? ($unitPrice * $quantity));
         $publicItems[] = [
-            'name' => trim((string)($item['name'] ?? $item['title'] ?? $item['productName'] ?? 'Producto Casa Glick')),
-            'sku' => trim((string)($item['sku'] ?? $item['code'] ?? $item['productCode'] ?? '')),
+            'name' => trim((string)($item['name'] ?? $item['title'] ?? 'Producto Casa Glick')),
+            'sku' => trim((string)($item['sku'] ?? $item['code'] ?? '')),
             'quantity' => $quantity,
             'unitPrice' => $unitPrice,
             'lineTotal' => $lineTotal,

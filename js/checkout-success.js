@@ -25,7 +25,6 @@ async function verify(){
       emailNode.textContent=String(data.email||'');
       detailsNode.append(folioNode,totalNode,emailNode);
       if(viewOrderNode){viewOrderNode.href=`order.html?folio=${encodeURIComponent(String(data.folio||''))}`;viewOrderNode.hidden=!data.folio;}
-      window.CasaGlickMetaPixel?.trackOnce?.(`purchase:${sessionId}`,'Purchase',{value:Number(data.total)||0,currency:'MXN',content_type:'product',order_id:String(data.folio||'')});
       window.CasaGlickCart?.clear?.();
       sessionStorage.removeItem('casaGlickStripePendingOrder');
       return;

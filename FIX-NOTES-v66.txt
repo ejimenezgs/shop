@@ -1,0 +1,4 @@
+Casa Glick Shop v66
+- shopContent/home.sections is canonical.
+- Legacy top-level sections are fallback only.
+- Exact Firebase image URLs, including assets.casaglick.com, take priority.

@@ -17,6 +17,7 @@ const specialMap = {
 };
 
 const originals = new WeakMap();
+const imageRequestVersions = new WeakMap();
 function remember(element){
   if(!element || originals.has(element)) return;
   originals.set(element,{text:element.textContent,hidden:element.hidden,href:element.getAttribute?.('href'),src:element.getAttribute?.('src'),srcset:element.getAttribute?.('srcset')});
@@ -28,31 +29,10 @@ function isSafeLink(value){
   if(/^(https:\/\/|\/|\.\/|\.\.\/|#)/i.test(url)) return true;
   return /^(index|productos|producto|bolsa|checkout|confirmacion|checkout-success|checkout-cancel|cookie-policy|order)\.html(?:[?#].*)?$/i.test(url);
 }
-const allowedImageHosts = new Set([
-  'assets.casaglick.com',
-  'shop.casaglick.com',
-  'casaglick.com',
-  'www.casaglick.com'
-]);
-function normalizeImageUrl(value){
-  const raw=trimmedString(value);
-  if(!raw || /^(javascript|data|file|blob):/i.test(raw)) return '';
-
-  // Preserve project-relative fallbacks exactly as they are stored in HTML/Firebase.
-  if(/^(\/|\.\/|\.\.\/|assets\/)/i.test(raw)) return raw;
-
-  try{
-    const parsed=new URL(raw);
-    if(parsed.protocol!=='https:') return '';
-    if(!allowedImageHosts.has(parsed.hostname.toLowerCase())) return '';
-    // Return the original absolute URL. Never prepend location.origin or convert it
-    // into a relative Shop path, because dynamic files live on a shared subdomain.
-    return raw;
-  }catch{
-    return '';
-  }
+function isSafeImageUrl(value){
+  const url=trimmedString(value);
+  return Boolean(url && !/^(javascript|data|file):/i.test(url) && /^(https:\/\/|\/|\.\/|\.\.\/|assets\/)/i.test(url));
 }
-function isSafeImageUrl(value){ return Boolean(normalizeImageUrl(value)); }
 function setText(element,value){
   const text=trimmedString(value); if(!element || !text) return; remember(element);
   const childSpans=Array.from(element.children).filter(child=>child.tagName==='SPAN');
@@ -73,42 +53,67 @@ function setButton(element,section){
   if(text){ remember(element); const target=element.querySelector('span:not([aria-hidden="true"])'); if(target)target.textContent=text; else element.textContent=text; }
   if(element.tagName==='A' && isSafeLink(url)){ remember(element); element.setAttribute('href',url); }
 }
-const latestImageUrl = new WeakMap();
 function setImage(image,source,value){
-  const url=normalizeImageUrl(value); if(!image || !url) return;
-  remember(image); if(source)remember(source);
-  if(latestImageUrl.get(image)===url) return;
-  latestImageUrl.set(image,url);
-  // Apply immediately. There is intentionally no preload promise that could
-  // finish late and restore an older Firebase URL.
+  const url=trimmedString(value);
+  if(!image || !isSafeImageUrl(url)) return;
+
+  remember(image);
+  if(source) remember(source);
+
+  const version=(imageRequestVersions.get(image)||0)+1;
+  imageRequestVersions.set(image,version);
+
+  // Aplicar inmediatamente la URL más reciente de Firebase. La versión evita
+  // que una precarga anterior termine sobrescribiendo una actualización nueva.
   image.setAttribute('src',url);
-  if(source)source.setAttribute('srcset',url);
+  image.removeAttribute('srcset');
+  if(source) source.setAttribute('srcset',url);
+
+  const probe=new Image();
+  probe.onload=()=>{
+    if(imageRequestVersions.get(image)!==version) return;
+    image.setAttribute('src',url);
+    if(source) source.setAttribute('srcset',url);
+  };
+  probe.onerror=()=>{
+    // No restaurar una imagen anterior: puede tratarse de una propagación o
+    // caché temporal. El navegador volverá a solicitar la URL vigente.
+    if(imageRequestVersions.get(image)!==version) return;
+    console.warn('[Web Design] No se pudo precargar la imagen:',url);
+  };
+  probe.src=url;
 }
-function validObject(value){ return value && typeof value==='object' && !Array.isArray(value) ? value : {}; }
-function mergeValidObjects(base,override){
-  const result={...validObject(base)};
-  Object.entries(validObject(override)).forEach(([key,value])=>{
-    if(value===undefined || value===null) return;
-    if(typeof value==='string' && !value.trim()) return;
-    if(validObject(value)===value && validObject(result[key])===result[key]) result[key]=mergeValidObjects(result[key],value);
-    else result[key]=value;
+
+function boolEnabled(value){ return !(value===false || value===0 || value==='false'); }
+function applyProductsCategories(section){
+  const map={interior:'categoryInteriorImageUrl',exterior:'categoryExteriorImageUrl',habitacion:'categoryHabitacionImageUrl',decoracion:'categoryDecoracionImageUrl'};
+  Object.entries(map).forEach(([category,field])=>document.querySelectorAll(`[data-product-category-image="${category}"]`).forEach(img=>setImage(img,null,section[field])));
+}
+function applyGallery(section,type){
+  const isLifestyle=type==='lifestyle';
+  const selector=isLifestyle?'[data-lifestyle-slot]':'[data-showroom-slot]';
+  const prefix=isLifestyle?'image':'galleryImage';
+  document.querySelectorAll(selector).forEach(item=>{
+    const slot=Number(item.dataset[isLifestyle?'lifestyleSlot':'showroomSlot']);
+    const image=item.querySelector('img');
+    const enabled=boolEnabled(section[`${prefix}${slot}Enabled`]);
+    item.hidden=!enabled;
+    item.style.setProperty('display',enabled?'':'none',enabled?'':'important');
+    if(enabled) setImage(image,null,section[`${prefix}${slot}Url`]);
   });
-  return result;
 }
-const productCategoryImageFields = Object.freeze({
-  interior:'categoryInteriorImageUrl',
-  exterior:'categoryExteriorImageUrl',
-  habitacion:'categoryHabitacionImageUrl',
-  decoracion:'categoryDecoracionImageUrl'
-});
-function applyProductCategoryImages(products){
-  const section=validObject(products);
-  Object.entries(productCategoryImageFields).forEach(([category,field])=>{
-    const image=document.querySelector(`[data-product-category-image="${category}"]`);
-    const url=trimmedString(section[field]);
-    if(image && isSafeImageUrl(url)) setImage(image,null,url);
-  });
+function applyModal(section,prefix){
+  setText(document.querySelector(`[data-content="${prefix}-modal-eyebrow"]`),section.modalEyebrow);
+  setText(document.querySelector(`[data-content="${prefix}-modal-title"]`),section.modalTitle);
+  setDescription(`[data-content="${prefix}-modal-description"]`,section.modalDescription);
+  const button=document.querySelector(`[data-content="${prefix}-modal-button"]`);
+  if(button) setButton(button,{buttonText:section.modalButtonText,buttonUrl:section.modalButtonUrl});
+  for(let i=1;i<=4;i++){
+    setText(document.querySelector(`[data-content="${prefix}-modal-item-${i}-title"]`),section[`modalItem${i}Title`]);
+    setDescription(`[data-content="${prefix}-modal-item-${i}-description"]`,section[`modalItem${i}Description`]);
+  }
 }
+
 function dynamicMapFor(name){
   const prefix=`${name}-`;
   return {
@@ -133,7 +138,11 @@ function applySection(name,section){
   if(map.title) setText(document.querySelector(map.title),section.title);
   if(map.description) setDescription(map.description,section.description);
   if(map.button) setButton(document.querySelector(map.button),section);
-  if(name==='products') applyProductCategoryImages(section);
+  if(name==='products') applyProductsCategories(section);
+  if(name==='brands') applyGallery(section,'lifestyle');
+  if(name==='showroom') applyGallery(section,'showroom');
+  if(name==='about') applyModal(section,'about');
+  if(name==='hospitality') applyModal(section,'hospitality');
   if(map.image){
     let image=document.querySelector(map.image), source=map.imageSource?document.querySelector(map.imageSource):null;
     if(image?.tagName==='PICTURE'){ source=image.querySelector('source'); image=image.querySelector('img'); }
@@ -161,9 +170,12 @@ function applyShopContent(content){
   const nested=content.sections&&typeof content.sections==='object'?content.sections:{};
   const keys=new Set([...schema.map(def=>def.key),...Object.keys(nested),...Object.keys(specialMap)]);
   keys.forEach(name=>{
-    const direct=validObject(content[name]);
-    const section=validObject(nested[name]);
-    applySection(name,mergeValidObjects(section,direct));
+    const direct=content[name]&&typeof content[name]==='object'?content[name]:{};
+    const section=nested[name]&&typeof nested[name]==='object'?nested[name]:{};
+    // sections.<seccion> es la fuente canonica. La copia superior solo se usa
+    // como fallback para documentos antiguos y nunca puede reemplazar una URL
+    // absoluta mas nueva guardada por el Panel.
+    applySection(name,{...direct,...section});
   });
 }
 async function startShopContent(){

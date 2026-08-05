@@ -484,13 +484,13 @@ function require_inventory_admin_token(array $config): void {
 
 function stripe_request(array $config, string $path, array $params = [], string $method = 'POST', ?string $idempotencyKey = null): array {
     $secret = (string)($config['stripe_secret_key'] ?? '');
-    if (!str_starts_with($secret, 'sk_test_') && !str_starts_with($secret, 'sk_live_') && !str_starts_with($secret, 'rk_test_') && !str_starts_with($secret, 'rk_live_')) throw new RuntimeException('Falta una clave privada válida de Stripe.');
+    if (!str_starts_with($secret, 'sk_test_') && !str_starts_with($secret, 'sk_live_')) throw new RuntimeException('Falta una clave secreta válida de Stripe.');
     $environment = strtolower(trim((string)($config['stripe_environment'] ?? 'test')));
-    if ($environment === 'test' && !str_starts_with($secret, 'sk_test_') && !str_starts_with($secret, 'rk_test_')) {
-        throw new RuntimeException('La configuración está en modo Sandbox y requiere una clave sk_test_ o rk_test_.');
+    if ($environment === 'test' && !str_starts_with($secret, 'sk_test_')) {
+        throw new RuntimeException('La configuración está en modo Sandbox y requiere una clave sk_test_.');
     }
-    if ($environment === 'live' && !str_starts_with($secret, 'sk_live_') && !str_starts_with($secret, 'rk_live_')) {
-        throw new RuntimeException('La configuración está en modo producción y requiere una clave sk_live_ o rk_live_.');
+    if ($environment === 'live' && !str_starts_with($secret, 'sk_live_')) {
+        throw new RuntimeException('La configuración está en modo producción y requiere una clave sk_live_.');
     }
     $headers = ['Authorization: Bearer ' . $secret];
     $body = null;
@@ -846,7 +846,7 @@ function build_customer_order_email(array $config, array $order, string $orderId
         . '<tfoot><tr><td colspan="2" style="padding:20px 0 0;font-weight:600;">Total pagado</td><td style="padding:20px 0 0;text-align:right;font-size:18px;font-weight:600;">' . html_escape(cg_money($total)) . '</td></tr></tfoot>'
         . '</table>'
         . '<div style="padding:30px 0 8px;text-align:center;"><a href="' . html_escape($orderUrl) . '" style="display:inline-block;background:#1d1d1b;color:#fff;text-decoration:none;padding:15px 28px;font-size:12px;letter-spacing:1px;text-transform:uppercase;">Consultar mi orden</a></div>'
-        . '<p style="margin:24px 0 0;color:#777;font-size:12px;line-height:1.6;text-align:center;">¿Tienes alguna duda? Escríbenos a contacto@gruposegel.com y nuestro equipo te ayudará.</p>'
+        . '<p style="margin:24px 0 0;color:#777;font-size:12px;line-height:1.6;text-align:center;">¿Tienes alguna duda? Responde este correo o escríbenos a contacto@gruposegel.com.</p>'
         . '</td></tr></table></td></tr></table></body></html>';
 
     $text = "CASA GLICK\n\nGracias por tu compra, {$name}.\nTu pago fue confirmado correctamente.\n\n"
@@ -1040,7 +1040,7 @@ function build_customer_assisted_order_email(array $config, array $order, string
         . '<tfoot><tr><td colspan="2" style="padding:20px 0 0;font-weight:600;">Total estimado</td><td style="padding:20px 0 0;text-align:right;font-size:18px;font-weight:600;">' . html_escape(cg_money($total)) . '</td></tr></tfoot>'
         . '</table>'
         . '<div style="padding:30px 0 8px;text-align:center;"><a href="' . html_escape($whatsappUrl) . '" style="display:inline-block;background:#1d1d1b;color:#fff;text-decoration:none;padding:15px 28px;font-size:12px;letter-spacing:1px;text-transform:uppercase;">Continuar por WhatsApp</a></div>'
-        . '<p style="margin:24px 0 0;color:#777;font-size:12px;line-height:1.6;text-align:center;">¿Necesitas ayuda con tu solicitud? Escríbenos a contacto@gruposegel.com y nuestro equipo te atenderá.</p>'
+        . '<p style="margin:24px 0 0;color:#777;font-size:12px;line-height:1.6;text-align:center;">También puedes responder este correo y te atenderemos desde contacto@gruposegel.com.</p>'
         . '</td></tr></table></td></tr></table></body></html>';
 
     $text = "CASA GLICK\n\nRecibimos tu solicitud, {$name}.\n"

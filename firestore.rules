@@ -21,7 +21,7 @@ service cloud.firestore {
           "folio", "status", "customer", "items", "subtotal", "total",
           "createdAt", "createdAtClient", "source", "paymentMethod",
           "paymentStatus", "stripeSessionId", "checkoutAttempt",
-          "emailDispatchToken", "assistedRequestEmail", "customerNotes"
+          "emailDispatchToken", "assistedRequestEmail"
         ])
         && request.resource.data.keys().hasAll([
           "folio", "status", "customer", "items", "subtotal", "total",
@@ -41,9 +41,6 @@ service cloud.firestore {
         && request.resource.data.source == "web"
         && request.resource.data.createdAt == request.time
         && request.resource.data.createdAtClient is string
-        && (!request.resource.data.keys().hasAny(["customerNotes"])
-          || (request.resource.data.customerNotes is string
-            && request.resource.data.customerNotes.size() <= 2000))
         && (
           request.resource.data.status == "Nueva"
           || (

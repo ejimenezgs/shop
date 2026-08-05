@@ -392,75 +392,52 @@ try {
                     );
                 }
             }
-        } elseif ($type === 'checkout.session.expired') {
-            $order = firestore_get($config, 'orders/' . $orderId);
-            if ($order && !in_array(strtolower((string)($order['paymentStatus'] ?? '')), ['paid', 'refunded'], true)) {
-                $storedSessionId = trim((string)($order['stripeSessionId'] ?? ''));
-                $eventSessionId = trim((string)($object['id'] ?? ''));
-                if ($storedSessionId === '' || $eventSessionId === '' || hash_equals($storedSessionId, $eventSessionId)) {
-                    $fields = [
-                        'status' => 'No completado',
-                        'paymentStatus' => 'expired',
-                        'failureReason' => 'checkout_session_expired',
-                        'stripeSessionId' => $eventSessionId,
-                        'paymentClosedAt' => new DateTimeImmutable('now', new DateTimeZone('UTC')),
-                    ];
-                    if (($order['inventoryStatus'] ?? '') === 'reserved') {
-                        try {
-                            transition_inventory_reservation($config, $orderId, 'released', 'checkout_session_expired');
-                            $fields['inventoryStatus'] = 'released';
-                            $fields['inventoryReleasedAt'] = new DateTimeImmutable('now', new DateTimeZone('UTC'));
-                        } catch (Throwable $releaseError) {
-                            error_log('inventory-release-expired: ' . $releaseError->getMessage());
-                            $fields['inventoryStatus'] = 'release_failed';
-                            $fields['inventoryError'] = mb_substr($releaseError->getMessage(), 0, 500);
-                        }
-                    }
-                    firestore_patch($config, 'orders/' . $orderId, $fields);
-                }
-            }
-        } elseif ($type === 'checkout.session.async_payment_failed') {
-            $order = firestore_get($config, 'orders/' . $orderId);
-            if ($order && !in_array(strtolower((string)($order['paymentStatus'] ?? '')), ['paid', 'refunded'], true)) {
-                $storedSessionId = trim((string)($order['stripeSessionId'] ?? ''));
-                $eventSessionId = trim((string)($object['id'] ?? ''));
-                if ($storedSessionId === '' || $eventSessionId === '' || hash_equals($storedSessionId, $eventSessionId)) {
-                    $failureMessage = trim((string)($object['last_payment_error']['message'] ?? 'El método de pago asíncrono falló definitivamente.'));
-                    $fields = [
-                        'status' => 'No completado',
-                        'paymentStatus' => 'failed',
-                        'failureReason' => 'async_payment_failed',
-                        'paymentFailureMessage' => mb_substr($failureMessage, 0, 500),
-                        'stripeSessionId' => $eventSessionId,
-                        'stripePaymentIntentId' => (string)($object['payment_intent'] ?? ''),
-                        'paymentClosedAt' => new DateTimeImmutable('now', new DateTimeZone('UTC')),
-                    ];
-                    if (($order['inventoryStatus'] ?? '') === 'reserved') {
-                        try {
-                            transition_inventory_reservation($config, $orderId, 'released', 'async_payment_failed');
-                            $fields['inventoryStatus'] = 'released';
-                            $fields['inventoryReleasedAt'] = new DateTimeImmutable('now', new DateTimeZone('UTC'));
-                        } catch (Throwable $releaseError) {
-                            error_log('inventory-release-async-failed: ' . $releaseError->getMessage());
-                            $fields['inventoryStatus'] = 'release_failed';
-                            $fields['inventoryError'] = mb_substr($releaseError->getMessage(), 0, 500);
-                        }
-                    }
-                    firestore_patch($config, 'orders/' . $orderId, $fields);
-                }
-            }
-        } elseif ($type === 'payment_intent.payment_failed') {
-            $order = firestore_get($config, 'orders/' . $orderId);
-            if ($order && !in_array(strtolower((string)($order['paymentStatus'] ?? '')), ['paid', 'refunded'], true)) {
-                $lastError = $object['last_payment_error'] ?? [];
-                $safeMessage = trim((string)(is_array($lastError) ? ($lastError['message'] ?? '') : ''));
-                if ($safeMessage === '') $safeMessage = 'El intento de pago no pudo completarse.';
-                firestore_patch($config, 'orders/' . $orderId, [
-                    'lastPaymentError' => mb_substr($safeMessage, 0, 500),
-                    'lastPaymentAttemptAt' => new DateTimeImmutable('now', new DateTimeZone('UTC')),
-                    'stripePaymentIntentId' => (string)($object['id'] ?? ''),
-                ]);
-            }
+        } elseif (
+            $type === 'checkout.session.expired'
+        ) {
+            firestore_patch(
+                $config,
+                'orders/' . $orderId,
+                [
+                    'status' => 'Pago expirado',
+                    'paymentStatus' => 'expired',
+                    'stripeSessionId' =>
+                        (string) ($object['id'] ?? ''),
+                ]
+            );
+        } elseif (
+            in_array(
+                $type,
+                [
+                    'payment_intent.payment_failed',
+                    'checkout.session.async_payment_failed',
+                ],
+                true
+            )
+        ) {
+            $paymentIntentId =
+                $type === 'payment_intent.payment_failed'
+                    ? (string) ($object['id'] ?? '')
+                    : (string) (
+                        $object['payment_intent'] ?? ''
+                    );
+
+            firestore_patch(
+                $config,
+                'orders/' . $orderId,
+                [
+                    'status' => 'Pago fallido',
+                    'paymentStatus' => 'failed',
+                    'stripePaymentIntentId' =>
+                        $paymentIntentId,
+                    'paymentFailureMessage' =>
+                        (string) (
+                            $object['last_payment_error']
+                                ['message']
+                            ?? 'El pago no pudo completarse.'
+                        ),
+                ]
+            );
         } elseif (
             $type === 'charge.refunded'
             && (int) (
