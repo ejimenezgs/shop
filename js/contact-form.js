@@ -86,6 +86,11 @@ if (form) {
         createdAt: serverTimestamp()
       });
 
+      window.CasaGlickMetaPixel?.track?.('Lead', {
+        content_name: 'Formulario de contacto',
+        content_category: 'Contacto',
+        source: 'shop.casaglick.com'
+      });
       form.reset();
       setStatus('Tu mensaje fue enviado correctamente. Pronto nos pondremos en contacto contigo.', 'success');
     } catch (error) {

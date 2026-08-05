@@ -743,6 +743,7 @@ async function renderDetail(){
     const products=await loadPublicProducts();
     const product=products.find(p=>String(p.code).toLowerCase()===String(key).toLowerCase()||p.slug===key);
     if(!product)throw new Error('Producto no encontrado');
+    window.CasaGlickMetaPixel?.track?.('ViewContent',{content_ids:[String(product.code||product.id||key)],content_name:String(product.displayName||product.name||product.code||'Producto'),content_category:String(product.category||''),content_type:'product',value:Number.isFinite(Number(product.price))?Number(product.price):0,currency:'MXN'});
     document.querySelectorAll('[data-product-title]').forEach(node=>{
       node.textContent=String(product.displayName||'Producto').trim();
     });
