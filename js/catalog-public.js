@@ -75,6 +75,27 @@ async function readOverrides(){
 
 
 
+async function readCatalogSettings(){
+  if(!config.projectId)return{};
+  try{
+    const [{initializeApp,getApps},{doc,getDoc,getFirestore}]=await withTimeout(
+      Promise.all([
+        import('https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js'),
+        import('https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js')
+      ]),7000,'Firebase tardó demasiado en cargar'
+    );
+    const app=getApps().length?getApps()[0]:initializeApp(config);
+    const snapshot=await withTimeout(
+      getDoc(doc(getFirestore(app),'catalogSettings','admin')),
+      7000,'Firestore tardó demasiado en responder'
+    );
+    return snapshot.exists()?(snapshot.data()||{}):{};
+  }catch(error){
+    console.error('No se pudo leer la configuración del catálogo',error);
+    return{};
+  }
+}
+
 async function readInventoryReservations(){
   if(!config.projectId)return{};
   try{
@@ -232,8 +253,12 @@ function applyOverride(product,overrides){
 
 async function loadPublicProducts() {
   if (!catalog) throw new Error('CasaGlickCatalog no está disponible');
+  const settings=await readCatalogSettings();
+  const inventoryUrl=typeof settings.apiUrl==='string'&&settings.apiUrl.trim()
+    ? settings.apiUrl.trim()
+    : catalog.API_URL;
   const [productsResult, overridesResult, reservationsResult] = await Promise.allSettled([
-    withTimeout(catalog.fetchProducts(), 12000, 'La API del inventario tardó demasiado en responder'),
+    withTimeout(catalog.fetchProducts(inventoryUrl), 12000, 'La API del inventario tardó demasiado en responder'),
     readOverrides(),
     readInventoryReservations()
   ]);

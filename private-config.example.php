@@ -15,7 +15,8 @@ return [
     // Optional extra identity check. Leave empty or copy the UID from Firebase Authentication.
     'firebase_auth_uid' => '',
     'site_url' => 'https://shop.casaglick.com',
-    'inventory_url' => 'https://segel-inventario.vercel.app/api/catalogo',
+    // Fallback only. Shop normally reads catalogSettings/admin.apiUrl from Firebase.
+    'inventory_url' => 'https://example.com/api/catalogo',
     // Long random token used only by the private dispatch/release endpoint.
     'inventory_admin_token' => 'REPLACE_WITH_A_LONG_RANDOM_SECRET',
 

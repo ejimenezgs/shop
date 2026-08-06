@@ -596,8 +596,21 @@ function unwrap_inventory(mixed $payload): array {
     return [];
 }
 
+function inventory_url(array $config): string {
+    $fallback = trim((string)($config['inventory_url'] ?? ''));
+    try {
+        $settings = firestore_get($config, 'catalogSettings/admin') ?? [];
+        $firebaseUrl = trim((string)($settings['apiUrl'] ?? ''));
+        if ($firebaseUrl !== '') return $firebaseUrl;
+    } catch (Throwable $error) {
+        error_log('inventory-config: ' . $error->getMessage());
+    }
+    if ($fallback === '') throw new RuntimeException('Falta la URL del inventario.');
+    return $fallback;
+}
+
 function fetch_inventory(array $config): array {
-    [$status, $body] = http_request((string)($config['inventory_url'] ?? ''), 'GET', ['Accept: application/json']);
+    [$status, $body] = http_request(inventory_url($config), 'GET', ['Accept: application/json']);
     if ($status !== 200) throw new RuntimeException('El inventario no está disponible.');
     $payload = json_decode($body, true);
     if (!is_array($payload)) throw new RuntimeException('La respuesta del inventario no es válida.');

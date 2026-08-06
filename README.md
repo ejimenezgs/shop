@@ -7,7 +7,7 @@ Repositorio publico para `https://shop.casaglick.com`.
 La tienda y `https://panel.casaglick.com` usan el mismo proyecto Firebase:
 
 - Proyecto: `casaglick-439b2`
-- Endpoint de inventario: `https://segel-inventario.vercel.app/api/catalogo`
+- Endpoint de inventario: se lee desde `catalogSettings/admin.apiUrl` en Firebase; el PHP privado conserva un fallback.
 - Coleccion editorial: `catalogProductOverrides`
 - Configuracion general: `catalogSettings`
 - Ordenes: `orders`
