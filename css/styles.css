@@ -10299,10 +10299,10 @@ body.product-detail-page [data-product-title].is-fitting-title {
 }
 .checkout-stripe-banner img {
   display: block;
-  width: 100%;
-  max-width: 520px;
+  width: 70%;
+  max-width: 364px;
   height: auto;
-  margin: 0 auto;
+  margin: 0;
 }
 .stripe-result-card > h1 {
   font-size: clamp(28px, 3.3vw, 46px) !important;
