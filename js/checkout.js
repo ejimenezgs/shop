@@ -22,6 +22,7 @@ const deliverySelect=form?.elements?.delivery;
 const addressField=document.querySelector('#checkout-address-field');
 const addressInput=document.querySelector('#checkout-address');
 const shippingNote=document.querySelector('#checkout-shipping-note');
+const stripeBanner=document.querySelector('#checkout-stripe-banner');
 const money=v=>new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(Number(v)||0);
 const folio=()=>`CG-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Math.random().toString(36).slice(2,6).toUpperCase()}`;
 const STRIPE_PENDING_KEY='casaGlickStripePendingOrder';
@@ -33,6 +34,9 @@ function validPrice(value){const number=Number(value);return Number.isFinite(num
 function normalizePostal(value){return String(value||'').replace(/\D/g,'').slice(0,5);}
 function validPostal(value){return /^\d{5}$/.test(normalizePostal(value));}
 function isCdmxPostal(value){const cp=normalizePostal(value);if(!validPostal(cp))return false;const numeric=Number(cp);return numeric>=1000&&numeric<=16999;}
+function isEstadoDeMexicoPostal(value){const cp=normalizePostal(value);if(!validPostal(cp))return false;const numeric=Number(cp);return numeric>=50000&&numeric<=57999;}
+function supportsStripePostal(value){return isCdmxPostal(value)||isEstadoDeMexicoPostal(value);}
+function regionLabel(value){return isCdmxPostal(value)?'CDMX':(isEstadoDeMexicoPostal(value)?'Estado de México':'fuera de cobertura');}
 function homeDelivery(){return String(deliverySelect?.value||'')==='Envío a domicilio';}
 function readPendingStripeOrder(){try{const value=JSON.parse(sessionStorage.getItem(STRIPE_PENDING_KEY)||'null');return value&&typeof value==='object'?value:null;}catch{return null;}}
 function stripeOrderSignature(orderItems,customer){return JSON.stringify({items:orderItems.map(item=>({code:String(item.code||''),quantity:Math.max(1,Number(item.quantity)||1)})).sort((a,b)=>a.code.localeCompare(b.code)),customer});}
@@ -49,8 +53,11 @@ function updateCheckoutMode(){
   if(postalInput&&postalInput.value!==postal)postalInput.value=postal;
   const postalReady=validPostal(postal);
   const cdmx=postalReady&&isCdmxPostal(postal);
-  checkoutMode=stripeAvailable&&cdmx?'stripe':'assisted';
-  shippingNote.hidden=!(cdmx&&homeDelivery());
+  const edomex=postalReady&&isEstadoDeMexicoPostal(postal);
+  const stripeRegion=postalReady&&supportsStripePostal(postal);
+  checkoutMode=stripeAvailable&&stripeRegion?'stripe':'assisted';
+  shippingNote.hidden=!(stripeRegion&&homeDelivery());
+  if(stripeBanner)stripeBanner.hidden=checkoutMode!=='stripe';
   if(!postalReady){
     submitButton.textContent='Continuar';
     modeNote.hidden=false;
@@ -59,19 +66,19 @@ function updateCheckoutMode(){
     if(checkoutIntro)checkoutIntro.textContent='Captura tus datos para generar tu orden.';
     return;
   }
-  if(cdmx){
-    postalMessage.textContent='Entrega disponible en CDMX.';
+  if(stripeRegion){
+    postalMessage.textContent=`Entrega disponible en ${regionLabel(postal)}.`;
     if(stripeAvailable){
       submitButton.textContent='Pagar con Stripe';
       modeNote.hidden=false;
-      modeNote.textContent=homeDelivery()?'Pago seguro · Envío gratis en CDMX':'Pago seguro procesado por Stripe';
+      modeNote.textContent=homeDelivery()?'Pago seguro · Envío gratis en CDMX y Estado de México':'Pago seguro procesado por Stripe';
       if(checkoutIntro)checkoutIntro.textContent='Captura tus datos para validar disponibilidad y continuar a un pago seguro.';
     }else{
       submitButton.textContent='Generar orden';modeNote.hidden=true;
       if(checkoutIntro)checkoutIntro.textContent='Captura tus datos para generar tu orden y continuar por WhatsApp con un asesor.';
     }
   }else{
-    postalMessage.textContent='Para entregas fuera de CDMX, un asesor confirmará envío y disponibilidad.';
+    postalMessage.textContent='Para entregas fuera de CDMX y Estado de México, un asesor confirmará envío y disponibilidad.';
     submitButton.textContent='Continuar por WhatsApp';
     modeNote.hidden=false;
     modeNote.textContent='Un asesor cotizará el envío a tu ubicación';
@@ -82,7 +89,7 @@ async function loadCheckoutMode(){try{const snapshot=await getDoc(doc(db,'catalo
 function renderSummary(){const total=items.reduce((sum,item)=>sum+(validPrice(item.price)?Number(item.price):0)*(Number(item.quantity)||0),0);summary.innerHTML=items.length?`<div class="checkout-summary-list">${items.map(item=>{const quantity=Number(item.quantity)||1;const hasPrice=validPrice(item.price);const lineTotal=hasPrice?Number(item.price)*quantity:0;return `<article class="checkout-summary-item"><img src="${safeImage(item.image)}" alt="${escapeHtml(item.name||item.code||'Producto Casa Glick')}"><span class="seo-image-caption">${escapeHtml(item.name||item.code||'Producto Casa Glick')}</span><div class="checkout-summary-item__copy"><strong>${escapeHtml(item.name||item.code||'Producto')}</strong><span>${quantity} × ${hasPrice?money(item.price):'Precio a cotizar'}</span></div><b>${hasPrice?money(lineTotal):'Cotizar'}</b></article>`;}).join('')}</div><div class="checkout-summary-total"><span>Total estimado</span><strong>${money(total)} MXN</strong></div>`:'<p>Tu bolsa está vacía.</p>';if(submitButton)submitButton.disabled=!items.length;return total;}
 async function refreshPricesFromApi(){try{if(!window.CasaGlickCatalog?.fetchProducts)return;const products=await window.CasaGlickCatalog.fetchProducts();const byCode=new Map(products.map(product=>[String(product.code||product.id),product]));let changed=false;items=items.map(item=>{const fresh=byCode.get(String(item.code||item.id));if(!fresh)return item;const next={...item};if(validPrice(fresh.price)&&Number(next.price)!==Number(fresh.price)){next.price=Number(fresh.price);changed=true;}if(fresh.displayName||fresh.name)next.name=fresh.displayName||fresh.name;if(fresh.images?.[0])next.image=fresh.images[0];if(Number.isFinite(Number(fresh.stock)))next.stock=Number(fresh.stock);return next;});if(changed)cart?.write?.(items);}catch(err){console.warn('No fue posible actualizar precios desde la API.',err);}}
 async function init(){renderSummary();updateDeliveryFields();await Promise.all([refreshPricesFromApi(),loadCheckoutMode()]);renderSummary();}
-function cleanOrderData(data,total,orderFolio){const cleanText=value=>value==null?'':String(value).trim();const orderItems=items.map((item,index)=>({id:cleanText(item.id||item.code||`item-${index+1}`),code:cleanText(item.code||item.id),name:cleanText(item.name||item.code||'Producto'),price:validPrice(item.price)?Number(item.price):null,quantity:Math.max(1,Number(item.quantity)||1),image:cleanText(item.image)}));const postalCode=normalizePostal(data.postalCode);const firstName=cleanText(data.name);const lastName=cleanText(data.lastName);const fullName=[firstName,lastName].filter(Boolean).join(' ').trim();const customer={name:fullName,firstName,lastName,phone:cleanText(data.phone),email:cleanText(data.email),postalCode,address:cleanText(data.address),delivery:cleanText(data.delivery),comments:cleanText(data.comments),region:isCdmxPostal(postalCode)?'cdmx':'exterior'};return{orderItems,customer,base:{folio:orderFolio,customer,items:orderItems,subtotal:Number(total)||0,total:Number(total)||0,createdAt:serverTimestamp(),createdAtClient:new Date().toISOString(),source:'web'}};}
+function cleanOrderData(data,total,orderFolio){const cleanText=value=>value==null?'':String(value).trim();const orderItems=items.map((item,index)=>({id:cleanText(item.id||item.code||`item-${index+1}`),code:cleanText(item.code||item.id),name:cleanText(item.name||item.code||'Producto'),price:validPrice(item.price)?Number(item.price):null,quantity:Math.max(1,Number(item.quantity)||1),image:cleanText(item.image)}));const postalCode=normalizePostal(data.postalCode);const firstName=cleanText(data.name);const lastName=cleanText(data.lastName);const fullName=[firstName,lastName].filter(Boolean).join(' ').trim();const customerRegion=isCdmxPostal(postalCode)?'cdmx':(isEstadoDeMexicoPostal(postalCode)?'edomex':'exterior');const customer={name:fullName,firstName,lastName,phone:cleanText(data.phone),email:cleanText(data.email),postalCode,address:cleanText(data.address),delivery:cleanText(data.delivery),comments:cleanText(data.comments),region:customerRegion};return{orderItems,customer,base:{folio:orderFolio,customer,items:orderItems,subtotal:Number(total)||0,total:Number(total)||0,createdAt:serverTimestamp(),createdAtClient:new Date().toISOString(),source:'web'}};}
 
 postalInput?.addEventListener('input',updateCheckoutMode);
 postalInput?.addEventListener('blur',updateCheckoutMode);
@@ -100,7 +107,7 @@ form.addEventListener('submit',async event=>{
     if(!items.length)throw new Error('EMPTY_CART');
     const orderFolio=folio();const total=renderSummary();const{orderItems,customer,base}=cleanOrderData(data,total,orderFolio);
     if(activeMode==='stripe'){
-      if(!isCdmxPostal(customer.postalCode))throw new Error('STRIPE_CDMX_ONLY');
+      if(!supportsStripePostal(customer.postalCode))throw new Error('STRIPE_COVERAGE_ONLY');
       if(orderItems.some(item=>!validPrice(item.price)))throw new Error('STRIPE_QUOTE_ITEM');
       const signature=stripeOrderSignature(orderItems,customer);const pending=readPendingStripeOrder();let orderId='';let activeFolio=orderFolio;
       if(pending?.signature===signature&&/^[A-Za-z0-9_-]{8,128}$/.test(String(pending.orderId||''))){orderId=String(pending.orderId);activeFolio=String(pending.folio||orderFolio);}else{const order={...base,status:'Pendiente de pago',paymentMethod:'stripe',paymentStatus:'pending',stripeSessionId:null,checkoutAttempt:0};const orderRef=await addDoc(collection(db,'orders'),order);orderId=orderRef.id;sessionStorage.setItem(STRIPE_PENDING_KEY,JSON.stringify({orderId,folio:activeFolio,signature}));}
@@ -120,6 +127,6 @@ form.addEventListener('submit',async event=>{
       else console.warn('No se pudo enviar el correo de solicitud:',notificationPayload.error||notificationResponse.status);
     }catch(notificationError){console.warn('No se pudo enviar el correo de solicitud:',notificationError);}
     sessionStorage.setItem('casaGlickOrderConfirmation',JSON.stringify({folio:orderFolio,whatsappUrl:url,total:Number(total)||0,itemCount:orderItems.reduce((sum,item)=>sum+item.quantity,0)}));cart.clear();window.location.href=`confirmacion.html?folio=${encodeURIComponent(orderFolio)}`;
-  }catch(err){console.error('Error al generar la orden:',err);const firebaseCode=String(err?.code||'');if(err?.message==='NAME_REQUIRED')error.textContent='Ingresa tu nombre.';else if(err?.message==='LASTNAME_REQUIRED')error.textContent='Ingresa tu apellido.';else if(err?.message==='PHONE_INVALID')error.textContent='Ingresa un teléfono válido de 10 números.';else if(err?.message==='POSTAL_INVALID')error.textContent='Ingresa un código postal válido de 5 números.';else if(err?.message==='ADDRESS_REQUIRED')error.textContent='Ingresa la dirección completa para la entrega a domicilio.';else if(err?.message==='EMPTY_CART')error.textContent='Tu bolsa está vacía.';else if(err?.message==='STRIPE_CDMX_ONLY')error.textContent='El pago con Stripe está disponible únicamente para entregas en CDMX.';else if(err?.message==='STRIPE_QUOTE_ITEM')error.textContent='La bolsa contiene un producto que requiere cotización. Retíralo para pagar con Stripe.';else if(firebaseCode.includes('permission-denied'))error.textContent='Firebase rechazó la orden. Revisa las reglas de Firestore para el modo seleccionado.';else error.textContent=String(err?.message||'').startsWith('STRIPE_')?'No fue posible iniciar el pago. Inténtalo nuevamente.':(err?.message||'No fue posible procesar la orden. Revisa tu conexión e inténtalo de nuevo.');submitButton.disabled=false;updateCheckoutMode();}
+  }catch(err){console.error('Error al generar la orden:',err);const firebaseCode=String(err?.code||'');if(err?.message==='NAME_REQUIRED')error.textContent='Ingresa tu nombre.';else if(err?.message==='LASTNAME_REQUIRED')error.textContent='Ingresa tu apellido.';else if(err?.message==='PHONE_INVALID')error.textContent='Ingresa un teléfono válido de 10 números.';else if(err?.message==='POSTAL_INVALID')error.textContent='Ingresa un código postal válido de 5 números.';else if(err?.message==='ADDRESS_REQUIRED')error.textContent='Ingresa la dirección completa para la entrega a domicilio.';else if(err?.message==='EMPTY_CART')error.textContent='Tu bolsa está vacía.';else if(err?.message==='STRIPE_COVERAGE_ONLY')error.textContent='El pago con Stripe está disponible únicamente para entregas en CDMX y Estado de México.';else if(err?.message==='STRIPE_QUOTE_ITEM')error.textContent='La bolsa contiene un producto que requiere cotización. Retíralo para pagar con Stripe.';else if(firebaseCode.includes('permission-denied'))error.textContent='Firebase rechazó la orden. Revisa las reglas de Firestore para el modo seleccionado.';else error.textContent=String(err?.message||'').startsWith('STRIPE_')?'No fue posible iniciar el pago. Inténtalo nuevamente.':(err?.message||'No fue posible procesar la orden. Revisa tu conexión e inténtalo de nuevo.');submitButton.disabled=false;updateCheckoutMode();}
 });
 init();

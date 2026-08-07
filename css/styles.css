@@ -10288,10 +10288,21 @@ body.product-detail-page [data-product-title].is-fitting-title {
 .checkout-address[hidden], .checkout-shipping-note[hidden] { display: none !important; }
 .checkout-shipping-note {
   margin: -2px 0 4px;
-  color: #4f6654;
+  color: #2f8f46;
   font: 600 10px/1.5 Montserrat, sans-serif;
   letter-spacing: .08em;
   text-transform: uppercase;
+}
+.checkout-stripe-banner[hidden] { display: none !important; }
+.checkout-stripe-banner {
+  margin-top: 14px;
+}
+.checkout-stripe-banner img {
+  display: block;
+  width: 100%;
+  max-width: 520px;
+  height: auto;
+  margin: 0 auto;
 }
 .stripe-result-card > h1 {
   font-size: clamp(28px, 3.3vw, 46px) !important;
