@@ -10717,8 +10717,8 @@ body.has-lifestyle-lightbox {
 }
 .checkout-header {
   background: #f6f4ef !important;
-  border-bottom: 1px solid rgba(37,36,34,.08) !important;
-  box-shadow: 0 1px 0 rgba(255,255,255,.65) !important;
+  border-bottom: 0 !important;
+  box-shadow: none !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
@@ -10746,8 +10746,14 @@ body.has-lifestyle-lightbox {
   max-height: 100%;
   overflow-y: auto;
   overscroll-behavior: contain;
-  scrollbar-gutter: stable;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   align-self: stretch;
+}
+.checkout-card::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
 }
 
 /* Index categories: Firebase/local image fills the square card without inner padding. */
