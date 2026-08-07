@@ -23,6 +23,10 @@ function remember(element){
   originals.set(element,{text:element.textContent,hidden:element.hidden,href:element.getAttribute?.('href'),src:element.getAttribute?.('src'),srcset:element.getAttribute?.('srcset')});
 }
 function trimmedString(value){ return typeof value==='string' ? value.trim() : ''; }
+function normalizeShopWhatsappUrl(value){
+  const url=trimmedString(value);
+  return url.replace(/https:\/\/wa\.me\/(?:52)?5513004665(?=\?|$)/i,'https://wa.me/525514676585');
+}
 function isSafeLink(value){
   const url=trimmedString(value);
   if(!url || /^(javascript|data|file):/i.test(url)) return false;
@@ -49,7 +53,7 @@ function setDescription(selectors,value){
 }
 function setButton(element,section){
   if(!element || !section) return;
-  const text=trimmedString(section.buttonText), url=trimmedString(section.buttonUrl);
+  const text=trimmedString(section.buttonText), url=normalizeShopWhatsappUrl(section.buttonUrl);
   if(text){ remember(element); const target=element.querySelector('span:not([aria-hidden="true"])'); if(target)target.textContent=text; else element.textContent=text; }
   if(element.tagName==='A' && isSafeLink(url)){ remember(element); element.setAttribute('href',url); }
 }

@@ -17,7 +17,7 @@
   folioElement.textContent = folio || 'Orden confirmada';
   if (viewOrderLink) { viewOrderLink.href = folio ? `order.html?folio=${encodeURIComponent(folio)}` : 'order.html'; }
 
-  const casaGlickWhatsapp = 'https://wa.me/525513004665';
+  const casaGlickWhatsapp = 'https://wa.me/525514676585';
   let message = `Hola, generé la orden ${folio || ''} en Casa Glick y quiero darle seguimiento.`;
 
   if (confirmation.whatsappUrl) {

@@ -67,7 +67,7 @@ function render(data){
   totalLabel.textContent=caption;
   totalElement.textContent=money.format(Number(data.total)||0);
 
-  whatsapp.href=`https://wa.me/525513004665?text=${encodeURIComponent(`Hola, quiero consultar el estado de mi orden ${folio}.`)}`;
+  whatsapp.href=`https://wa.me/525514676585?text=${encodeURIComponent(`Hola, quiero consultar el estado de mi orden ${folio}.`)}`;
   result.hidden=false;
 }
 async function lookup(folio){

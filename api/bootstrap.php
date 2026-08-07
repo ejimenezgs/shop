@@ -1021,7 +1021,7 @@ function build_assisted_whatsapp_url(array $order): string {
     }
     $message .= "\nCliente: " . (string)($customer['name'] ?? '')
         . "\nTeléfono: " . (string)($customer['phone'] ?? '');
-    return 'https://wa.me/525513004665?text=' . rawurlencode($message);
+    return 'https://wa.me/525514676585?text=' . rawurlencode($message);
 }
 
 function build_customer_assisted_order_email(array $config, array $order, string $orderId): array {

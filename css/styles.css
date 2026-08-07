@@ -10294,16 +10294,7 @@ body.product-detail-page [data-product-title].is-fitting-title {
   text-transform: uppercase;
 }
 .checkout-stripe-banner[hidden] { display: none !important; }
-.checkout-stripe-banner {
-  margin-top: 14px;
-}
-.checkout-stripe-banner img {
-  display: block;
-  width: 70%;
-  max-width: 364px;
-  height: auto;
-  margin: 0;
-}
+.checkout-stripe-banner { margin-top: 14px; }
 .stripe-result-card > h1 {
   font-size: clamp(28px, 3.3vw, 46px) !important;
   line-height: 1 !important;
@@ -10614,4 +10605,76 @@ body.has-lifestyle-lightbox {
 @media (max-width:700px){
   .lifestyle,.lifestyle__motion{touch-action:pan-y pinch-zoom;}
   .lifestyle__carousel{touch-action:pan-x pan-y pinch-zoom;overscroll-behavior-x:contain;overscroll-behavior-y:auto;}
+}
+
+
+/* shop110: payment method selector + crisp Stripe secure card */
+.checkout-payment {
+  border: 0;
+  margin: 8px 0 6px;
+  padding: 0;
+}
+.checkout-payment legend {
+  margin: 0 0 12px;
+  padding: 0;
+  font: 500 10px Montserrat, sans-serif;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #252422;
+}
+.checkout-payment-options { display: grid; gap: 10px; }
+.checkout-payment-placeholder { margin: 0; color: #77736d; font: 400 10px/1.55 Montserrat, sans-serif; }
+.checkout-payment-option {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 15px;
+  border: 1px solid #d8d4cc;
+  cursor: pointer;
+  background: #fff;
+}
+.checkout-payment-option input { position: absolute; opacity: 0; pointer-events: none; }
+.checkout-payment-option__control {
+  width: 16px; height: 16px; border: 1px solid #8e8b85; border-radius: 50%; position: relative;
+}
+.checkout-payment-option input:checked + .checkout-payment-option__control { border-color: #252422; }
+.checkout-payment-option input:checked + .checkout-payment-option__control::after {
+  content: ''; position: absolute; inset: 3px; border-radius: 50%; background: #252422;
+}
+.checkout-payment-option__copy { display: grid; gap: 3px; }
+.checkout-payment-option__copy strong { font: 500 12px/1.35 Montserrat, sans-serif; color: #252422; }
+.checkout-payment-option__copy small { font: 400 9px/1.45 Montserrat, sans-serif; color: #77736d; }
+
+.stripe-secure-card {
+  width: 70%; max-width: 420px; min-width: 300px;
+  border: 1px solid #d7d9df; border-radius: 9px;
+  padding: 14px 16px 15px; background: #fff;
+}
+.stripe-secure-card__head { display: grid; grid-template-columns: 22px 1fr auto; gap: 9px; align-items: center; }
+.stripe-secure-card__lock { width: 18px; height: 20px; border-radius: 3px; display: grid; place-items: center; background: #30354c; color: #fff; font-size: 10px; }
+.stripe-secure-card__head strong { color: #30354c; font: 600 11px/1.25 Montserrat, sans-serif; }
+.stripe-secure-card__powered { background: #30354c; color: #fff; border-radius: 4px; padding: 6px 9px; white-space: nowrap; font: 500 7px/1 Montserrat, sans-serif; }
+.stripe-secure-card__powered b { font-size: 14px; letter-spacing: -.04em; }
+.stripe-secure-card__divider { height: 1px; background: #e1e2e5; margin: 13px 0; }
+.stripe-secure-card__brands { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: 8px; align-items: center; }
+.pay-brand { height: 30px; display: grid; place-items: center; border: 1px solid #cfd2d8; border-radius: 4px; background: #fff; overflow: hidden; font: 700 9px/1 Arial,sans-serif; }
+.pay-brand--visa { color:#1261a0; font-style: italic; font-size:12px; }
+.pay-brand--amex { background:#1789c3; color:#fff; font-size:9px; }
+.pay-brand--jcb { color:#0a5597; font-size:10px; }
+.pay-brand--discover { color:#222; font-size:7px; }
+.pay-brand--diners { color:#1886bd; font-size:14px; }
+.pay-brand--union { background:#d8263f; color:#fff; font-size:7px; transform:skew(-8deg); }
+.pay-brand--mc { position:relative; display:block; }
+.pay-brand--mc i { position:absolute; top:7px; width:16px; height:16px; border-radius:50%; }
+.pay-brand--mc i:first-child { left:calc(50% - 13px); background:#eb001b; }
+.pay-brand--mc i:last-child { left:calc(50% - 3px); background:#f79e1b; opacity:.92; }
+.checkout-terms { width:70%; max-width:420px; margin: 11px 0 0; color:#77736d; font:400 9px/1.55 Montserrat,sans-serif; }
+.checkout-terms span, .checkout-terms a { color:#55524d; text-decoration:underline; text-underline-offset:2px; }
+.checkout-mode-note { display:none !important; }
+@media (max-width: 640px) {
+  .stripe-secure-card, .checkout-terms { width: 100%; max-width: none; min-width: 0; }
+  .stripe-secure-card__head { grid-template-columns: 20px 1fr; }
+  .stripe-secure-card__powered { grid-column: 2; justify-self:start; }
+  .stripe-secure-card__brands { grid-template-columns: repeat(4,minmax(0,1fr)); }
 }
