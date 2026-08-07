@@ -10678,3 +10678,32 @@ body.has-lifestyle-lightbox {
   .stripe-secure-card__powered { grid-column: 2; justify-self:start; }
   .stripe-secure-card__brands { grid-template-columns: repeat(4,minmax(0,1fr)); }
 }
+
+/* shop111: restored automatic checkout mode + exact Stripe trust banner image */
+.checkout-stripe-banner[hidden] { display: none !important; }
+.checkout-stripe-banner {
+  margin-top: 14px;
+  text-align: left;
+}
+.checkout-stripe-banner > img {
+  display: block;
+  width: min(58%, 430px);
+  height: auto;
+  margin: 0;
+}
+.checkout-terms {
+  margin: 14px 0 0;
+  color: #77736d;
+  font: 400 10px/1.6 Montserrat, sans-serif;
+  text-align: left;
+}
+.checkout-terms a,
+.checkout-terms span {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+@media (max-width: 680px) {
+  .checkout-stripe-banner > img { width: min(82%, 390px); }
+  .checkout-terms { font-size: 9px; }
+}
